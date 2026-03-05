@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\ProductoCva;
+use App\Models\TipoCambioMoneda;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -249,6 +250,14 @@ class CVAService
         }
 
         $precio = (float) ($art['precio'] ?? 0);
+        $moneda = strtoupper((string) ($art['moneda'] ?? 'MXN'));
+
+        if ($moneda === 'USD' && $precio > 0) {
+            $tipoCambio = TipoCambioMoneda::actual();
+            $precio = round($precio * $tipoCambio, 2);
+            $moneda = 'MXN';
+        }
+
         if ($this->porcentaje > 0) {
             $precio = $precio * (1 + $this->porcentaje / 100);
         }
@@ -269,7 +278,7 @@ class CVAService
                 'marca' => $art['marca'] ?? null,
                 'garantia' => $art['garantia'] ?? null,
                 'clase' => $art['clase'] ?? null,
-                'moneda' => $art['moneda'] ?? null,
+                'moneda' => $moneda,
                 'precio' => $precio,
                 'imagen' => $imagen,
                 'imagenes' => $imagenes,

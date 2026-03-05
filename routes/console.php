@@ -1,5 +1,6 @@
 <?php
 
+use App\Jobs\ActualizarTipoCambioJob;
 use App\Services\CVAService;
 use App\Services\DescuentoPrecioService;
 use Illuminate\Foundation\Inspiring;
@@ -47,6 +48,14 @@ Artisan::command('precios:comparar-descuentos', function () {
     return 0;
 })->purpose('Comparar precios cada 12 h y actualizar tabla producto_descuento');
 
+Artisan::command('tipo-cambio:actualizar', function () {
+    $this->info('Actualizando tipo de cambio USD → MXN...');
+    ActualizarTipoCambioJob::dispatchSync();
+    $this->info('Tipo de cambio actualizado.');
+
+    return 0;
+})->purpose('Obtener tipo de cambio actual de la API y guardarlo en BD (también se ejecuta diariamente a las 06:30)');
+
 // CVA sync cada 5 min (token se renueva solo)
 Schedule::command('cva:sync')->everyFiveMinutes();
 
@@ -55,3 +64,6 @@ Schedule::command('precios:sync-referencia')->cron('0 2 */3 * *');
 
 // Comparación de descuentos: cada 12 horas (06:00 y 18:00)
 Schedule::command('precios:comparar-descuentos')->twiceDaily(6, 18);
+
+// Tipo de cambio USD → MXN: actualizar diariamente a las 06:30
+Schedule::job(new ActualizarTipoCambioJob)->dailyAt('06:30');

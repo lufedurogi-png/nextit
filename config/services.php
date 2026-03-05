@@ -45,4 +45,9 @@ return [
         'moneda_pesos' => env('CVA_MONEDA_PESOS', true),
     ],
 
+    'exchangerate' => [
+        'url' => env('EXCHANGERATE_API_URL', 'https://v6.exchangerate-api.com/v6'),
+        'key' => env('EXCHANGERATE_API_KEY'),
+    ],
+
 ];
