@@ -50,6 +50,10 @@ class TokenAuthService
             return $this->failedAuthResponse();
         }
 
+        if ($user->tipo === UserType::CUSTOMER && ! $user->hasRole(UserRole::CUSTOMER->value)) {
+            $this->permissionService->setRole($user, UserRole::CUSTOMER);
+        }
+
         $token = $this->createTokenForUser($user);
         $this->logLogin($user);
 

@@ -91,4 +91,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(Cotizacion::class, 'user_id');
     }
+
+    public function clienteVentasMensajes()
+    {
+        return $this->hasMany(ClienteVentasMensaje::class, 'user_id');
+    }
+
+    public function mensajesEnviadosComoVendedor()
+    {
+        return $this->hasMany(ClienteVentasMensaje::class, 'seller_id');
+    }
 }
