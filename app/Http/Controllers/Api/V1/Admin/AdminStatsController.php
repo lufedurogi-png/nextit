@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api\V1\Admin;
 use App\Enum\User\UserType;
 use App\Http\Controllers\Controller;
 use App\Models\BusquedaProductoMostrado;
+use App\Models\ProductoCva;
+use App\Models\ProductoManual;
 use App\Models\User;
 use App\Models\UserLoginLog;
 use Illuminate\Http\JsonResponse;
@@ -14,6 +16,100 @@ use Symfony\Component\HttpFoundation\Response;
 
 class AdminStatsController extends Controller
 {
+    /**
+     * Resumen de catálogo en una sola respuesta:
+     * - resumen (totales/stock/ofertas)
+     * - por_categoria (grupo => total)
+     * - por_marca (marca => total)
+     */
+    public function catalogoResumen(): JsonResponse
+    {
+        $resumenCva = ProductoCva::query()
+            ->selectRaw('COUNT(*) as total')
+            ->selectRaw('SUM(CASE WHEN disponible > 0 THEN 1 ELSE 0 END) as con_stock')
+            ->selectRaw('SUM(CASE WHEN disponible_cd > 0 THEN 1 ELSE 0 END) as con_stock_cd')
+            ->selectRaw('SUM(CASE WHEN (COALESCE(disponible,0) + COALESCE(disponible_cd,0)) <= 0 THEN 1 ELSE 0 END) as sin_stock')
+            ->selectRaw('SUM(CASE WHEN destacado = 1 THEN 1 ELSE 0 END) as en_oferta')
+            ->first();
+
+        $resumenManual = ProductoManual::query()
+            ->where('anulado', false)
+            ->selectRaw('COUNT(*) as total')
+            ->selectRaw('SUM(CASE WHEN disponible > 0 THEN 1 ELSE 0 END) as con_stock')
+            ->selectRaw('SUM(CASE WHEN disponible_cd > 0 THEN 1 ELSE 0 END) as con_stock_cd')
+            ->selectRaw('SUM(CASE WHEN (COALESCE(disponible,0) + COALESCE(disponible_cd,0)) <= 0 THEN 1 ELSE 0 END) as sin_stock')
+            ->selectRaw('SUM(CASE WHEN destacado = 1 THEN 1 ELSE 0 END) as en_oferta')
+            ->first();
+
+        $porCategoriaCva = ProductoCva::query()
+            ->selectRaw("COALESCE(NULLIF(TRIM(grupo), ''), 'Sin categoría') as nombre")
+            ->selectRaw('COUNT(*) as total')
+            ->groupBy('grupo')
+            ->get();
+
+        $porCategoriaManual = ProductoManual::query()
+            ->where('anulado', false)
+            ->selectRaw("COALESCE(NULLIF(TRIM(grupo), ''), 'Sin categoría') as nombre")
+            ->selectRaw('COUNT(*) as total')
+            ->groupBy('grupo')
+            ->get();
+
+        $porMarcaCva = ProductoCva::query()
+            ->selectRaw("COALESCE(NULLIF(TRIM(marca), ''), 'Sin marca') as nombre")
+            ->selectRaw('COUNT(*) as total')
+            ->groupBy('marca')
+            ->get();
+
+        $porMarcaManual = ProductoManual::query()
+            ->where('anulado', false)
+            ->selectRaw("COALESCE(NULLIF(TRIM(marca), ''), 'Sin marca') as nombre")
+            ->selectRaw('COUNT(*) as total')
+            ->groupBy('marca')
+            ->get();
+
+        $porCategoria = $porCategoriaCva
+            ->concat($porCategoriaManual)
+            ->groupBy('nombre')
+            ->map(fn ($rows, $nombre) => [
+                'nombre' => $nombre,
+                'total' => (int) $rows->sum(fn ($r) => (int) $r->total),
+            ])
+            ->sortByDesc('total')
+            ->values();
+
+        $porMarca = $porMarcaCva
+            ->concat($porMarcaManual)
+            ->groupBy('nombre')
+            ->map(fn ($rows, $nombre) => [
+                'nombre' => $nombre,
+                'total' => (int) $rows->sum(fn ($r) => (int) $r->total),
+            ])
+            ->sortByDesc('total')
+            ->values();
+
+        $total = (int) (($resumenCva->total ?? 0) + ($resumenManual->total ?? 0));
+        $conStock = (int) (($resumenCva->con_stock ?? 0) + ($resumenManual->con_stock ?? 0));
+        $conStockCd = (int) (($resumenCva->con_stock_cd ?? 0) + ($resumenManual->con_stock_cd ?? 0));
+        $sinStock = (int) (($resumenCva->sin_stock ?? 0) + ($resumenManual->sin_stock ?? 0));
+        $enOferta = (int) (($resumenCva->en_oferta ?? 0) + ($resumenManual->en_oferta ?? 0));
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'resumen' => [
+                    'total_productos' => $total,
+                    'productos_con_stock' => $conStock,
+                    'productos_con_stock_cd' => $conStockCd,
+                    'productos_sin_stock' => $sinStock,
+                    'productos_sin_stock_cd' => $sinStock,
+                    'productos_en_oferta' => $enOferta,
+                ],
+                'por_categoria' => $porCategoria,
+                'por_marca' => $porMarca,
+            ],
+        ], Response::HTTP_OK);
+    }
+
     /**
      * Categorías (grupos) más vistos en búsquedas - para gráfica de pastel.
      * Solo tiene datos cuando hay búsquedas registradas en busqueda_productos_mostrados.

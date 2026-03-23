@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\Cotizacion;
 use App\Models\CotizacionItem;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 
 class CotizacionController extends Controller
@@ -113,6 +115,19 @@ class CotizacionController extends Controller
             'success' => true,
             'data' => self::formatCotizacion($cotizacion),
         ]);
+    }
+
+    public function downloadPdf(int $id): Response|JsonResponse
+    {
+        $cotizacion = Auth::user()->cotizaciones()->with(['items', 'user'])->find($id);
+        if (! $cotizacion) {
+            return response()->json(['success' => false, 'message' => 'Cotización no encontrada.'], 404);
+        }
+
+        $pdf = Pdf::loadView('pdf.cotizacion', ['cotizacion' => $cotizacion]);
+        $pdf->setPaper('a4', 'portrait');
+
+        return $pdf->download('cotizacion-' . $cotizacion->id . '.pdf');
     }
 
     public function update(Request $request, int $id): JsonResponse

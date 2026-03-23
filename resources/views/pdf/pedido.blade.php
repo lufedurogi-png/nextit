@@ -5,21 +5,19 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Pedido {{ $pedido->folio }} – Todo para la oficina</title>
     <style>
+        @page { margin: 0; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'DejaVu Sans', sans-serif; font-size: 11px; color: #1f2937; line-height: 1.4; }
-        .page { padding: 0 28px 28px; max-width: 100%; }
-        /* Franja superior naranja: identifica al instante que es PEDIDO */
-        .top-bar { background: #ea580c; color: #fff; padding: 12px 28px; margin: 0 -28px 20px; }
-        .top-bar .doc-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; opacity: 0.95; }
-        .top-bar .doc-folio { font-size: 20px; font-weight: 700; margin-top: 2px; }
-        .header { display: table; width: 100%; margin-bottom: 22px; padding-bottom: 14px; border-bottom: 3px solid #ea580c; }
+        .page-bg-image { position: fixed; top: 0; left: 0; width: 210mm; height: 297mm; z-index: -1; }
+        .page { padding: 150px 36px 110px; max-width: 100%; }
+        .header { display: table; width: 100%; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid #ea580c; }
         .header-left { display: table-cell; width: 50%; vertical-align: top; }
         .header-right { display: table-cell; width: 50%; text-align: right; vertical-align: top; }
-        .brand { font-size: 22px; font-weight: 700; color: #ea580c; letter-spacing: 0.05em; margin-bottom: 4px; }
-        .tagline { font-size: 9px; color: #6b7280; letter-spacing: 0.05em; }
-        .doc-meta { font-size: 10px; color: #374151; margin-top: 6px; }
-        .section { margin-bottom: 18px; }
-        .section-title { font-size: 10px; font-weight: 700; color: #ea580c; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; padding-left: 10px; border-left: 4px solid #ea580c; }
+        .doc-label { font-size: 10px; font-weight: 700; color: #ea580c; text-transform: uppercase; letter-spacing: 0.1em; }
+        .doc-folio { font-size: 20px; font-weight: 700; color: #ea580c; margin-top: 4px; }
+        .doc-meta { font-size: 10px; color: #374151; margin-top: 4px; }
+        .section { margin-bottom: 16px; }
+        .section-title { font-size: 10px; font-weight: 700; color: #ea580c; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; padding-left: 8px; border-left: 3px solid #ea580c; }
         .address-block { font-size: 10px; color: #374151; }
         .address-block strong { color: #111827; }
         table.items { width: 100%; border-collapse: collapse; margin-top: 8px; }
@@ -37,26 +35,37 @@
         .badge-pago { background: #fef3c7; color: #92400e; }
         .badge-pagado { background: #d1fae5; color: #065f46; }
         .badge-estado { background: #ffedd5; color: #c2410c; }
-        .footer { margin-top: 28px; padding-top: 14px; border-top: 2px solid #ea580c; font-size: 9px; color: #9ca3af; text-align: center; }
+        .footer { margin-top: 18px; padding-top: 12px; border-top: 2px solid #ea580c; font-size: 9px; color: #9ca3af; text-align: center; }
         .footer strong { color: #ea580c; }
     </style>
 </head>
+@php
+    $bgCandidates = [
+        'Imagenes/Hoja_membretada.png',
+        'Imagenes/Hoja_membretada.jpg',
+        'Imagenes/Hoja_membretada.jpeg',
+    ];
+    $bgData = null;
+    foreach ($bgCandidates as $candidate) {
+        $path = public_path($candidate);
+        if (! file_exists($path)) {
+            continue;
+        }
+        $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+        $mime = $ext === 'png' ? 'image/png' : 'image/jpeg';
+        $bgData = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($path));
+        break;
+    }
+@endphp
 <body>
+    @if($bgData)
+        <img class="page-bg-image" src="{{ $bgData }}" alt="Membrete">
+    @endif
     <div class="page">
-        <div class="top-bar">
-            <div class="doc-label">Comprobante de pedido</div>
-            <div class="doc-folio"># {{ $pedido->folio }}</div>
-        </div>
-
         <div class="header">
             <div class="header-left">
-                <div class="brand">Todo para la oficina</div>
-                <div class="tagline">Soluciones para tu espacio de trabajo</div>
-                <div class="doc-meta" style="margin-top: 12px;">
-                    Av. López Mateos #1038-11, Col. Italia Providencia<br>
-                    CP 44630, Guadalajara, Jalisco<br>
-                    desarrollo@nxt.it.com · 333 616-7279
-                </div>
+                <div class="doc-label">Comprobante de pedido</div>
+                <div class="doc-folio"># {{ $pedido->folio }}</div>
             </div>
             <div class="header-right">
                 <div class="doc-meta">

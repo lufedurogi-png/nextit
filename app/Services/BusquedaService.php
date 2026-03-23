@@ -284,7 +284,8 @@ class BusquedaService
                 $q->whereRaw('LOWER(descripcion) LIKE ?', [$like])
                     ->orWhereRaw('LOWER(grupo) LIKE ?', [$like])
                     ->orWhereRaw('LOWER(subgrupo) LIKE ?', [$like])
-                    ->orWhereRaw('LOWER(marca) LIKE ?', [$like]);
+                    ->orWhereRaw('LOWER(marca) LIKE ?', [$like])
+                    ->orWhereRaw('LOWER(COALESCE(codigo_fabricante, \'\')) LIKE ?', [$like]);
             });
         }
         $cva = $queryCva->limit($limite)->get();
@@ -297,7 +298,8 @@ class BusquedaService
             $queryManual->where(function ($q) use ($like) {
                 $q->whereRaw('LOWER(descripcion) LIKE ?', [$like])
                     ->orWhereRaw('LOWER(grupo) LIKE ?', [$like])
-                    ->orWhereRaw('LOWER(marca) LIKE ?', [$like]);
+                    ->orWhereRaw('LOWER(marca) LIKE ?', [$like])
+                    ->orWhereRaw('LOWER(COALESCE(codigo_fabricante, \'\')) LIKE ?', [$like]);
             });
         }
         $manual = $queryManual->limit($limite)->get();

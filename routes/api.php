@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Api\V1\Admin\AdminAuthController;
+use App\Http\Controllers\Api\V1\Admin\AdminBackupController;
+use App\Http\Controllers\Api\V1\Admin\AdminChatController;
 use App\Http\Controllers\Api\V1\Ventas\VentasAuthController;
 use App\Http\Controllers\Api\V1\Ventas\VentasChatController;
 use App\Http\Controllers\Api\V1\Admin\AdminStatsController;
@@ -128,6 +130,7 @@ Route::prefix('v1')->group(function () {
             Route::post('/cotizaciones', [CotizacionController::class, 'store'])->name('cotizaciones.store');
             Route::get('/cotizaciones/papelera', [CotizacionController::class, 'papelera'])->name('cotizaciones.papelera');
             Route::get('/cotizaciones/{id}', [CotizacionController::class, 'show'])->name('cotizaciones.show');
+            Route::get('/cotizaciones/{id}/pdf', [CotizacionController::class, 'downloadPdf'])->name('cotizaciones.pdf');
             Route::put('/cotizaciones/{id}', [CotizacionController::class, 'update'])->name('cotizaciones.update');
             Route::delete('/cotizaciones/{id}', [CotizacionController::class, 'destroy'])->name('cotizaciones.destroy');
             Route::post('/cotizaciones/{id}/restore', [CotizacionController::class, 'restore'])->name('cotizaciones.restore');
@@ -143,20 +146,13 @@ Route::prefix('v1')->group(function () {
             Route::delete('/chat-mensajes/{id}', [ClienteChatController::class, 'destroy'])->name('chat.mensajes.destroy');
         });
 
-        Route::middleware('role:seller')->prefix('ventas')->name('ventas.')->group(function () {
-            Route::get('/chat/clientes', [VentasChatController::class, 'indexClientes'])->name('chat.clientes.index');
-            Route::get('/chat/clientes/{userId}', [VentasChatController::class, 'show'])->name('chat.clientes.show');
-            Route::post('/chat/clientes/{userId}/mensajes', [VentasChatController::class, 'store'])->name('chat.clientes.mensajes.store');
-            Route::put('/chat/mensajes/{id}', [VentasChatController::class, 'update'])->name('chat.mensajes.update');
-            Route::delete('/chat/mensajes/{id}', [VentasChatController::class, 'destroy'])->name('chat.mensajes.destroy');
-        });
-
         // Admin routes (solo usuarios con rol admin)
         Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
             Route::get('/stats/categorias-mas-vistas', [AdminStatsController::class, 'categoriasMasVistas'])->name('stats.categorias');
             Route::get('/stats/clientes-por-mes', [AdminStatsController::class, 'clientesPorMes'])->name('stats.clientes');
             Route::get('/stats/actividad-usuarios', [AdminStatsController::class, 'actividadUsuarios'])->name('stats.actividad');
             Route::get('/stats/actividad-eventos', [AdminStatsController::class, 'actividadEventos'])->name('stats.actividad.eventos');
+            Route::get('/stats/catalogo-resumen', [AdminStatsController::class, 'catalogoResumen'])->name('stats.catalogo.resumen');
 
             Route::get('/tipos-usuario', [ManagerUserController::class, 'getTypesUser'])->name('tipos-usuario');
             Route::get('/permisos', [ManagerUserController::class, 'getPermissions'])->name('permisos');
@@ -187,6 +183,16 @@ Route::prefix('v1')->group(function () {
             Route::get('/pedidos', [PedidoAdminController::class, 'index'])->name('pedidos.admin.index');
             Route::get('/pedidos/{id}/pdf', [PedidoAdminController::class, 'downloadPdf'])->name('pedidos.admin.pdf');
             Route::get('/pedidos/{id}', [PedidoAdminController::class, 'show'])->name('pedidos.admin.show');
+
+            Route::get('/backup/preview-export', [AdminBackupController::class, 'previewExport'])->name('backup.preview');
+            Route::post('/backup/export', [AdminBackupController::class, 'export'])->name('backup.export');
+            Route::post('/backup/import', [AdminBackupController::class, 'import'])->name('backup.import');
+
+            Route::get('/chat/clientes', [AdminChatController::class, 'indexClientes'])->name('chat.clientes.index');
+            Route::get('/chat/clientes/{userId}', [AdminChatController::class, 'show'])->name('chat.clientes.show');
+            Route::post('/chat/clientes/{userId}/mensajes', [AdminChatController::class, 'store'])->name('chat.clientes.mensajes.store');
+            Route::put('/chat/mensajes/{id}', [AdminChatController::class, 'update'])->name('chat.mensajes.update');
+            Route::delete('/chat/mensajes/{id}', [AdminChatController::class, 'destroy'])->name('chat.mensajes.destroy');
         });
 
     });

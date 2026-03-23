@@ -33,6 +33,11 @@ class ClienteVentasMensaje extends Model
 
     public function isFromSeller(): bool
     {
-        return $this->sender_type === 'seller';
+        return in_array($this->sender_type, ['seller', 'admin'], true);
+    }
+
+    public function isFromAdmin(): bool
+    {
+        return $this->sender_type === 'admin';
     }
 }

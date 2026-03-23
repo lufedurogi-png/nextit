@@ -38,7 +38,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'api/v1/tarjetas-guardadas/*',
             'api/v1/chat-mensajes',
             'api/v1/chat-mensajes/*',
-            'api/v1/ventas/chat/*',
+            'api/v1/admin/chat/*',
         ]);
         
         $middleware->alias([

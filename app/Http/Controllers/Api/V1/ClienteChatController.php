@@ -67,14 +67,18 @@ class ClienteChatController extends Controller
 
     private function mapMensaje(ClienteVentasMensaje $m): array
     {
+        $senderType = $m->sender_type === 'seller' ? 'admin' : $m->sender_type;
         $arr = [
             'id' => $m->id,
-            'sender_type' => $m->sender_type,
+            'sender_type' => $senderType,
             'body' => $m->body,
             'created_at' => $m->created_at->toIso8601String(),
             'updated_at' => $m->updated_at->toIso8601String(),
         ];
         if ($m->seller_id && $m->relationLoaded('seller') && $m->seller) {
+            $arr['admin_name'] = $m->seller->name;
+            $arr['admin_email'] = $m->seller->email;
+            // Compatibilidad temporal para frontend no migrado.
             $arr['seller_name'] = $m->seller->name;
             $arr['seller_email'] = $m->seller->email;
         }
