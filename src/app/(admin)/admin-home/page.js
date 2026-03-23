@@ -3,9 +3,16 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import useSWR from 'swr'
-import { downloadInformeCategorias, downloadInformeActividad } from '@/lib/adminReportPdf'
+import axios from '@/lib/axios'
+import {
+    downloadInformeCategorias,
+    downloadInformeActividad,
+    downloadInformeProductosPorCategoria,
+    downloadInformeProductosPorMarca,
+} from '@/lib/adminReportPdf'
 import { swrFetcher } from '@/lib/swrFetcher'
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts'
+import { BarChart, Bar } from 'recharts'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as LineTooltip, ResponsiveContainer as LineResponsive, Legend as LineLegend } from 'recharts'
 
 const swrConfig = { revalidateOnFocus: false, dedupingInterval: 60000 }
@@ -73,6 +80,11 @@ function EventosTooltip({ active, payload, label }) {
 
 export default function AdminHome() {
     const [darkMode, setDarkMode] = useState(true)
+    const [loadingCatalogo, setLoadingCatalogo] = useState(true)
+    const [catalogoError, setCatalogoError] = useState('')
+    const [resumenCatalogo, setResumenCatalogo] = useState(null)
+    const [productosPorCategoria, setProductosPorCategoria] = useState([])
+    const [productosPorMarca, setProductosPorMarca] = useState([])
 
     const { data: categorias = [], isLoading: loadingCat } = useSWR(
         '/admin/stats/categorias-mas-vistas',
@@ -99,6 +111,40 @@ export default function AdminHome() {
         return () => window.removeEventListener('darkModeChange', onDarkModeChange)
     }, [])
 
+    useEffect(() => {
+        let cancelled = false
+        async function loadCatalogStats() {
+            setLoadingCatalogo(true)
+            setCatalogoError('')
+            try {
+                const response = await axios.get('/admin/stats/catalogo-resumen')
+                if (cancelled) return
+
+                const body = response?.data ?? {}
+                const payload = body?.success ? body.data : body?.data ?? {}
+                const resumenData = payload?.resumen ?? {}
+                const catData = Array.isArray(payload?.por_categoria) ? payload.por_categoria : []
+                const marcaData = Array.isArray(payload?.por_marca) ? payload.por_marca : []
+
+                setResumenCatalogo(resumenData || {})
+                setProductosPorCategoria(catData)
+                setProductosPorMarca(marcaData)
+
+                if (Object.keys(resumenData || {}).length === 0 && catData.length === 0 && marcaData.length === 0) {
+                    setCatalogoError('No se pudieron cargar las estadísticas de catálogo.')
+                }
+            } catch {
+                if (!cancelled) setCatalogoError('No se pudieron cargar las estadísticas de catálogo.')
+            } finally {
+                if (!cancelled) setLoadingCatalogo(false)
+            }
+        }
+        loadCatalogStats()
+        return () => {
+            cancelled = true
+        }
+    }, [])
+
     const loading = loadingCat || loadingAct || loadingEv
     const pieData = categorias.map((c) => ({ name: c.nombre || 'Sin categoría', value: parseInt(c.total, 10) }))
     const actividadData = actividad.map((r) => ({
@@ -120,6 +166,24 @@ export default function AdminHome() {
         vendedor: e.tipo === 3 ? e.hora : null,
     }))
 
+    const categoriasCatalogoChartData = productosPorCategoria.map((c) => ({
+        nombre: c.categoria_nombre || c.nombre || 'Sin categoría',
+        total: Number(c.total) || 0,
+    }))
+    const marcasCatalogoChartData = productosPorMarca.map((m) => ({
+        nombre: m.marca_nombre || m.nombre || 'Sin marca',
+        total: Number(m.total) || 0,
+    }))
+
+    const totalProductos = resumenCatalogo?.total_productos
+    const productosConStock = resumenCatalogo?.productos_con_stock
+    const productosConStockCd = resumenCatalogo?.productos_con_stock_cd
+    const productosEnOferta = resumenCatalogo?.productos_en_oferta
+    const productosSinStock = resumenCatalogo?.productos_sin_stock
+    const productosSinStockCd = resumenCatalogo?.productos_sin_stock_cd
+
+    const formatNumber = (value) => (value === null || value === undefined ? 'N/D' : value)
+
     const SkeletonChart = () => (
         <div className="flex items-center justify-center min-h-[300px]">
             <div className="animate-pulse rounded-lg bg-gray-600/30 h-64 w-full" />
@@ -128,6 +192,118 @@ export default function AdminHome() {
 
     return (
         <div>
+            <div className="mb-8 space-y-6">
+                <div className="flex flex-col gap-2">
+                    <h2 className={`text-2xl font-bold ${darkMode ? 'text-emerald-300' : 'text-emerald-700'}`}>Panel de estadísticas de catálogo</h2>
+                    <p className={darkMode ? 'text-gray-400 text-sm' : 'text-gray-600 text-sm'}>
+                        Vista general de productos, stock y ofertas basada en las estadísticas de la API.
+                    </p>
+                </div>
+
+                {catalogoError && (
+                    <div className={`rounded-lg border px-4 py-3 text-sm ${darkMode ? 'border-red-500/40 bg-red-900/20 text-red-200' : 'border-red-200 bg-red-50 text-red-700'}`}>
+                        {catalogoError}
+                    </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-4">
+                    <div className={`rounded-xl p-4 border ${darkMode ? 'border-emerald-500/40 bg-gray-800' : 'border-emerald-200 bg-emerald-50'}`}>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Total de productos</p>
+                        <p className="mt-2 text-2xl font-bold text-emerald-400">{loadingCatalogo ? '—' : formatNumber(totalProductos)}</p>
+                    </div>
+                    <div className={`rounded-xl p-4 border ${darkMode ? 'border-emerald-500/30 bg-gray-800' : 'border-emerald-100 bg-white'}`}>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Con stock</p>
+                        <p className="mt-2 text-2xl font-bold text-emerald-300">{loadingCatalogo ? '—' : formatNumber(productosConStock)}</p>
+                    </div>
+                    <div className={`rounded-xl p-4 border ${darkMode ? 'border-emerald-500/20 bg-gray-800' : 'border-emerald-100 bg-white'}`}>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Con stock CD</p>
+                        <p className="mt-2 text-2xl font-bold text-emerald-200">{loadingCatalogo ? '—' : formatNumber(productosConStockCd)}</p>
+                    </div>
+                    <div className={`rounded-xl p-4 border ${darkMode ? 'border-yellow-500/40 bg-gray-800' : 'border-yellow-200 bg-yellow-50'}`}>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">En oferta</p>
+                        <p className="mt-2 text-2xl font-bold text-yellow-400">{loadingCatalogo ? '—' : formatNumber(productosEnOferta)}</p>
+                    </div>
+                    <div className={`rounded-xl p-4 border ${darkMode ? 'border-gray-600 bg-gray-800' : 'border-gray-200 bg-white'}`}>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Sin stock</p>
+                        <p className="mt-2 text-2xl font-bold text-gray-200">{loadingCatalogo ? '—' : formatNumber(productosSinStock)}</p>
+                    </div>
+                    <div className={`rounded-xl p-4 border ${darkMode ? 'border-gray-600 bg-gray-800' : 'border-gray-200 bg-white'}`}>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Sin stock CD</p>
+                        <p className="mt-2 text-2xl font-bold text-gray-200">{loadingCatalogo ? '—' : formatNumber(productosSinStockCd)}</p>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                    <div className={`rounded-xl overflow-hidden shadow-lg border ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+                        <div className={`px-5 py-3.5 rounded-t-xl ${darkMode ? 'bg-emerald-600/30 border-b border-emerald-500/40' : 'bg-emerald-50 border-b border-emerald-200'}`}>
+                            <h3 className={`text-lg font-bold ${darkMode ? 'text-emerald-300' : 'text-emerald-800'}`}>Productos por categoría</h3>
+                        </div>
+                        <div className="p-5">
+                            {loadingCatalogo ? (
+                                <SkeletonChart />
+                            ) : categoriasCatalogoChartData.length === 0 ? (
+                                <p className="text-gray-500 py-10 text-center text-sm">No hay datos de categorías disponibles.</p>
+                            ) : (
+                                <ResponsiveContainer width="100%" height={280}>
+                                    <BarChart data={categoriasCatalogoChartData} margin={{ top: 8, right: 8, left: 0, bottom: 40 }}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? '#374151' : '#e5e7eb'} />
+                                        <XAxis dataKey="nombre" stroke={darkMode ? '#9ca3af' : '#6b7280'} tick={{ fontSize: 11 }} angle={-25} textAnchor="end" interval={0} />
+                                        <YAxis stroke={darkMode ? '#9ca3af' : '#6b7280'} tick={{ fontSize: 11 }} allowDecimals={false} />
+                                        <Tooltip />
+                                        <Legend />
+                                        <Bar dataKey="total" name="Productos" radius={[4, 4, 0, 0]} fill="#10b981" />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            )}
+                            <div className="mt-4 flex justify-end">
+                                <button
+                                    type="button"
+                                    onClick={() => downloadInformeProductosPorCategoria(categoriasCatalogoChartData)}
+                                    className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all border ${darkMode ? 'border-emerald-500/60 text-emerald-400 hover:bg-emerald-500/20' : 'border-emerald-500 text-emerald-600 hover:bg-emerald-50'}`}
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                    Descargar informe PDF
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className={`rounded-xl overflow-hidden shadow-lg border ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+                        <div className={`px-5 py-3.5 rounded-t-xl ${darkMode ? 'bg-emerald-600/30 border-b border-emerald-500/40' : 'bg-emerald-50 border-b border-emerald-200'}`}>
+                            <h3 className={`text-lg font-bold ${darkMode ? 'text-emerald-300' : 'text-emerald-800'}`}>Productos por marca</h3>
+                        </div>
+                        <div className="p-5">
+                            {loadingCatalogo ? (
+                                <SkeletonChart />
+                            ) : marcasCatalogoChartData.length === 0 ? (
+                                <p className="text-gray-500 py-10 text-center text-sm">No hay datos de marcas disponibles.</p>
+                            ) : (
+                                <ResponsiveContainer width="100%" height={280}>
+                                    <BarChart data={marcasCatalogoChartData} margin={{ top: 8, right: 8, left: 0, bottom: 40 }}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? '#374151' : '#e5e7eb'} />
+                                        <XAxis dataKey="nombre" stroke={darkMode ? '#9ca3af' : '#6b7280'} tick={{ fontSize: 11 }} angle={-25} textAnchor="end" interval={0} />
+                                        <YAxis stroke={darkMode ? '#9ca3af' : '#6b7280'} tick={{ fontSize: 11 }} allowDecimals={false} />
+                                        <Tooltip />
+                                        <Legend />
+                                        <Bar dataKey="total" name="Productos" radius={[4, 4, 0, 0]} fill="#3b82f6" />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            )}
+                            <div className="mt-4 flex justify-end">
+                                <button
+                                    type="button"
+                                    onClick={() => downloadInformeProductosPorMarca(marcasCatalogoChartData)}
+                                    className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all border ${darkMode ? 'border-emerald-500/60 text-emerald-400 hover:bg-emerald-500/20' : 'border-emerald-500 text-emerald-600 hover:bg-emerald-50'}`}
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                    Descargar informe PDF
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className={`rounded-xl overflow-hidden shadow-lg border ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
                     <div className={`px-5 py-3.5 rounded-t-xl ${darkMode ? 'bg-emerald-600/30 border-b border-emerald-500/40' : 'bg-emerald-50 border-b border-emerald-200'}`}>
@@ -258,6 +434,13 @@ export default function AdminHome() {
                         </div>
                         <div className="flex flex-wrap gap-3">
                             <Link
+                                href="/admin-mensajes"
+                                className={`inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all duration-200 border-2 ${darkMode ? 'border-emerald-500 text-emerald-400 hover:bg-emerald-500 hover:text-white' : 'border-emerald-500 text-emerald-600 hover:bg-emerald-500 hover:text-white'}`}
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                                Mensajería
+                            </Link>
+                            <Link
                                 href="/admin-publicidad"
                                 className={`inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all duration-200 border-2 ${darkMode ? 'border-emerald-500 text-emerald-400 hover:bg-emerald-500 hover:text-white' : 'border-emerald-500 text-emerald-600 hover:bg-emerald-500 hover:text-white'}`}
                             >
@@ -310,6 +493,22 @@ export default function AdminHome() {
                             >
                                 <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                                 Actividad de usuarios
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => downloadInformeProductosPorCategoria(categoriasCatalogoChartData)}
+                                className={`w-full inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-all border ${darkMode ? 'border-emerald-500/60 text-emerald-400 hover:bg-emerald-500/20' : 'border-emerald-500 text-emerald-600 hover:bg-emerald-50'}`}
+                            >
+                                <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                Productos por categoría
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => downloadInformeProductosPorMarca(marcasCatalogoChartData)}
+                                className={`w-full inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-all border ${darkMode ? 'border-emerald-500/60 text-emerald-400 hover:bg-emerald-500/20' : 'border-emerald-500 text-emerald-600 hover:bg-emerald-50'}`}
+                            >
+                                <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                Productos por marca
                             </button>
                         </div>
                     </div>

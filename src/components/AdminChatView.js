@@ -5,9 +5,9 @@ import Image from 'next/image'
 import { formatMessageTime } from '@/lib/chatApi'
 
 const COLOR_CLIENTE = '#FF8000'
-const COLOR_VENTAS = '#6366f1'
+const COLOR_ADMIN = '#059669'
 
-export default function VentasChatView({
+export default function AdminChatView({
     darkMode,
     cliente,
     mensajes,
@@ -35,7 +35,7 @@ export default function VentasChatView({
     }, [mensajes])
 
     const isCliente = (m) => m.sender_type === 'customer'
-    const isSeller = (m) => m.sender_type === 'seller'
+    const isAdmin = (m) => m.sender_type === 'admin' || m.sender_type === 'seller'
 
     if (!cliente) {
         return (
@@ -71,10 +71,10 @@ export default function VentasChatView({
                                 } ${m.pending ? 'opacity-90' : ''}`}
                                 style={{
                                     backgroundColor: isCliente(m)
-                                        ? `${COLOR_CLIENTE}`
+                                        ? COLOR_CLIENTE
                                         : darkMode
-                                            ? `${COLOR_VENTAS}99`
-                                            : COLOR_VENTAS,
+                                            ? `${COLOR_ADMIN}99`
+                                            : COLOR_ADMIN,
                                     color: '#fff',
                                 }}
                             >
@@ -84,10 +84,10 @@ export default function VentasChatView({
                                         {m.user_email ? ` (${m.user_email})` : ''}
                                     </div>
                                 )}
-                                {isSeller(m) && (m.seller_name || m.seller_email) && (
+                                {isAdmin(m) && (m.admin_name || m.admin_email || m.seller_name || m.seller_email) && (
                                     <div className="text-xs opacity-90 mb-1">
-                                        {m.seller_name}
-                                        {m.seller_email ? ` (${m.seller_email})` : ''}
+                                        {m.admin_name || m.seller_name}
+                                        {(m.admin_email || m.seller_email) ? ` (${m.admin_email || m.seller_email})` : ''}
                                     </div>
                                 )}
                                 {editandoId === m.id ? (
@@ -106,13 +106,7 @@ export default function VentasChatView({
                                                 className="p-1.5 rounded bg-white/20 hover:bg-white/30"
                                                 title="Guardar"
                                             >
-                                                <Image
-                                                    src="/Imagenes/icon_guardar.png"
-                                                    alt="Guardar"
-                                                    width={18}
-                                                    height={18}
-                                                    className="object-contain invert"
-                                                />
+                                                <Image src="/Imagenes/icon_guardar.png" alt="Guardar" width={18} height={18} className="object-contain invert" />
                                             </button>
                                             <button
                                                 type="button"
@@ -126,36 +120,13 @@ export default function VentasChatView({
                                 ) : (
                                     <div className="flex items-start gap-2 group">
                                         <span className="text-sm whitespace-pre-wrap break-words">{m.body}</span>
-                                        {isSeller(m) && (
+                                        {isAdmin(m) && (
                                             <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => onIniciarEdicion(m)}
-                                                    className="p-1 rounded hover:bg-white/20"
-                                                    title="Editar"
-                                                >
-                                                    <Image
-                                                        src="/Imagenes/icon_editar.webp"
-                                                        alt="Editar"
-                                                        width={16}
-                                                        height={16}
-                                                        className="object-contain invert"
-                                                    />
+                                                <button type="button" onClick={() => onIniciarEdicion(m)} className="p-1 rounded hover:bg-white/20" title="Editar">
+                                                    <Image src="/Imagenes/icon_editar.webp" alt="Editar" width={16} height={16} className="object-contain invert" />
                                                 </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => onEliminar(m.id)}
-                                                    disabled={eliminandoId === m.id}
-                                                    className="p-1 rounded hover:bg-white/20"
-                                                    title="Eliminar"
-                                                >
-                                                    <Image
-                                                        src="/Imagenes/icon_basura.png"
-                                                        alt="Eliminar"
-                                                        width={16}
-                                                        height={16}
-                                                        className="object-contain invert"
-                                                    />
+                                                <button type="button" onClick={() => onEliminar(m.id)} disabled={eliminandoId === m.id} className="p-1 rounded hover:bg-white/20" title="Eliminar">
+                                                    <Image src="/Imagenes/icon_basura.png" alt="Eliminar" width={16} height={16} className="object-contain invert" />
                                                 </button>
                                             </div>
                                         )}
@@ -175,7 +146,7 @@ export default function VentasChatView({
                     e.preventDefault()
                     onEnviar()
                 }}
-                className={`flex gap-2 items-center rounded-2xl border-2 overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500/50 focus-within:border-indigo-500 transition-shadow ${darkMode ? 'border-gray-600 bg-gray-800/50' : 'border-gray-200 bg-white'}`}
+                className={`flex gap-2 items-center rounded-2xl border-2 overflow-hidden focus-within:ring-2 focus-within:ring-emerald-500/50 focus-within:border-emerald-500 transition-shadow ${darkMode ? 'border-gray-600 bg-gray-800/50' : 'border-gray-200 bg-white'}`}
             >
                 <input
                     type="text"
@@ -194,16 +165,10 @@ export default function VentasChatView({
                 <button
                     type="submit"
                     disabled={enviando || !(nuevoTexto || '').trim()}
-                    className="flex items-center justify-center w-12 h-12 shrink-0 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-50 transition-all m-1"
+                    className="flex items-center justify-center w-12 h-12 shrink-0 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-50 transition-all m-1"
                     title="Enviar"
                 >
-                    <Image
-                        src="/Imagenes/icon_enviar.png"
-                        alt="Enviar"
-                        width={24}
-                        height={24}
-                        className="object-contain invert"
-                    />
+                    <Image src="/Imagenes/icon_enviar.png" alt="Enviar" width={24} height={24} className="object-contain invert" />
                 </button>
             </form>
         </div>

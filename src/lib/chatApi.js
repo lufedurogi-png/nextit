@@ -39,14 +39,14 @@ export async function eliminarMensajeCliente(id) {
     return data?.success
 }
 
-// Ventas (mismo axios con token de vendedor)
-export async function getChatClientesVentas() {
-    const { data } = await axios.get('/ventas/chat/clientes')
+// Admin (mismo axios con token de admin)
+export async function getChatClientesAdmin() {
+    const { data } = await axios.get('/admin/chat/clientes')
     return data?.success && data?.data ? data.data : []
 }
 
-export async function getChatMensajesVentas(userId) {
-    const { data } = await axios.get(`/ventas/chat/clientes/${userId}`)
+export async function getChatMensajesAdmin(userId) {
+    const { data } = await axios.get(`/admin/chat/clientes/${userId}`)
     if (!data?.success) return { cliente: null, mensajes: [] }
     return {
         cliente: data.data?.cliente ?? null,
@@ -54,17 +54,24 @@ export async function getChatMensajesVentas(userId) {
     }
 }
 
-export async function enviarMensajeVentas(userId, body) {
-    const { data } = await axios.post(`/ventas/chat/clientes/${userId}/mensajes`, { body })
+export async function enviarMensajeAdmin(userId, body) {
+    const { data } = await axios.post(`/admin/chat/clientes/${userId}/mensajes`, { body })
     return data?.success ? data.data : null
 }
 
-export async function actualizarMensajeVentas(id, body) {
-    const { data } = await axios.put(`/ventas/chat/mensajes/${id}`, { body })
+export async function actualizarMensajeAdmin(id, body) {
+    const { data } = await axios.put(`/admin/chat/mensajes/${id}`, { body })
     return data?.success ? data.data : null
 }
 
-export async function eliminarMensajeVentas(id) {
-    const { data } = await axios.delete(`/ventas/chat/mensajes/${id}`)
+export async function eliminarMensajeAdmin(id) {
+    const { data } = await axios.delete(`/admin/chat/mensajes/${id}`)
     return data?.success
 }
+
+// Alias temporales de compatibilidad.
+export const getChatClientesVentas = getChatClientesAdmin
+export const getChatMensajesVentas = getChatMensajesAdmin
+export const enviarMensajeVentas = enviarMensajeAdmin
+export const actualizarMensajeVentas = actualizarMensajeAdmin
+export const eliminarMensajeVentas = eliminarMensajeAdmin

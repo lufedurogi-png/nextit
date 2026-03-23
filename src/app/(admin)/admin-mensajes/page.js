@@ -3,15 +3,15 @@
 import { useState, useEffect, useCallback } from 'react'
 import Image from 'next/image'
 import {
-    getChatClientesVentas,
-    getChatMensajesVentas,
-    enviarMensajeVentas,
-    actualizarMensajeVentas,
-    eliminarMensajeVentas,
+    getChatClientesAdmin,
+    getChatMensajesAdmin,
+    enviarMensajeAdmin,
+    actualizarMensajeAdmin,
+    eliminarMensajeAdmin,
 } from '@/lib/chatApi'
-import VentasChatView from '@/components/VentasChatView'
+import AdminChatView from '@/components/AdminChatView'
 
-export default function VentasMensajesPage() {
+export default function AdminMensajesPage() {
     const [darkMode, setDarkMode] = useState(true)
     const [clientes, setClientes] = useState([])
     const [loadingClientes, setLoadingClientes] = useState(true)
@@ -37,7 +37,7 @@ export default function VentasMensajesPage() {
     const cargarClientes = useCallback(async () => {
         setLoadingClientes(true)
         try {
-            const lista = await getChatClientesVentas()
+            const lista = await getChatClientesAdmin()
             setClientes(Array.isArray(lista) ? lista : [])
         } catch {
             setClientes([])
@@ -57,7 +57,7 @@ export default function VentasMensajesPage() {
         }
         if (!silent) setLoadingMensajes(true)
         try {
-            const { mensajes: list } = await getChatMensajesVentas(userId)
+            const { mensajes: list } = await getChatMensajesAdmin(userId)
             const arr = Array.isArray(list) ? list : []
             if (silent) {
                 setMensajes((prev) => {
@@ -106,19 +106,19 @@ export default function VentasMensajesPage() {
         const tempMsg = {
             id: tempId,
             user_id: userId,
-            sender_type: 'seller',
+            sender_type: 'admin',
             body: texto,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
-            seller_name: null,
-            seller_email: null,
+            admin_name: null,
+            admin_email: null,
             pending: true,
         }
         setMensajes((prev) => [...prev, tempMsg])
         setNuevoTexto('')
         setEnviando(true)
         try {
-            const m = await enviarMensajeVentas(userId, texto)
+            const m = await enviarMensajeAdmin(userId, texto)
             if (m) {
                 setMensajes((prev) => prev.map((x) => (x.id === tempId ? { ...m, pending: false } : x)))
                 cargarClientes()
@@ -148,7 +148,7 @@ export default function VentasMensajesPage() {
         if (!texto) return
         setGuardandoId(editandoId)
         try {
-            const actualizado = await actualizarMensajeVentas(editandoId, texto)
+            const actualizado = await actualizarMensajeAdmin(editandoId, texto)
             if (actualizado) {
                 setMensajes((prev) =>
                     prev.map((x) => (x.id === editandoId ? { ...x, ...actualizado } : x))
@@ -166,7 +166,7 @@ export default function VentasMensajesPage() {
         if (eliminandoId) return
         setEliminandoId(id)
         try {
-            const ok = await eliminarMensajeVentas(id)
+            const ok = await eliminarMensajeAdmin(id)
             if (ok) {
                 setMensajes((prev) => prev.filter((x) => x.id !== id))
             }
@@ -180,7 +180,7 @@ export default function VentasMensajesPage() {
     return (
         <div className="space-y-6">
             <div className="flex items-center gap-4">
-                <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${darkMode ? 'bg-indigo-500/20 text-indigo-400' : 'bg-indigo-100 text-indigo-600'}`}>
+                <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${darkMode ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-100 text-emerald-600'}`}>
                     <Image src="/Imagenes/icon_mensaje.png" alt="" width={28} height={28} className="object-contain" />
                 </span>
                 <div>
@@ -195,7 +195,6 @@ export default function VentasMensajesPage() {
 
             <div className={`rounded-xl border-2 overflow-hidden flex flex-col h-[calc(100vh-11rem)] max-h-[42rem] min-h-[28rem] ${darkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-white border-gray-200'}`}>
                 <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-hidden">
-                    {/* Lista de clientes */}
                     <div className={`w-full md:w-72 shrink-0 border-b md:border-b-0 md:border-r flex flex-col ${darkMode ? 'border-gray-700 bg-gray-800/80' : 'border-gray-200 bg-gray-50'}`}>
                         <div className="p-3 border-b border-gray-600/50 flex items-center gap-2 shrink-0">
                             <Image src="/Imagenes/icon_mensaje.png" alt="" width={20} height={20} className="object-contain opacity-80" />
@@ -219,7 +218,7 @@ export default function VentasMensajesPage() {
                                             onClick={() => setClienteSeleccionado({ id: c.id, name: c.name, email: c.email })}
                                             className={`w-full text-left rounded-xl p-3 mb-2 transition-all flex items-center gap-3 ${
                                                 isSelected
-                                                    ? 'bg-indigo-600 text-white shadow-md'
+                                                    ? 'bg-emerald-600 text-white shadow-md'
                                                     : darkMode
                                                         ? 'hover:bg-gray-700/80 text-gray-200'
                                                         : 'hover:bg-gray-100 text-gray-800'
@@ -232,7 +231,7 @@ export default function VentasMensajesPage() {
                                             </span>
                                             <div className="min-w-0 flex-1">
                                                 <div className="font-medium truncate">{c.name || 'Sin nombre'}</div>
-                                                <div className={`text-xs truncate ${isSelected ? 'text-indigo-100' : darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                                <div className={`text-xs truncate ${isSelected ? 'text-emerald-100' : darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                                                     {c.email}
                                                 </div>
                                                 {c.unanswered_count > 0 && (
@@ -248,7 +247,6 @@ export default function VentasMensajesPage() {
                         </div>
                     </div>
 
-                    {/* Área del chat: altura fija, solo los mensajes hacen scroll */}
                     <div className="flex-1 flex flex-col min-h-0 overflow-hidden p-4">
                         {clienteSeleccionado && (
                             <div className={`mb-3 pb-2 border-b shrink-0 ${darkMode ? 'border-gray-600' : 'border-gray-200'}`}>
@@ -260,7 +258,7 @@ export default function VentasMensajesPage() {
                                 </span>
                             </div>
                         )}
-                        <VentasChatView
+                        <AdminChatView
                             darkMode={darkMode}
                             cliente={clienteSeleccionado}
                             mensajes={mensajes}

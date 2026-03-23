@@ -11,7 +11,7 @@ import {
 } from '@/lib/chatApi'
 
 const COLOR_CLIENTE = '#FF8000'
-const COLOR_VENTAS = '#6366f1'
+const COLOR_ADMIN = '#059669'
 
 export default function ChatVentasCliente({ darkMode }) {
     const [mensajes, setMensajes] = useState([])
@@ -164,7 +164,7 @@ export default function ChatVentasCliente({ darkMode }) {
                     <p className={darkMode ? 'text-gray-400' : 'text-gray-500'}>Cargando…</p>
                 ) : mensajes.length === 0 ? (
                     <p className={darkMode ? 'text-gray-400' : 'text-gray-500'}>
-                        Aún no hay mensajes. Escribe algo y ventas te responderá.
+                        Aún no hay mensajes. Escribe algo y un administrador te responderá.
                     </p>
                 ) : (
                     mensajes.map((m) => (
@@ -182,14 +182,14 @@ export default function ChatVentasCliente({ darkMode }) {
                                     backgroundColor: isCliente(m)
                                         ? `${COLOR_CLIENTE}`
                                         : darkMode
-                                            ? `${COLOR_VENTAS}99`
-                                            : COLOR_VENTAS,
+                                            ? `${COLOR_ADMIN}99`
+                                            : COLOR_ADMIN,
                                     color: '#fff',
                                 }}
                             >
                                 {!isCliente(m) && (
                                     <div className="text-xs opacity-90 mb-1">
-                                        {m.seller_name || 'Ventas'}
+                                        {m.admin_name || m.seller_name || 'Admin'}
                                     </div>
                                 )}
                                 {editandoId === m.id ? (

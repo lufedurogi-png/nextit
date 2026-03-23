@@ -11,6 +11,7 @@ import InputError from '@/components/InputError'
 import axios from '@/lib/axios'
 import { getCotizacionesGuardadas, getCotizacionesPapelera, moveCotizacionToPapelera, restoreCotizacionFromPapelera, updateCotizacionGuardada } from '@/lib/cotizaciones'
 import { fetchCotizacionesGuardadas, fetchCotizacionesPapelera, moveCotizacionToPapeleraApi, restoreCotizacionFromPapeleraApi, updateCotizacionApi, isLoggedInUserId } from '@/lib/cotizacionesApi'
+import { downloadCotizacionPdf } from '@/lib/cotizacionPdf'
 import { formatPrecio } from '@/lib/productos'
 import CheckoutModal from '@/components/CheckoutModal'
 import ChatVentasCliente from '@/components/ChatVentasCliente'
@@ -499,7 +500,7 @@ const Dashboard = () => {
         { id: 'cotizaciones', label: 'Mis cotizaciones', icon: 'icon_pedidos.png' },
         { id: 'contacto', label: 'Contacto / Envío', icon: 'icon_contacto.png' },
         { id: 'facturacion', label: 'Datos de facturación', icon: 'icon_facturacion.webp' },
-        { id: 'chat', label: 'Chat con ventas', icon: 'icon_mensaje.png' },
+        { id: 'chat', label: 'Chat con administración', icon: 'icon_mensaje.png' },
         { id: 'password', label: 'Cambiar contraseña', icon: 'icon_contraseña.webp' }
     ]
 
@@ -1464,98 +1465,20 @@ const Dashboard = () => {
                                             const fechaStr = cot.fecha ? new Date(cot.fecha).toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' }) : ''
                                             const nombreArchivo = `Cotizacion_${cot.fecha ? new Date(cot.fecha).toISOString().slice(0, 16).replace('T', '_') : cot.id}.pdf`
                                             const descargarCotizacion = async () => {
-                                                const totalStr = typeof totalConStock === 'number' ? totalConStock.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : String(totalConStock)
-                                                const { jsPDF } = await import('jspdf')
-                                                const autoTable = (await import('jspdf-autotable')).default
-                                                const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
-                                                const pageW = doc.internal.pageSize.getWidth()
-                                                const pageH = doc.internal.pageSize.getHeight()
-                                                const margin = 14
-                                                // --- PDF COTIZACIÓN: diseño verde (diferente al pedido naranja) ---
-                                                const green = [5, 150, 105]      // #059669 emerald
-                                                const greenLight = [236, 253, 245] // #ecfdf5
-                                                const greenDark = [4, 120, 87]   // #047857
-                                                // Franja superior verde: identifica al instante que es COTIZACIÓN
-                                                doc.setFillColor(...green)
-                                                doc.rect(0, 0, pageW, 22, 'F')
-                                                doc.setTextColor(255, 255, 255)
-                                                doc.setFontSize(11)
-                                                doc.setFont(undefined, 'bold')
-                                                doc.text('COTIZACIÓN', margin, 10)
-                                                doc.setFontSize(16)
-                                                doc.text(`Fecha: ${fechaStr}`, pageW - margin, 14, { align: 'right' })
-                                                // Cuerpo: marca y datos en verde oscuro
-                                                doc.setTextColor(...greenDark)
-                                                doc.setFontSize(20)
-                                                doc.setFont(undefined, 'bold')
-                                                doc.text('Todo para la oficina', margin, 34)
-                                                doc.setFontSize(9)
-                                                doc.setFont(undefined, 'normal')
-                                                doc.setTextColor(107, 114, 128)
-                                                doc.text('Soluciones para tu espacio de trabajo', margin, 39)
-                                                doc.setFontSize(10)
-                                                doc.text('Av. López Mateos #1038-11, Col. Italia Providencia', margin, 46)
-                                                doc.text('CP 44630, Guadalajara, Jalisco', margin, 51)
-                                                doc.text('desarrollo@nxt.it.com · 333 616-7279', margin, 56)
-                                                // Línea verde bajo el bloque de datos
-                                                doc.setDrawColor(...green)
-                                                doc.setLineWidth(0.8)
-                                                doc.line(margin, 62, pageW - margin, 62)
-                                                // Sección "Detalle" con recuadro verde
-                                                doc.setFillColor(...greenLight)
-                                                doc.rect(margin, 66, pageW - margin * 2, 8, 'F')
-                                                doc.setTextColor(...greenDark)
-                                                doc.setFontSize(10)
-                                                doc.setFont(undefined, 'bold')
-                                                doc.text('DETALLE DE LA COTIZACIÓN', margin + 4, 71.5)
-                                                doc.setTextColor(0, 0, 0)
-                                                const tableData = items.map((i) => {
-                                                    const eff = getEffective(i)
-                                                    const nombre = (i.nombre_producto || i.clave || '').toString().slice(0, 55) + (i.clave ? ` (${i.clave})` : '') + (eff.sinStock ? ' — Sin stock' : '')
-                                                    const pUnit = typeof i.precio_unitario === 'number' ? '$ ' + i.precio_unitario.toLocaleString('es-MX', { minimumFractionDigits: 2 }) : (i.precio_unitario ?? '-')
-                                                    const sub = '$ ' + eff.subtotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })
-                                                    return [nombre, String(eff.qty), pUnit, sub]
-                                                })
-                                                autoTable(doc, {
-                                                    startY: 76,
-                                                    head: [['Producto', 'Cant.', 'P. unit.', 'Subtotal']],
-                                                    body: tableData,
-                                                    theme: 'plain',
-                                                    headStyles: {
-                                                        fillColor: greenLight,
-                                                        textColor: greenDark,
-                                                        fontStyle: 'bold',
-                                                        fontSize: 9
-                                                    },
-                                                    columnStyles: {
-                                                        0: { cellWidth: 'auto' },
-                                                        1: { halign: 'right', cellWidth: 18 },
-                                                        2: { halign: 'right', cellWidth: 28 },
-                                                        3: { halign: 'right', cellWidth: 28 }
-                                                    },
-                                                    margin: { left: margin, right: margin },
-                                                    tableLineColor: [167, 243, 208],
-                                                    tableLineWidth: 0.3
-                                                })
-                                                const finalY = doc.lastAutoTable ? doc.lastAutoTable.finalY + 14 : 90
-                                                doc.setDrawColor(...green)
-                                                doc.setLineWidth(0.6)
-                                                doc.line(margin, finalY, pageW - margin, finalY)
-                                                doc.setFontSize(11)
-                                                doc.setFont(undefined, 'bold')
-                                                doc.setTextColor(...greenDark)
-                                                doc.text('Total', margin, finalY + 8)
-                                                doc.setFontSize(14)
-                                                doc.text(`$ ${totalStr}`, pageW - margin, finalY + 8, { align: 'right' })
-                                                const footerY = pageH - 12
-                                                doc.setDrawColor(...green)
-                                                doc.setLineWidth(0.4)
-                                                doc.line(margin, footerY - 6, pageW - margin, footerY - 6)
-                                                doc.setFontSize(9)
-                                                doc.setFont(undefined, 'normal')
-                                                doc.setTextColor(...greenDark)
-                                                doc.text(`Cotización · Todo para la oficina · ${fechaStr}`, pageW / 2, footerY, { align: 'center' })
-                                                doc.save(nombreArchivo)
+                                                if (isLoggedInUserId(user?.id)) {
+                                                    const { data } = await axios.get(`/cotizaciones/${cot.id}/pdf`, { responseType: 'blob' })
+                                                    const url = window.URL.createObjectURL(new Blob([data], { type: 'application/pdf' }))
+                                                    const a = document.createElement('a')
+                                                    a.href = url
+                                                    a.download = nombreArchivo
+                                                    document.body.appendChild(a)
+                                                    a.click()
+                                                    a.remove()
+                                                    window.URL.revokeObjectURL(url)
+                                                    return
+                                                }
+
+                                                await downloadCotizacionPdf(items, totalConStock, nombreArchivo)
                                             }
                                             const fechaEditadaStr = cot.fecha_editada ? new Date(cot.fecha_editada).toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' }) : ''
                                             const actualizarCotizacion = (nuevosItems, nuevoTotal) => {
@@ -2471,11 +2394,11 @@ const Dashboard = () => {
                                         <Image src="/Imagenes/icon_mensaje.png" alt="" width={24} height={24} className="object-contain" />
                                     </div>
                                     <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                                        Chat con ventas
+                                        Chat con administración
                                     </h2>
                                 </div>
                                 <p className={`text-sm mb-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                                    Escribe aquí y un asesor de ventas te responderá. Tus mensajes aparecen en naranja; las respuestas de ventas en morado.
+                                    Escribe aquí y un administrador te responderá. Tus mensajes aparecen en naranja; las respuestas de administración en verde.
                                 </p>
                                 <ChatVentasCliente darkMode={darkMode} />
                             </div>

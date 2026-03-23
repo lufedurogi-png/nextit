@@ -7,17 +7,7 @@ import { useAuth } from '@/hooks/auth'
 
 const Home = () => {
     const { user, logout } = useAuth({ middleware: 'guest' })
-    const [currentSlide, setCurrentSlide] = useState(0)
     const [userDropdownOpen, setUserDropdownOpen] = useState(false)
-    const images = ['/Imagenes/f1.jpg', '/Imagenes/f2.png', '/Imagenes/f3.png', '/Imagenes/f4.png', '/Imagenes/f5.png']
-
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setCurrentSlide((prev) => (prev + 1) % images.length)
-        }, 5000) // Cambia cada 5 segundos
-
-        return () => clearInterval(interval)
-    }, [images.length])
 
     // Cerrar dropdown al hacer clic fuera
     useEffect(() => {
@@ -34,16 +24,21 @@ const Home = () => {
         }
     }, [userDropdownOpen])
 
+    const NavLink = ({ href, children }) => (
+        <a href={href} className="text-white hover:text-[#FF8000] transition-colors font-medium">
+            {children}
+        </a>
+    )
+
     return (
-        <div className="min-h-screen bg-black text-white overflow-hidden">
+        <div className="min-h-screen text-white bg-gray-950">
             {/* Header */}
-            <header className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-sm border-b border-gray-800">
+            <header className="fixed top-0 left-0 right-0 z-50 bg-gray-950/70 backdrop-blur-sm border-b border-white/10">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16">
-                        {/* Logo */}
                         <Link href="/" className="flex items-center">
                             <Image
-                                src="/Imagenes/logo_en.png"
+                                src="/Imagenes/logo_nxtIt.png"
                                 alt="NXT.IT"
                                 width={120}
                                 height={40}
@@ -51,16 +46,13 @@ const Home = () => {
                             />
                         </Link>
 
-                        {/* Login/Register Links o Usuario */}
-                        <div className="flex items-center space-x-4">
-                            <Link
-                                href="/tienda"
-                                className="text-white hover:text-[#FF8000] transition-colors font-medium"
-                            >
-                                Tienda
-                            </Link>
-                            
-                            {/* Mostrar dropdown del usuario si está logueado, sino mostrar "Iniciar sesión" y "Registrarse" */}
+                        <div className="flex items-center gap-6">
+                            <div className="hidden md:flex items-center gap-6">
+                                <NavLink href="/tienda">Tienda</NavLink>
+                                <NavLink href="#nosotros">Nosotros</NavLink>
+                                <NavLink href="#contacto">Contacto</NavLink>
+                            </div>
+
                             {user ? (
                                 <div className="relative">
                                     <button
@@ -69,9 +61,7 @@ const Home = () => {
                                     >
                                         <span>{user?.name || user?.email}</span>
                                         <svg
-                                            className={`w-4 h-4 transition-transform duration-200 ${
-                                                userDropdownOpen ? 'rotate-180' : ''
-                                            }`}
+                                            className={`w-4 h-4 transition-transform duration-200 ${userDropdownOpen ? 'rotate-180' : ''}`}
                                             fill="none"
                                             stroke="currentColor"
                                             viewBox="0 0 24 24"
@@ -80,13 +70,9 @@ const Home = () => {
                                         </svg>
                                     </button>
 
-                                    {/* Dropdown Menu */}
                                     {userDropdownOpen && (
                                         <>
-                                            <div
-                                                className="fixed inset-0 z-10"
-                                                onClick={() => setUserDropdownOpen(false)}
-                                            />
+                                            <div className="fixed inset-0 z-10" onClick={() => setUserDropdownOpen(false)} />
                                             <div className="absolute right-0 mt-2 w-48 rounded-lg shadow-lg border z-20 bg-white border-gray-200">
                                                 <div className="py-1">
                                                     <Link
@@ -94,14 +80,6 @@ const Home = () => {
                                                         onClick={() => setUserDropdownOpen(false)}
                                                         className="flex items-center px-4 py-2 text-sm transition-colors text-gray-700 hover:bg-gray-100 hover:text-[#FF8000]"
                                                     >
-                                                        <div className="relative w-5 h-5 mr-3">
-                                                            <Image
-                                                                src="/Imagenes/icon_home.webp"
-                                                                alt="Home"
-                                                                fill
-                                                                className="object-contain"
-                                                            />
-                                                        </div>
                                                         Home
                                                     </Link>
                                                     <Link
@@ -109,14 +87,6 @@ const Home = () => {
                                                         onClick={() => setUserDropdownOpen(false)}
                                                         className="flex items-center px-4 py-2 text-sm transition-colors text-gray-700 hover:bg-gray-100 hover:text-[#FF8000]"
                                                     >
-                                                        <div className="relative w-5 h-5 mr-3">
-                                                            <Image
-                                                                src="/Imagenes/icon_pedidos.png"
-                                                                alt="Mis pedidos"
-                                                                fill
-                                                                className="object-contain"
-                                                            />
-                                                        </div>
                                                         Mis pedidos
                                                     </Link>
                                                     <Link
@@ -124,14 +94,6 @@ const Home = () => {
                                                         onClick={() => setUserDropdownOpen(false)}
                                                         className="flex items-center px-4 py-2 text-sm transition-colors text-gray-700 hover:bg-gray-100 hover:text-[#FF8000]"
                                                     >
-                                                        <div className="relative w-5 h-5 mr-3">
-                                                            <Image
-                                                                src="/Imagenes/icon_favoritos.png"
-                                                                alt="Favoritos"
-                                                                fill
-                                                                className="object-contain"
-                                                            />
-                                                        </div>
                                                         Favoritos
                                                     </Link>
                                                     <button
@@ -141,14 +103,6 @@ const Home = () => {
                                                         }}
                                                         className="w-full flex items-center px-4 py-2 text-sm transition-colors text-gray-700 hover:bg-gray-100 hover:text-[#FF8000]"
                                                     >
-                                                        <div className="relative w-5 h-5 mr-3">
-                                                            <Image
-                                                                src="/Imagenes/icon_cerrar_sesion.webp"
-                                                                alt="Cerrar sesión"
-                                                                fill
-                                                                className="object-contain"
-                                                            />
-                                                        </div>
                                                         Cerrar
                                                     </button>
                                                 </div>
@@ -157,263 +111,331 @@ const Home = () => {
                                     )}
                                 </div>
                             ) : (
-                                <>
-                                    <Link
-                                        href="/login"
-                                        className="text-white hover:text-[#FF8000] transition-colors font-medium"
-                                    >
+                                <div className="flex items-center gap-4">
+                                    <Link href="/login" className="text-white hover:text-[#FF8000] transition-colors font-medium">
                                         Iniciar sesión
                                     </Link>
-                                    <Link
-                                        href="/register"
-                                        className="text-white hover:text-[#FF8000] transition-colors font-medium"
-                                    >
+                                    <Link href="/register" className="text-white hover:text-[#FF8000] transition-colors font-medium">
                                         Registrarse
                                     </Link>
-                                </>
+                                </div>
                             )}
                         </div>
                     </div>
                 </div>
             </header>
 
-            {/* Hero Section with Carousel */}
-            <div className="relative h-screen w-full">
-                {/* Carousel Images */}
-                <div className="absolute inset-0">
-                    {images.map((img, index) => (
-                        <div
-                            key={index}
-                            className={`absolute inset-0 transition-opacity duration-1000 ${
-                                index === currentSlide ? 'opacity-100' : 'opacity-0'
-                            }`}
-                        >
+            {/* Hero mitad y mitad */}
+            <main className="pt-16">
+                <section className="min-h-[calc(100vh-4rem)] flex flex-col md:flex-row">
+                    <div className="md:w-1/2 bg-gray-950 p-10 flex flex-col justify-center relative overflow-hidden">
+                        <div className="absolute inset-0 opacity-40 bg-[radial-gradient(circle_at_20%_20%,rgba(255,128,0,0.35),transparent_55%),radial-gradient(circle_at_80%_30%,rgba(0,176,255,0.25),transparent_50%)]" />
+
+                        <div className="relative">
                             <Image
-                                src={img}
-                                alt={`Slide ${index + 1}`}
-                                fill
-                                className="object-cover"
-                                priority={index === 0}
+                                src="/Imagenes/logo_nxtIt.png"
+                                alt="NXT.IT"
+                                width={520}
+                                height={180}
+                                className="w-auto h-20 md:h-24"
+                                priority
                             />
-                            <div className="absolute inset-0 bg-black/40" />
+
+                            <h1 className="mt-6 text-4xl md:text-5xl font-extrabold leading-tight fade-up">
+                                Tu Hub Integrador de Soluciones Tecnológicas
+                                <span className="text-[#FF8000]">.</span>
+                            </h1>
+
+                            <p className="mt-5 text-gray-200 max-w-xl leading-relaxed">
+                                Desde una PC hasta un centro de datos completo. Llevamos más de una década impulsando a empresas y gobiernos con tecnología de vanguardia.
+                            </p>
+
+                            <div className="mt-8 flex gap-4 flex-wrap">
+                                <Link
+                                    href="/tienda"
+                                    className="px-6 py-3 rounded-xl bg-[#FF8000] hover:bg-[#e67300] text-gray-950 font-bold transition-colors"
+                                >
+                                    Ir a tienda
+                                </Link>
+                                <Link
+                                    href="/tienda/cotizaciones"
+                                    className="px-6 py-3 rounded-xl border border-white/20 hover:border-[#FF8000] bg-white/5 hover:bg-white/10 text-white font-bold transition-colors"
+                                >
+                                    Solicitar cotización
+                                </Link>
+                            </div>
                         </div>
-                    ))}
-                </div>
-
-                {/* Carousel Navigation Arrows */}
-                <button
-                    onClick={() => setCurrentSlide((prev) => (prev - 1 + images.length) % images.length)}
-                    className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all"
-                    aria-label="Previous slide"
-                >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                </button>
-                <button
-                    onClick={() => setCurrentSlide((prev) => (prev + 1) % images.length)}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all"
-                    aria-label="Next slide"
-                >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                </button>
-
-                {/* Content Overlay */}
-                <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-4">
-                    {/* Logo/Branding */}
-                    <div className="mb-8">
-                        <Image
-                            src="/Imagenes/logo_en.png"
-                            alt="NXT.IT"
-                            width={400}
-                            height={150}
-                            className="w-auto h-32 md:h-40 mx-auto"
-                            priority
-                        />
                     </div>
 
-                    {/* Main Headline */}
-                    <h2 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight" style={{ fontFamily: 'system-ui, -apple-system, sans-serif', letterSpacing: '-0.03em', fontWeight: 700 }}>
-                        <span className="text-white">Tu Hub</span>{' '}
-                        <span className="text-[#FF8000]">Integrador</span>{' '}
-                        <span className="text-white">de</span>{' '}
-                        <br />
-                        <span className="text-white">Soluciones</span>{' '}
-                        <span className="text-white">Tecnológicas</span>
-                    </h2>
-
-                    {/* Sub-headline */}
-                    <p className="text-lg md:text-xl text-gray-200 max-w-3xl mx-auto mb-10 leading-relaxed">
-                        Desde una PC hasta un centro de datos completo: impulsamos a empresas y gobiernos con tecnología de vanguardia.
-                    </p>
-
-                    {/* CTA Button */}
-                    <Link
-                        href="/tienda"
-                        className="px-8 py-4 border-2 border-gray-700 bg-black/40 backdrop-blur-sm text-white hover:border-[#FF8000] hover:text-[#FF8000] transition-all duration-300 font-medium text-lg tracking-wide"
-                    >
-                        CONOCE NUESTRAS SOLUCIONES
-                    </Link>
-                </div>
-
-                {/* Carousel Indicators */}
-                <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10 flex space-x-2">
-                    {images.map((_, index) => (
-                        <button
-                            key={index}
-                            onClick={() => setCurrentSlide(index)}
-                            className={`w-2 h-2 rounded-full transition-all ${
-                                index === currentSlide ? 'bg-[#FF8000] w-8' : 'bg-gray-500'
-                            }`}
-                            aria-label={`Go to slide ${index + 1}`}
-                        />
-                    ))}
-                </div>
-            </div>
-
-            {/* Contact and About Section */}
-            <section className="bg-gray-900 text-gray-100 py-24 px-4">
-                <div className="max-w-6xl mx-auto">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 lg:gap-24">
-                        {/* Contáctanos */}
-                        <div className="text-center lg:text-left">
-                            <h2 
-                                className="text-3xl md:text-4xl font-bold mb-12 text-white"
-                                style={{ 
-                                    fontFamily: "'Playfair Display', serif",
-                                    fontWeight: 700,
-                                    letterSpacing: '-0.02em'
-                                }}
-                            >
-                                Contáctanos
+                    <div className="md:w-1/2 bg-white text-gray-900 p-10 flex flex-col justify-center">
+                        <div className="max-w-xl mx-auto w-full">
+                            <p className="text-sm font-bold tracking-widest text-[#FF8000] uppercase">
+                                Compromiso y experiencia
+                            </p>
+                            <h2 className="mt-3 text-3xl font-extrabold leading-snug">
+                                Tecnología que acompaña tu operación
                             </h2>
-                            <div className="space-y-8">
-                                <div>
-                                    <p 
-                                        className="text-lg md:text-xl text-gray-300 hover:text-[#FF8000] transition-colors"
-                                        style={{ 
-                                            fontFamily: "'VT323', monospace",
-                                            letterSpacing: '0.08em'
-                                        }}
+
+                            <div className="mt-7 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {[
+                                    { t: 'Enfoque empresarial', d: 'Soluciones pensadas para operación real' },
+                                    { t: 'Tecnología de vanguardia', d: 'Actualización constante y mejores prácticas' },
+                                    { t: 'Integración integral', d: 'Un flujo de trabajo claro y controlado' },
+                                    { t: 'Atención cercana', d: 'Acompañamiento para decidir con confianza' },
+                                ].map((x) => (
+                                    <div
+                                        key={x.t}
+                                        className="rounded-2xl border border-gray-200 bg-white/70 p-5 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-[#FF8000]/40 fade-up"
                                     >
-                                        333 616-7279
-                                    </p>
-                                </div>
-                                <div>
-                                    <p 
-                                        className="text-lg md:text-xl text-gray-300 hover:text-[#FF8000] transition-colors"
-                                        style={{ 
-                                            fontFamily: "'VT323', monospace",
-                                            letterSpacing: '0.08em'
-                                        }}
-                                    >
-                                        desarrollo@nxt.it.com
-                                    </p>
-                                </div>
-                                <div>
-                                    <p 
-                                        className="text-base md:text-lg text-gray-400 leading-relaxed"
-                                        style={{ 
-                                            fontFamily: "'VT323', monospace",
-                                            letterSpacing: '0.05em',
-                                            lineHeight: '1.7'
-                                        }}
-                                    >
-                                        Av. Lopez Mateos #1038-11, Col Italia Providencia CP 44630<br />
-                                        Jalisco, Guadalajara
-                                    </p>
-                                </div>
+                                        <p className="font-bold">{x.t}</p>
+                                        <p className="text-sm text-gray-600 mt-2">{x.d}</p>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="mt-7 rounded-2xl border border-gray-200 bg-gray-50 p-5 transition-all duration-300 hover:border-[#FF8000]/30">
+                                <p className="text-sm text-gray-600">Contacto</p>
+                                <p className="font-bold mt-1">333 616-7279</p>
+                                <p className="text-sm text-gray-600 mt-1">desarrollo@nxt.it.com</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                {/* Nosotros */}
+                <section id="nosotros" className="py-20 bg-gray-50 text-gray-900">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex items-end justify-between gap-6 flex-col md:flex-row">
+                            <div>
+                                <p className="text-sm font-bold tracking-widest text-[#FF8000] uppercase">Nosotros</p>
+                                <h2 className="mt-3 text-4xl font-extrabold">Una empresa enfocada en soluciones que sí se usan</h2>
+                            </div>
+                            <div className="text-sm text-gray-600 max-w-lg">
+                                Historia, misión y visión organizadas de forma clara para que la información se entienda rápido.
                             </div>
                         </div>
 
-                        {/* Nosotros */}
-                        <div className="text-center lg:text-left">
-                            <h2 
-                                className="text-3xl md:text-4xl font-bold mb-12 text-white"
-                                style={{ 
-                                    fontFamily: "'Playfair Display', serif",
-                                    fontWeight: 700,
-                                    letterSpacing: '-0.02em'
-                                }}
-                            >
-                                Nosotros
-                            </h2>
-                            <div className="space-y-10">
-                                {/* Historia */}
-                                <div>
-                                    <h3 
-                                        className="text-lg md:text-xl font-semibold mb-3 text-[#FF8000]"
-                                        style={{ 
-                                            fontFamily: "'Playfair Display', serif",
-                                            fontWeight: 600
-                                        }}
-                                    >
-                                        Historia:
-                                    </h3>
-                                    <p 
-                                        className="text-sm md:text-base leading-relaxed text-gray-300"
-                                        style={{ 
-                                            fontFamily: "'VT323', monospace",
-                                            letterSpacing: '0.04em',
-                                            lineHeight: '1.8'
-                                        }}
-                                    >
-                                        Fundada en 2009 como Arrcuss Comercial de S de RL de CV, ahora NXT.IT, nació como un proyecto emprendedor para democratizar la creciente necesidad por equipo de cómputo y electrónica de las PYMES. Con el paso del tiempo, el mercado fue madurando y NXT.IT incorporó nuevas verticales de negocio, convirtiéndonos en un hub integrador de soluciones tecnológicas. nxt.it.com
-                                    </p>
-                                </div>
-
-                                {/* Misión */}
-                                <div>
-                                    <h3 
-                                        className="text-lg md:text-xl font-semibold mb-3 text-[#FF8000]"
-                                        style={{ 
-                                            fontFamily: "'Playfair Display', serif",
-                                            fontWeight: 600
-                                        }}
-                                    >
-                                        Misión:
-                                    </h3>
-                                    <p 
-                                        className="text-sm md:text-base leading-relaxed text-gray-300"
-                                        style={{ 
-                                            fontFamily: "'VT323', monospace",
-                                            letterSpacing: '0.04em',
-                                            lineHeight: '1.8'
-                                        }}
-                                    >
-                                        Incrementar las capacidades de nuestros clientes mediante innovadoras soluciones de software, hardware y tecnología de consumo.
-                                    </p>
-                                </div>
-
-                                {/* Visión */}
-                                <div>
-                                    <h3 
-                                        className="text-lg md:text-xl font-semibold mb-3 text-[#FF8000]"
-                                        style={{ 
-                                            fontFamily: "'Playfair Display', serif",
-                                            fontWeight: 600
-                                        }}
-                                    >
-                                        Visión:
-                                    </h3>
-                                    <p 
-                                        className="text-sm md:text-base leading-relaxed text-gray-300"
-                                        style={{ 
-                                            fontFamily: "'VT323', monospace",
-                                            letterSpacing: '0.04em',
-                                            lineHeight: '1.8'
-                                        }}
-                                    >
-                                        Ser una empresa reconocida por su liderazgo en el mercado de Tecnologías de la Información, por sus soluciones innovadoras, mejores prácticas, calidad de servicio y compromiso con nuestros clientes.
-                                    </p>
+                        <div className="mt-10 rounded-3xl overflow-hidden border border-gray-200 bg-white transition-all duration-300 hover:shadow-lg">
+                            <div className="p-6">
+                                <p className="text-sm font-bold tracking-widest text-[#FF8000] uppercase">Nuestra historia</p>
+                                <p className="mt-2 text-gray-600 text-sm">
+                                    Tres secciones claras para entender de dónde venimos y hacia dónde vamos.
+                                </p>
+                            </div>
+                            <div className="px-6 pb-6">
+                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                                    <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5 transition-all duration-300 hover:border-[#FF8000]/30">
+                                        <p className="font-extrabold text-[#FF8000] uppercase text-sm tracking-wider">Historia</p>
+                                        <p className="mt-3 text-gray-700 leading-relaxed text-sm">
+                                            Fundada en 2009 como Arrcuss Comercial, hoy como NXT.IT. Nació como un proyecto emprendedor para democratizar la necesidad de equipo de cómputo y electrónica para las PYMES, y con el paso del tiempo evolucionó a un hub integrador de soluciones tecnológicas.
+                                        </p>
+                                    </div>
+                                    <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5 transition-all duration-300 hover:border-[#FF8000]/30">
+                                        <p className="font-extrabold text-[#FF8000] uppercase text-sm tracking-wider">Misión</p>
+                                        <p className="mt-3 text-gray-700 leading-relaxed text-sm">
+                                            Incrementar las capacidades de nuestros clientes mediante soluciones de software, hardware y tecnología de consumo, para que su operación sea más eficiente y esté lista para crecer.
+                                        </p>
+                                    </div>
+                                    <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5 transition-all duration-300 hover:border-[#FF8000]/30">
+                                        <p className="font-extrabold text-[#FF8000] uppercase text-sm tracking-wider">Visión</p>
+                                        <p className="mt-3 text-gray-700 leading-relaxed text-sm">
+                                            Ser una empresa reconocida por su liderazgo en Tecnologías de la Información, con calidad de servicio, compromiso y mejores prácticas para cada cliente.
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </section>
+                </section>
+
+                <section className="py-20 bg-white text-gray-900">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="mb-8">
+                            <p className="text-sm font-bold tracking-widest text-[#FF8000] uppercase">Principales áreas de negocio</p>
+                            <h2 className="mt-2 text-3xl font-extrabold">Tecnología para transformar tu operación</h2>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {[
+                                {
+                                    t: 'Cómputo e Impresión',
+                                    b: ['Computadoras portátiles y de escritorio.', 'Impresoras, multifuncionales y consumibles.', 'Copiadoras y servicios administrados de impresión.'],
+                                },
+                                {
+                                    t: 'Centro de Datos',
+                                    b: ['Servidores, respaldos y virtualización.', 'Almacenamiento, enfriamiento y energía (UPS).', 'Diseño y construcción de infraestructura.'],
+                                },
+                                {
+                                    t: 'Telecomunicaciones',
+                                    b: ['Videoconferencia y comunicaciones.', 'Redes, cableado estructurado, VoIP y fibra óptica.', 'Soluciones en la nube.'],
+                                },
+                                {
+                                    t: 'Seguridad y Videovigilancia',
+                                    b: ['Antivirus, DRP, DLP, EPP.', 'Seguridad física y videovigilancia.', 'Ciberseguridad y equipo de seguridad informática.'],
+                                },
+                                {
+                                    t: 'Software y Soluciones Digitales',
+                                    b: ['Software y paquetería comercial.', 'Desarrollo a la medida de Apps.', 'Proyectos integrales y llave en mano.'],
+                                },
+                                {
+                                    t: 'Inteligencia Artificial',
+                                    b: ['Automatización de procesos.', 'Ciencia de datos y modernización de aplicaciones.', 'Gestión inteligente de la información.'],
+                                },
+                            ].map((x) => (
+                                <div
+                                    key={x.t}
+                                    className="rounded-3xl border border-gray-200 bg-white p-7 transition-all duration-300 hover:shadow-lg hover:border-[#FF8000]/30 fade-up"
+                                >
+                                    <p className="font-extrabold text-[#FF8000] uppercase text-sm tracking-wider">{x.t}</p>
+                                    <ul className="mt-4 space-y-2 text-sm text-gray-700">
+                                        {x.b.map((li, idx) => (
+                                            <li key={idx} className="flex items-start gap-3">
+                                                <span className="mt-2 block h-1.5 w-1.5 rounded-full bg-[#FF8000]" />
+                                                <span>{li}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+
+                <section className="py-20 bg-gray-950 text-white">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="mb-8">
+                            <p className="text-sm font-bold tracking-widest text-[#FF8000] uppercase">La confianza de nuestros clientes</p>
+                            <h2 className="mt-2 text-3xl font-extrabold">Instituciones que respaldan nuestro trabajo</h2>
+                        </div>
+                        <div className="rounded-3xl border border-white/10 p-8 transition-all duration-300 hover:shadow-lg">
+                            <p className="text-gray-300 text-sm max-w-2xl">
+                                Hemos tenido el honor de colaborar con instituciones líderes y empresas de gran prestigio.
+                            </p>
+                            <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+                                {[
+                                    'Gobierno de Jalisco',
+                                    'Gobierno de Zapopan',
+                                    'Gobierno de Tlaquepaque',
+                                    'UdeG',
+                                    'UP',
+                                    'Juegos Panamericanos 2011',
+                                    'Industrias Tajín',
+                                    'CONTPAQi',
+                                ].map((name) => (
+                                    <div
+                                        key={name}
+                                        className="h-16 rounded-2xl bg-gray-200/10 border border-white/10 flex items-center justify-center text-gray-100 px-3 text-center text-sm hover:border-[#FF8000]/40 transition-colors"
+                                    >
+                                        {name}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section className="py-20 bg-white text-gray-900">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="text-center">
+                            <p className="text-sm font-bold tracking-widest text-[#FF8000] uppercase">Nuestro aliado estratégico exclusivo</p>
+                            <h2 className="mt-3 text-4xl font-extrabold">ANADIC</h2>
+                            <div className="mt-8 inline-flex items-center justify-center rounded-3xl border border-gray-200 bg-gray-50 p-6 transition-all duration-300 hover:shadow-lg fade-up-2">
+                                <Image
+                                    src="/Imagenes/AnadicMX.png"
+                                    alt="ANADIC México"
+                                    width={420}
+                                    height={140}
+                                    className="w-auto h-auto"
+                                />
+                            </div>
+                            <p className="mt-6 max-w-3xl mx-auto text-sm text-gray-700 leading-relaxed">
+                                Somos una asociación a nivel nacional de empresas dedicadas a la tecnología, en donde de acuerdo a nuestra especialización se encuentran cómputo, integradores de tecnología y especializadas en telecomunicaciones, mayoristas de valor de tecnología, expertos en robótica, consultoras, desarrolladores de software, y diversas especializaciones que requiere la industria de Tecnologías de la Información y Comunicaciones.
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+                {/* Contacto */}
+                <section id="contacto" className="py-20 bg-gray-950 text-white">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+                            <div>
+                                <p className="text-sm font-bold tracking-widest text-[#FF8000] uppercase">Contacto</p>
+                                <h2 className="mt-3 text-4xl font-extrabold">Hablemos de tu proyecto</h2>
+                                <div className="mt-6 space-y-4 text-gray-200">
+                                    <div>
+                                        <p className="text-gray-400 text-sm">Teléfono</p>
+                                        <p className="text-xl font-bold">333 616-7279</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-gray-400 text-sm">Correo</p>
+                                        <p className="text-lg font-bold">desarrollo@nxt.it.com</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-gray-400 text-sm">Dirección</p>
+                                        <p className="text-sm leading-relaxed">
+                                            Av. López Mateos #1038-11, Col Italia Providencia<br />
+                                            CP 44630, Guadalajara, Jalisco
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="rounded-3xl border border-white/10 bg-white/5 p-7 transition-all duration-300 hover:border-[#FF8000]/30 hover:shadow-lg fade-up-2">
+                                <p className="font-extrabold">Acciones rápidas</p>
+                                <p className="text-sm text-gray-300 mt-2">
+                                    Si ya tienes una idea de lo que necesitas, puedes iniciar una cotización en minutos.
+                                </p>
+
+                                <div className="mt-6 flex flex-col sm:flex-row gap-4">
+                                    <Link
+                                        href="/tienda/cotizaciones"
+                                        className="px-6 py-3 rounded-xl bg-[#FF8000] hover:bg-[#e67300] text-gray-950 font-bold transition-colors text-center"
+                                    >
+                                        Solicitar cotización
+                                    </Link>
+                                    <a
+                                        href="mailto:desarrollo@nxt.it.com"
+                                        className="px-6 py-3 rounded-xl border border-white/20 hover:border-[#FF8000] bg-white/5 hover:bg-white/10 text-white font-bold transition-colors text-center"
+                                    >
+                                        Escribir por correo
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <footer className="py-10 bg-gray-950 border-t border-white/10">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                            <Image src="/Imagenes/logo_nxtIt.png" alt="NXT.IT" width={90} height={30} className="h-6 w-auto transition-transform duration-300 hover:scale-105" />
+                            <span className="text-sm text-gray-400">Integración de soluciones para tu operación</span>
+                        </div>
+                        <div className="text-sm text-gray-400">
+                            Plaza Florencia, Av. Adolfo López Mateos #1038-11, Providencia, Guadalajara, Jal. · www.nxt.it.com
+                        </div>
+                    </div>
+                </footer>
+            </main>
+            <style jsx>{`
+                @keyframes fadeUp {
+                    from {
+                        opacity: 0;
+                        transform: translateY(10px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+                .fade-up {
+                    animation: fadeUp 700ms ease both;
+                }
+                .fade-up-2 {
+                    animation: fadeUp 900ms ease both;
+                    animation-delay: 120ms;
+                }
+            `}</style>
         </div>
     )
 }

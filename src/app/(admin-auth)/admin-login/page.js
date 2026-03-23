@@ -63,13 +63,6 @@ export default function AdminLogin() {
                 >
                     <div className={`text-center px-6 sm:px-8 md:px-12 py-8 lg:py-0 transition-all duration-500 ${isExpanded ? 'opacity-0 scale-110' : 'opacity-100 scale-100'}`}>
                         <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 md:mb-6">Panel de administración</h2>
-                        <p className="text-lg sm:text-xl text-white/90 mb-6 md:mb-8">¿No tienes cuenta de administrador?</p>
-                        <button
-                            onClick={handleSwitchToRegister}
-                            className="px-6 sm:px-8 py-2 sm:py-3 border-2 border-white text-white rounded-lg font-semibold hover:bg-white hover:text-emerald-600 transition-all duration-300 transform hover:scale-105 text-sm sm:text-base"
-                        >
-                            Crear administrador
-                        </button>
                     </div>
                 </div>
 
@@ -146,12 +139,6 @@ export default function AdminLogin() {
                             <Button type="submit" className="w-full bg-gradient-to-r from-[#059669] to-[#10b981] hover:from-[#10b981] hover:to-[#059669] text-white px-6 py-3 rounded-lg text-sm font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 transform mt-2">
                                 INICIAR SESIÓN
                             </Button>
-
-                            <div className="mt-4 text-center">
-                                <button type="button" onClick={handleSwitchToRegister} className={`text-sm ${darkMode ? 'text-gray-200 hover:text-emerald-400' : 'text-gray-600 hover:text-emerald-600'}`}>
-                                    ¿No tienes cuenta admin? <span className="font-semibold">Crear administrador</span>
-                                </button>
-                            </div>
                         </form>
                     </div>
                 </div>
