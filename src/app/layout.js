@@ -22,8 +22,14 @@ const vt323 = VT323({
 
 const RootLayout = ({ children }) => {
     return (
-        <html lang="es" className={`${nunitoFont.className} ${playfairDisplay.variable} ${vt323.variable}`}>
-            <body className="antialiased bg-gray-950">{children}</body>
+        <html
+            lang="es"
+            suppressHydrationWarning
+            className={`${nunitoFont.className} ${playfairDisplay.variable} ${vt323.variable}`}
+        >
+            <body className="antialiased bg-gray-950" suppressHydrationWarning>
+                {children}
+            </body>
         </html>
     )
 }

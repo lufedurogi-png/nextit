@@ -7,6 +7,7 @@ import ProductCard from '@/components/ProductCard'
 import TiendaNavHeader from '@/components/TiendaNavHeader'
 import { getCatalogEstado } from '@/lib/productos'
 import { getBusqueda, getBusquedaSessionId } from '@/lib/busqueda'
+import { useTiendaDarkMode } from '@/hooks/useTiendaDarkMode'
 
 const emptyResult = {
     busqueda_id: 0,
@@ -32,13 +33,7 @@ export default function BusquedaClient({ initialData = null, initialQuery = '' }
     const querySearch = searchParams.get('q') ?? ''
     const initialTrimmed = typeof initialQuery === 'string' ? initialQuery.trim() : ''
 
-    const [darkMode, setDarkMode] = useState(() => {
-        if (typeof window !== 'undefined') {
-            const saved = localStorage.getItem('darkMode')
-            return saved !== null ? JSON.parse(saved) : true
-        }
-        return true
-    })
+    const { darkMode, setDarkMode } = useTiendaDarkMode()
     const [catalogDisponible, setCatalogDisponible] = useState(false)
     const [resultadoBusqueda, setResultadoBusqueda] = useState(() =>
         initialData && (initialData.productos?.length > 0 || initialData.texto_original !== undefined)
@@ -53,12 +48,6 @@ export default function BusquedaClient({ initialData = null, initialQuery = '' }
     const [selectedMarca, setSelectedMarca] = useState('')
     const initialDataRef = useRef(initialData)
     initialDataRef.current = initialData
-
-    useEffect(() => {
-        if (darkMode) document.documentElement.classList.add('dark')
-        else document.documentElement.classList.remove('dark')
-        localStorage.setItem('darkMode', JSON.stringify(darkMode))
-    }, [darkMode])
 
     useEffect(() => {
         getCatalogEstado()

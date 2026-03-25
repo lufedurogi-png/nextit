@@ -93,13 +93,61 @@ export async function removeFromCart(clave) {
     return { items: [], total: 0 }
 }
 
-export async function checkoutCart(metodo_pago) {
-    const { data } = await axios.post('/carrito/checkout', { metodo_pago })
+export async function checkoutCart(body) {
+    const payload =
+        typeof body === 'string'
+            ? { metodo_pago: body }
+            : { metodo_pago: body?.metodo_pago, direccion_envio_id: body?.direccion_envio_id, datos_facturacion_id: body?.datos_facturacion_id }
+    const { data } = await axios.post('/carrito/checkout', payload)
     if (data?.success && data?.data) {
         if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(CARRITO_CHANGE_EVENT))
         return data.data
     }
     throw new Error(data?.message || 'Error al crear el pedido')
+}
+
+function apiErrorMessage(err, fallback) {
+    const d = err?.response?.data
+    if (typeof d?.message === 'string') return d.message
+    if (d?.message && typeof d.message === 'object') return JSON.stringify(d.message)
+    return err?.message || fallback
+}
+
+/** Crea orden PayPal (sandbox/live según API) y devuelve approve_url. */
+export async function createPayPalOrder({ return_url, cancel_url, direccion_envio_id, datos_facturacion_id }) {
+    try {
+        const { data } = await axios.post('/paypal/orders', {
+            return_url,
+            cancel_url,
+            direccion_envio_id,
+            datos_facturacion_id,
+        })
+        if (data?.success && data?.data?.approve_url) {
+            return data.data
+        }
+        throw new Error(data?.message || 'No se pudo iniciar PayPal')
+    } catch (err) {
+        if (err?.response || err?.isAxiosError) {
+            throw new Error(apiErrorMessage(err, 'No se pudo iniciar PayPal'))
+        }
+        throw err
+    }
+}
+
+export async function capturePayPalOrder(order_id) {
+    try {
+        const { data } = await axios.post('/paypal/orders/capture', { order_id })
+        if (data?.success && data?.data) {
+            if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(CARRITO_CHANGE_EVENT))
+            return data.data
+        }
+        throw new Error(data?.message || 'No se pudo confirmar el pago')
+    } catch (err) {
+        if (err?.response || err?.isAxiosError) {
+            throw new Error(apiErrorMessage(err, 'No se pudo confirmar el pago'))
+        }
+        throw err
+    }
 }
 
 export { CARRITO_CHANGE_EVENT }

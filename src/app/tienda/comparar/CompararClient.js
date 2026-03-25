@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import TiendaNavHeader from '@/components/TiendaNavHeader'
 import { getProductoByClave, formatPrecio, resolveStorageUrl } from '@/lib/productos'
+import { useTiendaDarkMode } from '@/hooks/useTiendaDarkMode'
 
 const FALLBACK_IMAGE = '/Imagenes/caja.png'
 
@@ -43,22 +44,10 @@ export default function CompararClient() {
         ? `/tienda/${encodeURIComponent(categoria)}/${encodeURIComponent(subcategoria)}`
         : '/tienda'
 
-    const [darkMode, setDarkMode] = useState(() => {
-        if (typeof window !== 'undefined') {
-            const saved = localStorage.getItem('darkMode')
-            return saved !== null ? JSON.parse(saved) : true
-        }
-        return true
-    })
+    const { darkMode, setDarkMode } = useTiendaDarkMode()
     const [productos, setProductos] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(false)
-
-    useEffect(() => {
-        if (darkMode) document.documentElement.classList.add('dark')
-        else document.documentElement.classList.remove('dark')
-        localStorage.setItem('darkMode', JSON.stringify(darkMode))
-    }, [darkMode])
 
     useEffect(() => {
         if (claves.length < 2) {

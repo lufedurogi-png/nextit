@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -15,9 +15,12 @@ import {
     addToCart,
     useCarrito,
     checkoutCart,
+    createPayPalOrder,
+    capturePayPalOrder,
 } from '@/lib/carrito'
 import LoginRequiredModal from '@/components/LoginRequiredModal'
 import CheckoutModal from '@/components/CheckoutModal'
+import { useTiendaDarkMode } from '@/hooks/useTiendaDarkMode'
 
 const FALLBACK_IMAGE = '/Imagenes/caja.png'
 
@@ -41,19 +44,13 @@ export default function CarritoClient() {
     const isLogged = !!user || hasToken
     const { items: cartItems, total: cartTotal, isLoading, remove: removeFromCarrito, setQuantity: setCartQuantity, flushQuantity: flushCartQuantity, flushAllQuantities: flushAllCartQuantities } = useCarrito(isLogged)
 
-    const [darkMode, setDarkMode] = useState(() => {
-        if (typeof window !== 'undefined') {
-            const saved = localStorage.getItem('darkMode')
-            return saved !== null ? JSON.parse(saved) : true
-        }
-        return true
-    })
+    const { darkMode, setDarkMode } = useTiendaDarkMode()
     const [syncingGuest, setSyncingGuest] = useState(false)
     const [pagarModal, setPagarModal] = useState(false)
     const [loginRequiredOpen, setLoginRequiredOpen] = useState(false)
-    const [metodoPago, setMetodoPago] = useState('Efectivo')
     const [checkoutLoading, setCheckoutLoading] = useState(false)
     const [checkoutError, setCheckoutError] = useState(null)
+    const paypalCaptureStarted = useRef(false)
 
     // Usuario logueado: GET /carrito ya trae imagen y stock → una sola petición. Invitado: necesita getPorClaves.
     const cartKeys = cartItems?.map((i) => i.clave) ?? []
@@ -109,12 +106,6 @@ export default function CarritoClient() {
             if (totalStock >= 1 && qty > totalStock) setCartQuantity(cartItem.clave, totalStock)
         })
     }, [isLogged, cartItems?.map((i) => `${i.clave}-${i.cantidad}-${i.disponible}-${i.disponible_cd}`).join(',')])
-
-    useEffect(() => {
-        if (darkMode) document.documentElement.classList.add('dark')
-        else document.documentElement.classList.remove('dark')
-        localStorage.setItem('darkMode', JSON.stringify(darkMode))
-    }, [darkMode])
 
     useEffect(() => {
         if (!isLogged || !syncingGuest) return
@@ -175,22 +166,114 @@ export default function CarritoClient() {
         setPagarModal(true)
     }
 
-    const handleCheckout = async () => {
-        // Pago real aún no implementado: el botón no hace nada por ahora (solo usuario logueado llega aquí)
-        return
-        // --- Cuando implementes el pago real, descomenta lo siguiente y borra el return de arriba ---
-        // setCheckoutError(null)
-        // setCheckoutLoading(true)
-        // try {
-        //     const data = await checkoutCart(metodoPago)
-        //     setPagarModal(false)
-        //     router.push('/dashboard?tab=pedidos')
-        // } catch (err) {
-        //     setCheckoutError(err?.message || 'Error al crear el pedido')
-        // } finally {
-        //     setCheckoutLoading(false)
-        // }
+    const handleCheckout = async (payload) => {
+        if (!payload?.metodoPago) {
+            setCheckoutError('Elige un método de pago.')
+            return
+        }
+        if (payload.direccionId == null || payload.facturacionId == null) {
+            setCheckoutError('Selecciona dirección de envío y datos de facturación en las pestañas del modal.')
+            return
+        }
+        const direccionEnvioId = Number(payload.direccionId)
+        const datosFacturacionId = Number(payload.facturacionId)
+        if (!Number.isInteger(direccionEnvioId) || direccionEnvioId < 1) {
+            setCheckoutError('La dirección de envío seleccionada no es válida.')
+            return
+        }
+        if (!Number.isInteger(datosFacturacionId) || datosFacturacionId < 1) {
+            setCheckoutError('Los datos de facturación seleccionados no son válidos.')
+            return
+        }
+        setCheckoutError(null)
+        setCheckoutLoading(true)
+        try {
+            const base =
+                typeof window !== 'undefined'
+                    ? `${window.location.origin}/tienda/carrito`
+                    : '/tienda/carrito'
+            const returnUrl = `${base}?paypal_ok=1`
+            const cancelUrl = `${base}?paypal_cancel=1`
+
+            if (payload.metodoPago === 'mercadopago') {
+                setCheckoutError('Mercado Pago estará disponible próximamente.')
+                return
+            }
+
+            if (payload.metodoPago === 'paypal') {
+                const { approve_url: approveUrl } = await createPayPalOrder({
+                    return_url: returnUrl,
+                    cancel_url: cancelUrl,
+                    direccion_envio_id: direccionEnvioId,
+                    datos_facturacion_id: datosFacturacionId,
+                })
+                if (typeof window !== 'undefined' && approveUrl) {
+                    window.location.assign(approveUrl)
+                }
+                return
+            }
+
+            if (payload.metodoPago === 'tarjeta') {
+                await checkoutCart({
+                    metodo_pago: 'tarjeta',
+                    direccion_envio_id: direccionEnvioId,
+                    datos_facturacion_id: datosFacturacionId,
+                })
+                setPagarModal(false)
+                router.push('/dashboard?tab=pedidos')
+                return
+            }
+
+            setCheckoutError('Método de pago no soportado.')
+        } catch (err) {
+            setCheckoutError(err?.message || err?.response?.data?.message || 'Error al procesar el pago')
+        } finally {
+            setCheckoutLoading(false)
+        }
     }
+
+    useEffect(() => {
+        if (!mounted || !isLogged) return
+        if (searchParams.get('paypal_cancel') === '1') {
+            setCheckoutError('Pago cancelado en PayPal.')
+            router.replace('/tienda/carrito', { scroll: false })
+            return
+        }
+        if (searchParams.get('paypal_ok') !== '1') return
+        if (paypalCaptureStarted.current) return
+        const orderId = searchParams.get('token')
+        if (!orderId) {
+            setCheckoutError('No se recibió la orden de PayPal.')
+            router.replace('/tienda/carrito', { scroll: false })
+            return
+        }
+        paypalCaptureStarted.current = true
+        let cancelled = false
+        ;(async () => {
+            setCheckoutLoading(true)
+            setCheckoutError(null)
+            try {
+                await capturePayPalOrder(orderId)
+                if (!cancelled) {
+                    router.replace('/tienda/carrito', { scroll: false })
+                    router.push('/dashboard?tab=pedidos')
+                }
+            } catch (e) {
+                if (!cancelled) {
+                    paypalCaptureStarted.current = false
+                    setCheckoutError(
+                        e?.message || e?.response?.data?.message || 'Error al confirmar PayPal'
+                    )
+                    router.replace('/tienda/carrito', { scroll: false })
+                }
+            } finally {
+                if (!cancelled) setCheckoutLoading(false)
+            }
+        })()
+        return () => {
+            cancelled = true
+        }
+    }, [mounted, isLogged, router, searchParams])
 
     const bg = darkMode ? 'bg-gray-900' : 'bg-gray-50'
     const textMuted = darkMode ? 'text-gray-400' : 'text-gray-600'

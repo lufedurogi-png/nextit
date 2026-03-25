@@ -6,6 +6,8 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/hooks/auth'
+import { useTiendaDarkMode } from '@/hooks/useTiendaDarkMode'
+import { usePersistedBoolean } from '@/hooks/usePersistedBoolean'
 import ProductCard from '@/components/ProductCard'
 import SearchBar from '@/components/SearchBar'
 import {
@@ -39,13 +41,7 @@ export default function TiendaClient({ initialData = {} }) {
         }
     }, [searchParams, router])
 
-    const [darkMode, setDarkMode] = useState(() => {
-        if (typeof window !== 'undefined') {
-            const saved = localStorage.getItem('darkMode')
-            return saved !== null ? JSON.parse(saved) : true
-        }
-        return true
-    })
+    const { darkMode, setDarkMode } = useTiendaDarkMode()
     const [selectedCategory, setSelectedCategory] = useState('todos')
     const [selectedMarca, setSelectedMarca] = useState('')
     const [openSubcategoryPanel, setOpenSubcategoryPanel] = useState(null)
@@ -54,13 +50,7 @@ export default function TiendaClient({ initialData = {} }) {
     const [tooltipModoCotizacionRect, setTooltipModoCotizacionRect] = useState(null)
     const refModoCotizacionRow = useRef(null)
     const [subcategorias, setSubcategorias] = useState({})
-    const [sidebarRetraido, setSidebarRetraido] = useState(() => {
-        if (typeof window !== 'undefined') {
-            const saved = localStorage.getItem('sidebarRetraido')
-            return saved !== null ? JSON.parse(saved) : false
-        }
-        return false
-    })
+    const [sidebarRetraido, setSidebarRetraido] = usePersistedBoolean('sidebarRetraido', false)
     const [currentSlide, setCurrentSlide] = useState(0)
     const [userDropdownOpen, setUserDropdownOpen] = useState(false)
     const { count: cartCount } = useCarritoCount(!!user)
@@ -164,38 +154,6 @@ export default function TiendaClient({ initialData = {} }) {
         }, 5000)
         return () => clearInterval(interval)
     }, [imagenesPromocionales?.length ?? 0])
-
-    // Aplicar tema al body y guardar en localStorage
-    useEffect(() => {
-        if (darkMode) {
-            document.documentElement.classList.add('dark')
-        } else {
-            document.documentElement.classList.remove('dark')
-        }
-        // Guardar preferencia en localStorage
-        localStorage.setItem('darkMode', JSON.stringify(darkMode))
-    }, [darkMode])
-
-    // Escuchar cambios en localStorage desde otras pestañas
-    useEffect(() => {
-        const handleStorageChange = (e) => {
-            if (e.key === 'darkMode') {
-                const newMode = JSON.parse(e.newValue)
-                setDarkMode(newMode)
-            }
-            if (e.key === 'sidebarRetraido') {
-                const newState = JSON.parse(e.newValue)
-                setSidebarRetraido(newState)
-            }
-        }
-        window.addEventListener('storage', handleStorageChange)
-        return () => window.removeEventListener('storage', handleStorageChange)
-    }, [])
-
-    // Guardar estado del sidebar en localStorage
-    useEffect(() => {
-        localStorage.setItem('sidebarRetraido', JSON.stringify(sidebarRetraido))
-    }, [sidebarRetraido])
 
     const iconoPorCategoria = {
         todos: '/Imagenes/icon_producto.png',

@@ -7,6 +7,7 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import ProductCard from '@/components/ProductCard'
 import TiendaNavHeader from '@/components/TiendaNavHeader'
 import { getProductos, getFiltrosDinamicos } from '@/lib/productos'
+import { useTiendaDarkMode } from '@/hooks/useTiendaDarkMode'
 
 const RANGOS_PRECIO = [
     { value: '', label: 'Todos los precios', min: null, max: null },
@@ -45,13 +46,7 @@ export default function VistaSubcategoriaClient({ categoria, subcategoria, initi
     }, [searchParams])
     const parsed = parseUrlFilters(Object.keys(urlFiltersFromRoute).length > 0 ? urlFiltersFromRoute : urlFilters)
 
-    const [darkMode, setDarkMode] = useState(() => {
-        if (typeof window !== 'undefined') {
-            const saved = localStorage.getItem('darkMode')
-            return saved !== null ? JSON.parse(saved) : true
-        }
-        return true
-    })
+    const { darkMode, setDarkMode } = useTiendaDarkMode()
 
     const [catalogDisponible, setCatalogDisponible] = useState(() => initialData?.catalogDisponible ?? true)
     const [marcas, setMarcas] = useState(() => initialData?.marcas ?? [])
@@ -183,20 +178,6 @@ export default function VistaSubcategoriaClient({ categoria, subcategoria, initi
     const productosAMostrar = loading && productos.length === 0 && productosAnteriores.length > 0
         ? productosAnteriores
         : productos
-
-    useEffect(() => {
-        if (darkMode) document.documentElement.classList.add('dark')
-        else document.documentElement.classList.remove('dark')
-        localStorage.setItem('darkMode', JSON.stringify(darkMode))
-    }, [darkMode])
-
-    useEffect(() => {
-        const handleStorageChange = (e) => {
-            if (e.key === 'darkMode') setDarkMode(JSON.parse(e.newValue))
-        }
-        window.addEventListener('storage', handleStorageChange)
-        return () => window.removeEventListener('storage', handleStorageChange)
-    }, [])
 
     const tituloSubcategoria = isVerTodo ? 'Ver todo' : subcategoria
 

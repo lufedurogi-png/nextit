@@ -1,5 +1,14 @@
+import { Suspense } from 'react'
 import { getSubcategoriaDataForSSR } from '@/lib/productos-ssr'
 import VistaSubcategoriaClient from './VistaSubcategoriaClient'
+
+function SubcategoriaFallback() {
+    return (
+        <div className="min-h-screen bg-gray-900 text-gray-100 flex items-center justify-center">
+            <p className="text-gray-400 text-sm">Cargando productos…</p>
+        </div>
+    )
+}
 
 /** Subcategoría: datos en servidor para que la vista cargue al instante con productos. */
 export default async function PageSubcategoria({ params, searchParams }) {
@@ -27,11 +36,13 @@ export default async function PageSubcategoria({ params, searchParams }) {
     const initialData = await getSubcategoriaDataForSSR(categoria, subcategoria)
 
     return (
-        <VistaSubcategoriaClient
-            categoria={categoria}
-            subcategoria={subcategoria}
-            initialData={initialData}
-            urlFilters={urlFilters}
-        />
+        <Suspense fallback={<SubcategoriaFallback />}>
+            <VistaSubcategoriaClient
+                categoria={categoria}
+                subcategoria={subcategoria}
+                initialData={initialData}
+                urlFilters={urlFilters}
+            />
+        </Suspense>
     )
 }

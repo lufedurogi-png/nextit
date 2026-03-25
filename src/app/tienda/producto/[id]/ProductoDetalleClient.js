@@ -10,6 +10,7 @@ import { addVistoReciente, formatPrecio, getRecomendados, resolveStorageUrl } fr
 import { useCarrito } from '@/lib/carrito'
 import { useFavoritos } from '@/lib/favoritos'
 import { getOrCreateGuestId } from '@/lib/guestId'
+import { useTiendaDarkMode } from '@/hooks/useTiendaDarkMode'
 
 const FALLBACK_IMAGE = '/Imagenes/caja.png'
 
@@ -35,13 +36,7 @@ export default function ProductoDetalleClient({ clave, initialProducto = null, e
     const isLogged = !!user || hasToken
     const { isFavorito, toggle: toggleFavorito } = useFavoritos(isLogged)
     const { add: addToCarrito, isInCart } = useCarrito(isLogged)
-    const [darkMode, setDarkMode] = useState(() => {
-        if (typeof window !== 'undefined') {
-            const saved = localStorage.getItem('darkMode')
-            return saved !== null ? JSON.parse(saved) : true
-        }
-        return true
-    })
+    const { darkMode, setDarkMode } = useTiendaDarkMode()
     const [selectedImageIndex, setSelectedImageIndex] = useState(0)
     const [imgErrors, setImgErrors] = useState({})
     const [infoGeneralOpen, setInfoGeneralOpen] = useState(false)
@@ -71,25 +66,6 @@ export default function ProductoDetalleClient({ clave, initialProducto = null, e
     useEffect(() => {
         if (totalUnidades > 0) setCantidad((prev) => Math.min(Math.max(1, prev), totalUnidades))
     }, [totalUnidades])
-
-    useEffect(() => {
-        if (darkMode) {
-            document.documentElement.classList.add('dark')
-        } else {
-            document.documentElement.classList.remove('dark')
-        }
-        localStorage.setItem('darkMode', JSON.stringify(darkMode))
-    }, [darkMode])
-
-    useEffect(() => {
-        const handleStorageChange = (e) => {
-            if (e.key === 'darkMode' && e.newValue) {
-                setDarkMode(JSON.parse(e.newValue))
-            }
-        }
-        window.addEventListener('storage', handleStorageChange)
-        return () => window.removeEventListener('storage', handleStorageChange)
-    }, [])
 
     const handleImageError = (index) => {
         setImgErrors((prev) => ({ ...prev, [index]: true }))

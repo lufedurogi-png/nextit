@@ -8,6 +8,7 @@ import TiendaNavHeader from '@/components/TiendaNavHeader'
 import { useFavoritos } from '@/lib/favoritos'
 import { useCarrito } from '@/lib/carrito'
 import { formatPrecio } from '@/lib/productos'
+import { useTiendaDarkMode } from '@/hooks/useTiendaDarkMode'
 
 const FALLBACK_IMAGE = '/Imagenes/caja.png'
 
@@ -23,13 +24,7 @@ const Favoritos = () => {
     const isLogged = !!user
     const { claves, productByClave, remove: removeFavorito, isLoading } = useFavoritos(isLogged)
     const { items: cartItems, add: addToCart, isInCart } = useCarrito(isLogged)
-    const [darkMode, setDarkMode] = useState(() => {
-        if (typeof window !== 'undefined') {
-            const saved = localStorage.getItem('darkMode')
-            return saved !== null ? JSON.parse(saved) : true
-        }
-        return true
-    })
+    const { darkMode, setDarkMode } = useTiendaDarkMode()
     const [activeAddToCartClave, setActiveAddToCartClave] = useState(null)
     const [addToCartQuantity, setAddToCartQuantity] = useState(1)
     const [addToCartMessage, setAddToCartMessage] = useState(null)
@@ -60,26 +55,6 @@ const Favoritos = () => {
             await removeFavorito(clave)
         } catch {}
     }
-
-    useEffect(() => {
-        if (darkMode) {
-            document.documentElement.classList.add('dark')
-        } else {
-            document.documentElement.classList.remove('dark')
-        }
-        localStorage.setItem('darkMode', JSON.stringify(darkMode))
-    }, [darkMode])
-
-    useEffect(() => {
-        const handleStorageChange = (e) => {
-            if (e.key === 'darkMode') {
-                const newMode = JSON.parse(e.newValue)
-                setDarkMode(newMode)
-            }
-        }
-        window.addEventListener('storage', handleStorageChange)
-        return () => window.removeEventListener('storage', handleStorageChange)
-    }, [])
 
     if (!user) {
         return null

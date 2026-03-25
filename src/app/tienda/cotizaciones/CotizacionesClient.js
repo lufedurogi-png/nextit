@@ -11,6 +11,7 @@ import { saveCotizacionActual, useCotizacion, getEffectiveUserId } from '@/lib/c
 import { saveCotizacionApi, isLoggedInUserId } from '@/lib/cotizacionesApi'
 import { downloadCotizacionPdf } from '@/lib/cotizacionPdf'
 import LoginRequiredModal from '@/components/LoginRequiredModal'
+import { useTiendaDarkMode } from '@/hooks/useTiendaDarkMode'
 import CheckoutModal from '@/components/CheckoutModal'
 
 const METODOS_PAGO = [
@@ -33,13 +34,7 @@ export default function CotizacionesClient() {
     const router = useRouter()
     const { user } = useAuth({ middleware: 'guest' })
     const { items: quoteItems, refresh, setCantidad: setCantidadCotizacion, clearItems, removeItem } = useCotizacion(user)
-    const [darkMode, setDarkMode] = useState(() => {
-        if (typeof window !== 'undefined') {
-            const saved = localStorage.getItem('darkMode')
-            return saved !== null ? JSON.parse(saved) : true
-        }
-        return true
-    })
+    const { darkMode, setDarkMode } = useTiendaDarkMode()
     const [productos, setProductos] = useState({})
     const [loadingDetails, setLoadingDetails] = useState(true)
     const [guardando, setGuardando] = useState(false)
@@ -49,12 +44,6 @@ export default function CotizacionesClient() {
     const [pagarModal, setPagarModal] = useState(false)
     const [checkoutLoading, setCheckoutLoading] = useState(false)
     const [checkoutError, setCheckoutError] = useState(null)
-
-    useEffect(() => {
-        if (darkMode) document.documentElement.classList.add('dark')
-        else document.documentElement.classList.remove('dark')
-        localStorage.setItem('darkMode', JSON.stringify(darkMode))
-    }, [darkMode])
 
     useEffect(() => {
         const claves = quoteItems.map((i) => i.clave)

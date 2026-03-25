@@ -379,6 +379,35 @@ export default function CheckoutModal({
                                 Elige cómo quieres pagar: PayPal, Mercado Pago o tarjeta de crédito/débito.
                             </p>
 
+                            {(() => {
+                                const dSel = direcciones.find((d) => d.id === selectedDireccionId)
+                                const fSel = datosFacturacion.find((f) => f.id === selectedFacturacionId)
+                                if (!dSel || !fSel) return null
+                                return (
+                                    <div
+                                        className={`rounded-xl p-3 text-xs border space-y-2 ${
+                                            darkMode
+                                                ? 'bg-gray-700/40 border-gray-600 text-gray-200'
+                                                : 'bg-gray-50 border-gray-200 text-gray-800'
+                                        }`}
+                                    >
+                                        <p className={`font-bold text-sm ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                                            Se usarán para tu pedido
+                                        </p>
+                                        <p>
+                                            <span className="font-semibold text-[#FF8000]">Envío:</span>{' '}
+                                            {dSel.nombre} — {dSel.calle}
+                                            {dSel.numero_exterior ? ` ${dSel.numero_exterior}` : ''}, {dSel.colonia},{' '}
+                                            {dSel.ciudad_nombre || dSel.ciudad}, CP {dSel.codigo_postal}
+                                        </p>
+                                        <p>
+                                            <span className="font-semibold text-[#FF8000]">Facturación:</span>{' '}
+                                            {fSel.razon_social} — RFC {fSel.rfc}
+                                        </p>
+                                    </div>
+                                )
+                            })()}
+
                             {/* Opciones: PayPal, Mercado Pago, Tarjeta */}
                             <div className="grid grid-cols-1 gap-3">
                                 <label
