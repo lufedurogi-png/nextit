@@ -5,23 +5,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class PedidoItem extends Model
+class InventarioVenta extends Model
 {
-    protected $table = 'pedido_items';
+    protected $table = 'inventario_ventas';
 
     protected $fillable = [
-        'pedido_id',
         'clave',
-        'nombre_producto',
         'cantidad',
-        'precio_unitario',
-        'subtotal',
+        'pedido_id',
     ];
 
     protected $casts = [
         'cantidad' => 'integer',
-        'precio_unitario' => 'decimal:2',
-        'subtotal' => 'decimal:2',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

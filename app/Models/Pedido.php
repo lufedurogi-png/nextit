@@ -3,9 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Pedido extends Model
 {
@@ -17,6 +17,7 @@ class Pedido extends Model
         'fecha',
         'monto',
         'metodo_pago',
+        'referencia_pago_externa',
         'estado_pago',
         'estatus_pedido',
         'direccion_envio_id',

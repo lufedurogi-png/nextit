@@ -4,10 +4,13 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\CarritoItem;
+use App\Models\DatoFacturacion;
+use App\Models\DireccionEnvio;
 use App\Models\Pedido;
-use App\Models\PedidoItem;
 use App\Models\ProductoCva;
 use App\Models\ProductoManual;
+use App\Services\ProductoStockService;
+use App\Support\CatalogStockCache;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,10 +19,15 @@ use Illuminate\Support\Facades\DB;
 
 class CarritoController extends Controller
 {
+    public function __construct(
+        private readonly ProductoStockService $productoStock
+    ) {}
+
     private const CART_INDEX_CACHE_TTL = 15;
 
     /** Mismo TTL/clave que ProductoController (caché compartido). */
     private const PRODUCTO_CACHE_TTL = 120;
+
     private const PRODUCTO_SELECT = [
         'id', 'clave', 'codigo_fabricante', 'descripcion', 'grupo', 'marca',
         'precio', 'moneda', 'imagen', 'imagenes', 'disponible', 'disponible_cd', 'garantia',
@@ -32,7 +40,7 @@ class CarritoController extends Controller
 
     private static function productoCacheKey(string $clave): string
     {
-        return 'producto_por_clave_'.md5($clave).'_'.$clave;
+        return CatalogStockCache::key('producto_por_clave_'.md5($clave).'_'.$clave);
     }
 
     /** Misma estructura que ProductoController para reusar caché. */
@@ -96,11 +104,16 @@ class CarritoController extends Controller
                 }
             }
 
+            $vendidos = $this->productoStock->cantidadesVendidasPorClaves($claves);
+
             $data = [];
             foreach ($items as $i) {
-                $producto = $byClave[$i->clave] ?? null;
+                $raw = $byClave[$i->clave] ?? null;
+                $producto = $raw
+                    ? $this->productoStock->aplicarStockMostrado($raw, (int) ($vendidos[$i->clave] ?? 0))
+                    : null;
                 $imagen = $producto['imagen'] ?? null;
-                if (empty($imagen) && ! empty($producto['imagenes'][0] ?? null)) {
+                if ($producto !== null && empty($imagen) && ! empty($producto['imagenes'][0] ?? null)) {
                     $imagen = $producto['imagenes'][0];
                 }
                 $disponible = (int) ($producto['disponible'] ?? 0);
@@ -158,6 +171,16 @@ class CarritoController extends Controller
         $nombre = $producto->descripcion ?? $valid['clave'];
         $precio = (float) $producto->precio;
 
+        $d0 = (int) ($producto->disponible ?? 0);
+        $cd0 = (int) ($producto->disponible_cd ?? 0);
+        $maxQty = $this->productoStock->stockEfectivoTotal($valid['clave'], $d0, $cd0);
+        if ((int) $valid['cantidad'] > $maxQty) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Stock insuficiente (máx. '.$maxQty.').',
+            ], 422);
+        }
+
         if ($item) {
             $item->update([
                 'cantidad' => (int) $valid['cantidad'],
@@ -174,6 +197,7 @@ class CarritoController extends Controller
         }
 
         Cache::forget(self::cartCacheKey($user->id));
+
         return $this->index($request);
     }
 
@@ -209,14 +233,40 @@ class CarritoController extends Controller
         return response()->json($this->cartResponseSimple($user));
     }
 
-    /** Checkout: crea pedido y vacía carrito. Body: metodo_pago. */
+    /** Checkout: crea pedido y vacía carrito (tarjeta simulada u otros métodos sin pasarela). */
     public function checkout(Request $request): JsonResponse
     {
         $valid = $request->validate([
             'metodo_pago' => 'required|string|max:50',
+            'direccion_envio_id' => 'required|integer',
+            'datos_facturacion_id' => 'required|integer',
         ]);
 
         $user = Auth::user();
+
+        $dir = DireccionEnvio::query()
+            ->where('user_id', $user->id)
+            ->where('id', $valid['direccion_envio_id'])
+            ->first();
+        if (! $dir) {
+            return response()->json(['success' => false, 'message' => 'Dirección de envío no válida.'], 422);
+        }
+
+        $fac = DatoFacturacion::query()
+            ->where('user_id', $user->id)
+            ->where('id', $valid['datos_facturacion_id'])
+            ->first();
+        if (! $fac) {
+            return response()->json(['success' => false, 'message' => 'Datos de facturación no válidos.'], 422);
+        }
+
+        if (strtolower($valid['metodo_pago']) === 'paypal') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Para PayPal usa el flujo de pago dedicado (no este endpoint).',
+            ], 422);
+        }
+
         $items = $user->carritoItems()->get();
 
         if ($items->isEmpty()) {
@@ -224,6 +274,24 @@ class CarritoController extends Controller
                 'success' => false,
                 'message' => 'El carrito está vacío.',
             ], 422);
+        }
+
+        foreach ($items as $it) {
+            $producto = str_starts_with($it->clave, 'MANUAL-')
+                ? ProductoManual::query()->where('clave', $it->clave)->where('anulado', false)->first()
+                : ProductoCva::query()->where('clave', $it->clave)->first();
+            if (! $producto) {
+                return response()->json(['success' => false, 'message' => 'Producto no encontrado: '.$it->clave], 422);
+            }
+            $d = (int) ($producto->disponible ?? 0);
+            $cd = (int) ($producto->disponible_cd ?? 0);
+            $max = $this->productoStock->stockEfectivoTotal($it->clave, $d, $cd);
+            if ((int) $it->cantidad > $max) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Stock insuficiente para '.$it->nombre_producto.' (máx. '.$max.').',
+                ], 422);
+            }
         }
 
         try {
@@ -238,23 +306,29 @@ class CarritoController extends Controller
                     'metodo_pago' => $valid['metodo_pago'],
                     'estado_pago' => 'pagado',
                     'estatus_pedido' => 'completado',
+                    'direccion_envio_id' => (int) $valid['direccion_envio_id'],
+                    'datos_facturacion_id' => (int) $valid['datos_facturacion_id'],
                 ]);
 
                 $monto = 0;
+                $lineasInventario = [];
                 foreach ($items as $it) {
                     $q = (int) $it->cantidad;
                     $precio = (float) $it->precio_unitario;
                     $subtotal = $q * $precio;
                     $p->items()->create([
+                        'clave' => $it->clave,
                         'nombre_producto' => $it->nombre_producto,
                         'cantidad' => $q,
                         'precio_unitario' => $precio,
                         'subtotal' => $subtotal,
                     ]);
+                    $lineasInventario[] = ['clave' => $it->clave, 'cantidad' => $q];
                     $monto += $subtotal;
                 }
 
                 $p->update(['monto' => $monto]);
+                $this->productoStock->registrarVentasConfirmadas($p->id, $lineasInventario);
                 $user->carritoItems()->delete();
                 Cache::forget(self::cartCacheKey($user->id));
 

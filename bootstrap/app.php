@@ -36,11 +36,13 @@ return Application::configure(basePath: dirname(__DIR__))
             'api/v1/favoritos/*',
             'api/v1/tarjetas-guardadas',
             'api/v1/tarjetas-guardadas/*',
+            'api/v1/paypal/orders',
+            'api/v1/paypal/orders/*',
             'api/v1/chat-mensajes',
             'api/v1/chat-mensajes/*',
             'api/v1/admin/chat/*',
         ]);
-        
+
         $middleware->alias([
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
@@ -49,11 +51,11 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (UnauthorizedException $e, Request $request) {
-        if ($request->expectsJson()) {
-            return response()->json([
-                'message' => 'No tienes permisos para acceder a este recurso.',
-                'error' => 'Unauthorized'
-            ], 403);
-        }
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'No tienes permisos para acceder a este recurso.',
+                    'error' => 'Unauthorized',
+                ], 403);
+            }
         });
     })->create();

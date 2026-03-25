@@ -8,6 +8,8 @@ use App\Models\ProductoManual;
 use App\Services\CategoriaPrincipalService;
 use App\Services\CVAService;
 use App\Services\DescuentoPrecioService;
+use App\Services\ProductoStockService;
+use App\Support\CatalogStockCache;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -17,7 +19,8 @@ class ProductoController extends Controller
     public function __construct(
         private readonly CVAService $cva,
         private readonly CategoriaPrincipalService $categorias,
-        private readonly DescuentoPrecioService $descuentoPrecio
+        private readonly DescuentoPrecioService $descuentoPrecio,
+        private readonly ProductoStockService $productoStock,
     ) {}
 
     /** Catálogo ok si CVA configurado o si hay productos CVA o manuales en BD. */
@@ -29,6 +32,7 @@ class ProductoController extends Controller
     }
 
     private const CACHE_TTL = 180; // segundos listados
+
     private const GRUPOS_CACHE_TTL = 300; // 5 min para grupos distintos (cambian al sincronizar)
 
     /** Listado con filtros (grupo, categoria, marca, q, etc.). */
@@ -38,7 +42,7 @@ class ProductoController extends Controller
             return $this->catalogUnavailableResponse();
         }
 
-        $cacheKey = 'productos_index_'.md5(serialize($request->query()));
+        $cacheKey = CatalogStockCache::key('productos_index_'.md5(serialize($request->query())));
         $data = Cache::remember($cacheKey, self::CACHE_TTL, function () use ($request) {
             return $this->indexQueryData($request);
         });
@@ -115,7 +119,12 @@ class ProductoController extends Controller
         $pageItems = $collection->slice($offset, $perPage)->values();
         $claves = $pageItems->pluck('clave')->all();
         $descuentos = $this->descuentoPrecio->getDescuentosPorClaves($claves);
-        $items = $pageItems->map(fn ($p) => $this->formatProducto($p, $descuentos[$p->clave] ?? null))->values()->all();
+        $vendidos = $this->productoStock->cantidadesVendidasPorClaves($claves);
+        $items = $pageItems->map(function ($p) use ($descuentos, $vendidos) {
+            $formatted = $this->formatProducto($p, $descuentos[$p->clave] ?? null);
+
+            return $this->productoStock->aplicarStockMostrado($formatted, (int) ($vendidos[$p->clave] ?? 0));
+        })->values()->all();
 
         return [
             'success' => true,
@@ -215,7 +224,7 @@ class ProductoController extends Controller
         }
 
         $limit = min((int) $request->input('limit', 12), 24);
-        $data = Cache::remember('productos_destacados_'.$limit, self::CACHE_TTL, function () use ($limit) {
+        $data = Cache::remember(CatalogStockCache::key('productos_destacados_'.$limit), self::CACHE_TTL, function () use ($limit) {
             $cva = ProductoCva::query()->whereNotNull('imagen')->where('imagen', '!=', '')->where(function ($q) {
                 $q->where('disponible', '>', 0)->orWhere('disponible_cd', '>', 0);
             })->orderByDesc('synced_at')->orderByDesc('id')->limit($limit)->get();
@@ -225,7 +234,12 @@ class ProductoController extends Controller
             $collection = $cva->concat($manual)->sortByDesc(fn ($p) => $p->synced_at ?? $p->created_at)->take($limit)->values();
             $claves = $collection->pluck('clave')->all();
             $descuentos = $this->descuentoPrecio->getDescuentosPorClaves($claves);
-            $items = $collection->map(fn ($p) => $this->formatProducto($p, $descuentos[$p->clave] ?? null));
+            $vendidos = $this->productoStock->cantidadesVendidasPorClaves($claves);
+            $items = $collection->map(function ($p) use ($descuentos, $vendidos) {
+                $formatted = $this->formatProducto($p, $descuentos[$p->clave] ?? null);
+
+                return $this->productoStock->aplicarStockMostrado($formatted, (int) ($vendidos[$p->clave] ?? 0));
+            });
 
             return ['success' => true, 'data' => $items->values()->all()];
         });
@@ -241,13 +255,18 @@ class ProductoController extends Controller
         }
 
         $limit = min((int) $request->input('limit', 12), 24);
-        $data = Cache::remember('productos_ultimos_'.$limit, self::CACHE_TTL, function () use ($limit) {
+        $data = Cache::remember(CatalogStockCache::key('productos_ultimos_'.$limit), self::CACHE_TTL, function () use ($limit) {
             $cva = ProductoCva::query()->orderByDesc('synced_at')->orderByDesc('id')->limit($limit)->get();
             $manual = ProductoManual::query()->where('anulado', false)->orderByDesc('created_at')->limit($limit)->get();
             $collection = $cva->concat($manual)->sortByDesc(fn ($p) => $p->synced_at ?? $p->created_at)->take($limit)->values();
             $claves = $collection->pluck('clave')->all();
             $descuentos = $this->descuentoPrecio->getDescuentosPorClaves($claves);
-            $items = $collection->map(fn ($p) => $this->formatProducto($p, $descuentos[$p->clave] ?? null));
+            $vendidos = $this->productoStock->cantidadesVendidasPorClaves($claves);
+            $items = $collection->map(function ($p) use ($descuentos, $vendidos) {
+                $formatted = $this->formatProducto($p, $descuentos[$p->clave] ?? null);
+
+                return $this->productoStock->aplicarStockMostrado($formatted, (int) ($vendidos[$p->clave] ?? 0));
+            });
 
             return ['success' => true, 'data' => $items->values()->all()];
         });
@@ -265,7 +284,7 @@ class ProductoController extends Controller
 
     private static function productoPorClaveCacheKey(string $clave): string
     {
-        return 'producto_por_clave_'.md5($clave).'_'.$clave;
+        return CatalogStockCache::key('producto_por_clave_'.md5($clave).'_'.$clave);
     }
 
     /** Productos por claves; caché por clave (2ª petición misma clave = cache). */
@@ -296,6 +315,7 @@ class ProductoController extends Controller
         }
 
         if (! empty($missing)) {
+            $vendidosMissing = $this->productoStock->cantidadesVendidasPorClaves($missing);
             $cvaClaves = array_filter($missing, fn ($c) => ! str_starts_with($c, 'MANUAL-'));
             $manualClaves = array_filter($missing, fn ($c) => str_starts_with($c, 'MANUAL-'));
             if (! empty($cvaClaves)) {
@@ -303,6 +323,7 @@ class ProductoController extends Controller
                 $descuentos = $this->descuentoPrecio->getDescuentosPorClaves($cvaClaves);
                 foreach ($fresh as $p) {
                     $formatted = $this->formatProducto($p, $descuentos[$p->clave] ?? null);
+                    $formatted = $this->productoStock->aplicarStockMostrado($formatted, (int) ($vendidosMissing[$p->clave] ?? 0));
                     $byClave[$p->clave] = $formatted;
                     Cache::put(self::productoPorClaveCacheKey($p->clave), $formatted, self::POR_CLAVE_CACHE_TTL);
                 }
@@ -311,6 +332,7 @@ class ProductoController extends Controller
                 $manual = ProductoManual::query()->select(['id', 'clave', 'codigo_fabricante', 'descripcion', 'grupo', 'marca', 'precio', 'moneda', 'imagen', 'imagenes', 'disponible', 'disponible_cd', 'garantia'])->whereIn('clave', $manualClaves)->where('anulado', false)->get();
                 foreach ($manual as $p) {
                     $formatted = $this->formatProducto($p, null);
+                    $formatted = $this->productoStock->aplicarStockMostrado($formatted, (int) ($vendidosMissing[$p->clave] ?? 0));
                     $byClave[$p->clave] = $formatted;
                     Cache::put(self::productoPorClaveCacheKey($p->clave), $formatted, self::POR_CLAVE_CACHE_TTL);
                 }
@@ -357,7 +379,12 @@ class ProductoController extends Controller
             $collection = $cva->concat($manual)->sortByDesc(fn ($p) => $p->synced_at ?? $p->created_at)->take($limit)->values();
             $claves = $collection->pluck('clave')->all();
             $descuentos = $this->descuentoPrecio->getDescuentosPorClaves($claves);
-            $items = $collection->map(fn ($p) => $this->formatProducto($p, $descuentos[$p->clave] ?? null));
+            $vendidos = $this->productoStock->cantidadesVendidasPorClaves($claves);
+            $items = $collection->map(function ($p) use ($descuentos, $vendidos) {
+                $formatted = $this->formatProducto($p, $descuentos[$p->clave] ?? null);
+
+                return $this->productoStock->aplicarStockMostrado($formatted, (int) ($vendidos[$p->clave] ?? 0));
+            });
 
             return response()->json(['success' => true, 'data' => $items->values()->all()]);
         }
@@ -387,7 +414,12 @@ class ProductoController extends Controller
         $collection = $cva->concat($manual)->sortByDesc(fn ($p) => $p->synced_at ?? $p->created_at)->take($limit)->values();
         $claves = $collection->pluck('clave')->all();
         $descuentos = $this->descuentoPrecio->getDescuentosPorClaves($claves);
-        $items = $collection->map(fn ($p) => $this->formatProducto($p, $descuentos[$p->clave] ?? null));
+        $vendidos = $this->productoStock->cantidadesVendidasPorClaves($claves);
+        $items = $collection->map(function ($p) use ($descuentos, $vendidos) {
+            $formatted = $this->formatProducto($p, $descuentos[$p->clave] ?? null);
+
+            return $this->productoStock->aplicarStockMostrado($formatted, (int) ($vendidos[$p->clave] ?? 0));
+        });
 
         return response()->json(['success' => true, 'data' => $items->values()->all()]);
     }
@@ -401,7 +433,7 @@ class ProductoController extends Controller
             return $this->catalogUnavailableResponse();
         }
 
-        $cacheKey = 'producto_show_'.md5($clave);
+        $cacheKey = CatalogStockCache::key('producto_show_'.md5($clave));
         $cached = Cache::get($cacheKey);
         if ($cached !== null) {
             return response()->json($cached);
@@ -452,6 +484,10 @@ class ProductoController extends Controller
         } else {
             $formatted['tiene_descuento'] = false;
         }
+
+        $vShow = $this->productoStock->cantidadesVendidasPorClaves([$producto->clave]);
+        $formatted = $this->productoStock->aplicarStockMostrado($formatted, (int) ($vShow[$producto->clave] ?? 0));
+
         $data = ['success' => true, 'data' => $formatted];
         Cache::put($cacheKey, $data, self::CACHE_TTL);
 
@@ -680,6 +716,7 @@ class ProductoController extends Controller
         }
 
         $cacheKey = 'claves_filtros_'.md5(serialize([$grupo, $categoriaPrincipal, $marca, $precioMin, $precioMax, $filtros]));
+
         return Cache::remember($cacheKey, 300, function () use ($cvaQuery, $manualQuery, $filtros) {
             $cva = $cvaQuery->limit(1500)->get();
             $manual = $manualQuery->limit(300)->get();
@@ -689,6 +726,7 @@ class ProductoController extends Controller
                     $resultado[] = $p->clave;
                 }
             }
+
             return array_unique($resultado);
         });
     }
@@ -713,6 +751,7 @@ class ProductoController extends Controller
                 return false;
             }
         }
+
         return true;
     }
 
@@ -733,6 +772,7 @@ class ProductoController extends Controller
                 return $v;
             }
         }
+
         return [];
     }
 
@@ -742,7 +782,9 @@ class ProductoController extends Controller
         $out = [];
         $agregar = function (string $key, $valor) use (&$out) {
             $k = trim($key);
-            if ($k === '') return;
+            if ($k === '') {
+                return;
+            }
             $v = is_scalar($valor) ? trim((string) $valor) : null;
             if ($v !== null && $v !== '') {
                 $out[$k] = $out[$k] ?? [];
@@ -750,11 +792,21 @@ class ProductoController extends Controller
             }
         };
 
-        if ($p->clave) $agregar('Clave', $p->clave);
-        if ($p->codigo_fabricante) $agregar('Código de fabricante', $p->codigo_fabricante);
-        if ($p->marca) $agregar('Marca', $p->marca);
-        if ($p->garantia) $agregar('Garantía', $p->garantia);
-        if ($p->clase) $agregar('Clase', $p->clase);
+        if ($p->clave) {
+            $agregar('Clave', $p->clave);
+        }
+        if ($p->codigo_fabricante) {
+            $agregar('Código de fabricante', $p->codigo_fabricante);
+        }
+        if ($p->marca) {
+            $agregar('Marca', $p->marca);
+        }
+        if ($p->garantia) {
+            $agregar('Garantía', $p->garantia);
+        }
+        if ($p->clase) {
+            $agregar('Clase', $p->clase);
+        }
 
         if ($p instanceof ProductoManual) {
             foreach ($p->informacion_general ?? [] as $item) {
@@ -764,7 +816,9 @@ class ProductoController extends Controller
             }
         }
         foreach ($p->raw_data ?? [] as $k => $v) {
-            if (is_scalar($v)) $agregar($k, $v);
+            if (is_scalar($v)) {
+                $agregar($k, $v);
+            }
         }
         foreach ($p->especificaciones_tecnicas ?? [] as $item) {
             if (is_array($item) && ! empty(trim($item['nombre'] ?? ''))) {
@@ -776,12 +830,14 @@ class ProductoController extends Controller
                 $agregar($item['nombre'], $item['valor'] ?? '');
             }
         }
+
         return $out;
     }
 
     private function claveCanonicaFiltro(string $key): string
     {
         $k = preg_replace('/[\s_]+/', ' ', trim($key));
+
         return mb_strtolower($k, 'UTF-8');
     }
 
@@ -808,11 +864,21 @@ class ProductoController extends Controller
             }
         };
 
-        if ($p->clave) $agregar('Clave', $p->clave);
-        if ($p->codigo_fabricante) $agregar('Código de fabricante', $p->codigo_fabricante);
-        if ($p->marca) $agregar('Marca', $p->marca);
-        if ($p->garantia) $agregar('Garantía', $p->garantia);
-        if ($p->clase) $agregar('Clase', $p->clase);
+        if ($p->clave) {
+            $agregar('Clave', $p->clave);
+        }
+        if ($p->codigo_fabricante) {
+            $agregar('Código de fabricante', $p->codigo_fabricante);
+        }
+        if ($p->marca) {
+            $agregar('Marca', $p->marca);
+        }
+        if ($p->garantia) {
+            $agregar('Garantía', $p->garantia);
+        }
+        if ($p->clase) {
+            $agregar('Clase', $p->clase);
+        }
 
         if ($p instanceof ProductoManual) {
             foreach ($p->informacion_general ?? [] as $item) {
