@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\ProductoCva;
 use App\Models\ProductoManual;
+use App\Services\BusquedaService;
 use App\Services\CategoriaPrincipalService;
 use App\Services\CVAService;
 use App\Services\DescuentoPrecioService;
+use App\Services\MargenVentaService;
 use App\Services\ProductoStockService;
 use App\Support\CatalogStockCache;
 use Illuminate\Http\JsonResponse;
@@ -21,6 +23,8 @@ class ProductoController extends Controller
         private readonly CategoriaPrincipalService $categorias,
         private readonly DescuentoPrecioService $descuentoPrecio,
         private readonly ProductoStockService $productoStock,
+        private readonly BusquedaService $busqueda,
+        private readonly MargenVentaService $margenVenta,
     ) {}
 
     /** Catálogo ok si CVA configurado o si hay productos CVA o manuales en BD. */
@@ -140,7 +144,16 @@ class ProductoController extends Controller
 
     private function applyIndexFilters($cvaQuery, $manualQuery, Request $request): void
     {
-        if ($request->filled('categoria_principal')) {
+        if ($request->filled('busqueda_q')) {
+            $clavesB = $this->busqueda->clavesParaFiltrosDinamicos((string) $request->input('busqueda_q'));
+            if (empty($clavesB)) {
+                $cvaQuery->whereRaw('1 = 0');
+                $manualQuery->whereRaw('1 = 0');
+            } else {
+                $cvaQuery->whereIn('clave', $clavesB);
+                $manualQuery->whereIn('clave', $clavesB);
+            }
+        } elseif ($request->filled('categoria_principal')) {
             $gruposEnDb = $this->getGruposEnDb();
             $grupos = $this->categorias->gruposPorCategoria($request->input('categoria_principal'), $gruposEnDb);
             if (! empty($grupos)) {
@@ -151,7 +164,7 @@ class ProductoController extends Controller
                 });
             }
         }
-        if ($request->filled('grupo')) {
+        if (! $request->filled('busqueda_q') && $request->filled('grupo')) {
             $grupo = $request->input('grupo');
             if (strtolower(trim($grupo)) === 'tinta') {
                 $cvaQuery->where(function ($q) {
@@ -197,7 +210,7 @@ class ProductoController extends Controller
             $cvaQuery->where('precio', '<=', $max);
             $manualQuery->where('precio', '<=', $max);
         }
-        if ($request->filled('desc') || $request->filled('q')) {
+        if (($request->filled('desc') || $request->filled('q')) && ! $request->filled('busqueda_q')) {
             $term = $request->input('desc') ?: $request->input('q');
             $cvaQuery->where('descripcion', 'like', '%'.$term.'%');
             $manualQuery->where('descripcion', 'like', '%'.$term.'%');
@@ -347,8 +360,8 @@ class ProductoController extends Controller
             if (isset($descuentosList[$item['clave']])) {
                 $d = $descuentosList[$item['clave']];
                 $item['tiene_descuento'] = true;
-                $item['precio_anterior'] = $d['precio_anterior'];
-                $item['precio_actual'] = $d['precio_actual'];
+                $item['precio_anterior'] = $this->margenVenta->aplicarMargen((float) $d['precio_anterior']);
+                $item['precio_actual'] = $this->margenVenta->aplicarMargen((float) $d['precio_actual']);
                 $item['porcentaje_descuento'] = $d['porcentaje_descuento'];
             } else {
                 $item['tiene_descuento'] = false;
@@ -586,11 +599,12 @@ class ProductoController extends Controller
 
         $grupo = $request->input('grupo', '');
         $categoriaPrincipal = $request->input('categoria_principal', '');
-        if ($grupo === '' && $categoriaPrincipal === '') {
+        $qBusqueda = trim((string) $request->input('q', ''));
+        if ($grupo === '' && $categoriaPrincipal === '' && $qBusqueda === '') {
             return response()->json(['success' => true, 'data' => []]);
         }
 
-        $cacheKey = 'filtros_dinamicos_'.md5(serialize($request->only(['grupo', 'categoria_principal', 'marca', 'precio_min', 'precio_max', 'filtros'])));
+        $cacheKey = 'filtros_dinamicos_'.md5(serialize($request->only(['grupo', 'categoria_principal', 'marca', 'precio_min', 'precio_max', 'filtros', 'q'])));
         $data = Cache::remember($cacheKey, self::CACHE_TTL, function () use ($request) {
             return $this->computeFiltrosDinamicos($request);
         });
@@ -604,6 +618,7 @@ class ProductoController extends Controller
     {
         $grupo = $request->input('grupo', '');
         $categoriaPrincipal = $request->input('categoria_principal', '');
+        $qBusqueda = trim((string) $request->input('q', ''));
         $marca = $request->input('marca', '');
         $precioMin = $request->filled('precio_min') ? (float) $request->input('precio_min') : null;
         $precioMax = $request->filled('precio_max') ? (float) $request->input('precio_max') : null;
@@ -615,7 +630,14 @@ class ProductoController extends Controller
             ->select('id', 'clave', 'especificaciones_tecnicas', 'dimensiones', 'informacion_general', 'marca', 'garantia', 'clase', 'codigo_fabricante')
             ->where('anulado', false);
 
-        if ($grupo !== '') {
+        if ($qBusqueda !== '') {
+            $clavesBusqueda = $this->busqueda->clavesParaFiltrosDinamicos($qBusqueda);
+            if (empty($clavesBusqueda)) {
+                return [];
+            }
+            $cvaQuery->whereIn('clave', $clavesBusqueda);
+            $manualQuery->whereIn('clave', $clavesBusqueda);
+        } elseif ($grupo !== '') {
             $cvaQuery->where('grupo', $grupo);
             $manualQuery->where('grupo', $grupo);
         } else {
@@ -675,6 +697,7 @@ class ProductoController extends Controller
     /** Obtiene las claves de productos que coinciden con todos los filtros dinámicos, marca y precio. */
     private function getClavesQueCoincidenConFiltros(Request $request, array $filtros): array
     {
+        $busquedaQ = trim((string) $request->input('busqueda_q', ''));
         $grupo = $request->input('grupo', '');
         $categoriaPrincipal = $request->input('categoria_principal', '');
         $marca = $request->input('marca', '');
@@ -686,7 +709,14 @@ class ProductoController extends Controller
             ->select('id', 'clave', 'especificaciones_tecnicas', 'dimensiones', 'informacion_general', 'marca', 'garantia', 'clase', 'codigo_fabricante')
             ->where('anulado', false);
 
-        if ($grupo !== '') {
+        if ($busquedaQ !== '') {
+            $clavesBusqueda = $this->busqueda->clavesParaFiltrosDinamicos($busquedaQ);
+            if (empty($clavesBusqueda)) {
+                return [];
+            }
+            $cvaQuery->whereIn('clave', $clavesBusqueda);
+            $manualQuery->whereIn('clave', $clavesBusqueda);
+        } elseif ($grupo !== '') {
             $cvaQuery->where('grupo', $grupo);
             $manualQuery->where('grupo', $grupo);
         } else {
@@ -715,7 +745,7 @@ class ProductoController extends Controller
             $manualQuery->where('precio', '<=', $precioMax);
         }
 
-        $cacheKey = 'claves_filtros_'.md5(serialize([$grupo, $categoriaPrincipal, $marca, $precioMin, $precioMax, $filtros]));
+        $cacheKey = 'claves_filtros_'.md5(serialize([$busquedaQ, $grupo, $categoriaPrincipal, $marca, $precioMin, $precioMax, $filtros]));
 
         return Cache::remember($cacheKey, 300, function () use ($cvaQuery, $manualQuery, $filtros) {
             $cva = $cvaQuery->limit(1500)->get();
@@ -940,7 +970,7 @@ class ProductoController extends Controller
             'descripcion' => $p->descripcion,
             'grupo' => $p->grupo,
             'marca' => $p->marca,
-            'precio' => (float) $p->precio,
+            'precio' => $this->margenVenta->aplicarMargen((float) $p->precio),
             'moneda' => $p->moneda,
             'imagen' => $p->imagen,
             'imagenes' => $p->imagenes ?? [],
@@ -950,8 +980,8 @@ class ProductoController extends Controller
         ];
         if ($descuento !== null) {
             $arr['tiene_descuento'] = true;
-            $arr['precio_anterior'] = $descuento['precio_anterior'];
-            $arr['precio_actual'] = $descuento['precio_actual'];
+            $arr['precio_anterior'] = $this->margenVenta->aplicarMargen((float) $descuento['precio_anterior']);
+            $arr['precio_actual'] = $this->margenVenta->aplicarMargen((float) $descuento['precio_actual']);
             $arr['porcentaje_descuento'] = $descuento['porcentaje_descuento'];
         } else {
             $arr['tiene_descuento'] = false;
@@ -978,7 +1008,7 @@ class ProductoController extends Controller
             'garantia' => $p->garantia,
             'clase' => $p->clase,
             'moneda' => $p->moneda,
-            'precio' => (float) $p->precio,
+            'precio' => $this->margenVenta->aplicarMargen((float) $p->precio),
             'imagen' => $p->imagen,
             'imagenes' => $p->imagenes ?? [],
             'disponible' => $p->disponible,

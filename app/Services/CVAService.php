@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\ProductoCva;
 use App\Models\TipoCambioMoneda;
+use App\Support\CatalogStockCache;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -24,8 +25,9 @@ class CVAService
 
     private const CACHE_TOKEN_KEY = 'cva_api_token';
 
-    public function __construct()
-    {
+    public function __construct(
+        private readonly CatalogoStockPublicoService $catalogoStockPublico,
+    ) {
         $config = config('services.cva');
         $this->baseUrl = rtrim($config['base_url'] ?? '', '/');
         $this->user = $config['user'] ?? null;
@@ -196,11 +198,12 @@ class CVAService
 
         $count = 0;
         foreach ($result['articulos'] as $art) {
-            $saved = $this->upsertArticulo($art);
+            $saved = $this->upsertArticulo($art, false);
             if ($saved) {
                 $count++;
             }
         }
+        CatalogStockCache::bump();
 
         return ['synced' => $count, 'paginacion' => $result['paginacion']];
     }
@@ -232,7 +235,7 @@ class CVAService
     /**
      * Inserta o actualiza un artículo en productos_cva.
      */
-    public function upsertArticulo(array $art): bool
+    public function upsertArticulo(array $art, bool $bumpCatalogoCache = true): bool
     {
         $clave = $art['clave'] ?? null;
         if (! $clave) {
@@ -293,6 +296,10 @@ class CVAService
                 'synced_at' => now(),
             ]
         );
+
+        $dStock = (int) ($art['disponible'] ?? 0);
+        $cdStock = (int) ($art['disponibleCD'] ?? 0);
+        $this->catalogoStockPublico->sincronizarDesdeFuente($clave, $dStock, $cdStock, $bumpCatalogoCache);
 
         return true;
     }

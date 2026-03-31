@@ -9,6 +9,10 @@ use RuntimeException;
 class PayPalService
 {
     private ?string $cachedToken = null;
+    private const CONNECT_TIMEOUT_SECONDS = 15;
+    private const REQUEST_TIMEOUT_SECONDS = 30;
+    private const RETRY_TIMES = 2;
+    private const RETRY_SLEEP_MS = 500;
 
     private function baseUrl(): string
     {
@@ -41,6 +45,9 @@ class PayPalService
         }
 
         $res = Http::asForm()
+            ->connectTimeout(self::CONNECT_TIMEOUT_SECONDS)
+            ->timeout(self::REQUEST_TIMEOUT_SECONDS)
+            ->retry(self::RETRY_TIMES, self::RETRY_SLEEP_MS)
             ->withBasicAuth($this->clientId(), $this->secret())
             ->post($this->baseUrl().'/v1/oauth2/token', [
                 'grant_type' => 'client_credentials',
@@ -67,6 +74,9 @@ class PayPalService
     public function createOrder(array $payload): array
     {
         $res = Http::withToken($this->accessToken())
+            ->connectTimeout(self::CONNECT_TIMEOUT_SECONDS)
+            ->timeout(self::REQUEST_TIMEOUT_SECONDS)
+            ->retry(self::RETRY_TIMES, self::RETRY_SLEEP_MS)
             ->withHeaders(['Content-Type' => 'application/json', 'Prefer' => 'return=representation'])
             ->post($this->baseUrl().'/v2/checkout/orders', $payload);
 
@@ -85,6 +95,9 @@ class PayPalService
     public function captureOrder(string $paypalOrderId): array
     {
         $res = Http::withToken($this->accessToken())
+            ->connectTimeout(self::CONNECT_TIMEOUT_SECONDS)
+            ->timeout(self::REQUEST_TIMEOUT_SECONDS)
+            ->retry(self::RETRY_TIMES, self::RETRY_SLEEP_MS)
             ->withHeaders(['Content-Type' => 'application/json', 'Prefer' => 'return=representation'])
             ->post($this->baseUrl().'/v2/checkout/orders/'.rawurlencode($paypalOrderId).'/capture', (object) []);
 
@@ -103,6 +116,9 @@ class PayPalService
     public function getOrder(string $paypalOrderId): array
     {
         $res = Http::withToken($this->accessToken())
+            ->connectTimeout(self::CONNECT_TIMEOUT_SECONDS)
+            ->timeout(self::REQUEST_TIMEOUT_SECONDS)
+            ->retry(self::RETRY_TIMES, self::RETRY_SLEEP_MS)
             ->get($this->baseUrl().'/v2/checkout/orders/'.rawurlencode($paypalOrderId));
 
         if (! $res->successful()) {

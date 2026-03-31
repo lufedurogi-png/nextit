@@ -32,14 +32,20 @@ class PedidoAdminController extends Controller
             $q->where('estatus_pedido', $request->estatus);
         }
         if ($request->filled('folio')) {
-            $q->where('folio', 'like', '%' . $request->folio . '%');
+            $q->where('folio', 'like', '%'.$request->folio.'%');
         }
         if ($request->filled('cliente')) {
             $term = trim($request->cliente);
             $q->whereHas('user', function ($userQuery) use ($term) {
-                $userQuery->where('name', 'like', '%' . $term . '%')
-                    ->orWhere('email', 'like', '%' . $term . '%');
+                $userQuery->where('name', 'like', '%'.$term.'%')
+                    ->orWhere('email', 'like', '%'.$term.'%');
             });
+        }
+        if ($request->filled('metodo_pago') && $request->metodo_pago !== 'todos') {
+            $mp = trim((string) $request->metodo_pago);
+            if ($mp !== '') {
+                $q->where('metodo_pago', 'like', '%'.$mp.'%');
+            }
         }
 
         $perPage = (int) $request->get('per_page', 10);
@@ -48,6 +54,7 @@ class PedidoAdminController extends Controller
 
         $items = collect($paginated->items())->map(function (Pedido $p) {
             $user = $p->user;
+
             return [
                 'id' => $p->id,
                 'fecha' => $p->fecha->format('d-m-Y'),
@@ -158,6 +165,6 @@ class PedidoAdminController extends Controller
         $pdf = Pdf::loadView('pdf.pedido', ['pedido' => $pedido]);
         $pdf->setPaper('a4', 'portrait');
 
-        return $pdf->download('pedido-' . $pedido->folio . '.pdf');
+        return $pdf->download('pedido-'.$pedido->folio.'.pdf');
     }
 }

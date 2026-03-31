@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ProductoManual;
+use App\Services\CatalogoStockPublicoService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -11,6 +12,10 @@ use Symfony\Component\HttpFoundation\Response;
 
 class ProductoManualAdminController extends Controller
 {
+    public function __construct(
+        private readonly CatalogoStockPublicoService $catalogoStockPublico,
+    ) {}
+
     protected function getDisk(): string
     {
         return config('filesystems.productos_disk', 'public');
@@ -130,6 +135,12 @@ class ProductoManualAdminController extends Controller
             'anulado' => false,
         ]);
 
+        $this->catalogoStockPublico->sincronizarDesdeFuente(
+            $producto->clave,
+            (int) $producto->disponible,
+            (int) $producto->disponible_cd
+        );
+
         return response()->json([
             'success' => true,
             'message' => 'Producto creado correctamente',
@@ -230,6 +241,16 @@ class ProductoManualAdminController extends Controller
         }
         $producto->save();
 
+        if ($producto->anulado) {
+            $this->catalogoStockPublico->sincronizarDesdeFuente($producto->clave, 0, 0);
+        } else {
+            $this->catalogoStockPublico->sincronizarDesdeFuente(
+                $producto->clave,
+                (int) $producto->disponible,
+                (int) $producto->disponible_cd
+            );
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Producto actualizado',
@@ -244,12 +265,14 @@ class ProductoManualAdminController extends Controller
             return response()->json(['success' => false, 'message' => 'No encontrado'], Response::HTTP_NOT_FOUND);
         }
 
+        $clave = $producto->clave;
         $disk = $this->getDisk();
         $this->deleteImageIfStored($producto->imagen, $disk);
         foreach ($producto->imagenes ?? [] as $url) {
             $this->deleteImageIfStored($url, $disk);
         }
         $producto->delete();
+        $this->catalogoStockPublico->eliminarPorClave($clave);
 
         return response()->json(['success' => true, 'message' => 'Producto eliminado'], Response::HTTP_OK);
     }
@@ -262,6 +285,16 @@ class ProductoManualAdminController extends Controller
         }
         $producto->anulado = ! $producto->anulado;
         $producto->save();
+
+        if ($producto->anulado) {
+            $this->catalogoStockPublico->sincronizarDesdeFuente($producto->clave, 0, 0);
+        } else {
+            $this->catalogoStockPublico->sincronizarDesdeFuente(
+                $producto->clave,
+                (int) $producto->disponible,
+                (int) $producto->disponible_cd
+            );
+        }
 
         return response()->json([
             'success' => true,

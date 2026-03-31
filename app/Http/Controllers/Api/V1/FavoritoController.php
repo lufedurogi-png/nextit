@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\ProductoCva;
 use App\Models\ProductoManual;
+use App\Services\MargenVentaService;
+use App\Services\ProductoStockService;
+use App\Support\CatalogStockCache;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -12,8 +15,14 @@ use Illuminate\Support\Facades\Cache;
 
 class FavoritoController extends Controller
 {
+    public function __construct(
+        private readonly MargenVentaService $margenVenta,
+        private readonly ProductoStockService $productoStock,
+    ) {}
+
     /** Mismo caché que Carrito/Producto por clave. */
     private const PRODUCTO_CACHE_TTL = 120;
+
     private const PRODUCTO_SELECT = [
         'id', 'clave', 'codigo_fabricante', 'descripcion', 'grupo', 'marca',
         'precio', 'moneda', 'imagen', 'imagenes', 'disponible', 'disponible_cd', 'garantia',
@@ -21,10 +30,10 @@ class FavoritoController extends Controller
 
     private static function productoCacheKey(string $clave): string
     {
-        return 'producto_por_clave_'.md5($clave).'_'.$clave;
+        return CatalogStockCache::key('producto_por_clave_'.md5($clave).'_'.$clave);
     }
 
-    private static function formatProductoForList(ProductoCva|ProductoManual $p): array
+    private function formatProductoForList(ProductoCva|ProductoManual $p): array
     {
         return [
             'id' => $p->id,
@@ -33,7 +42,7 @@ class FavoritoController extends Controller
             'descripcion' => $p->descripcion,
             'grupo' => $p->grupo,
             'marca' => $p->marca,
-            'precio' => (float) $p->precio,
+            'precio' => $this->margenVenta->aplicarMargen((float) $p->precio),
             'moneda' => $p->moneda,
             'imagen' => $p->imagen,
             'imagenes' => $p->imagenes ?? [],
@@ -63,7 +72,7 @@ class FavoritoController extends Controller
             if (! empty($cvaClaves)) {
                 $fresh = ProductoCva::query()->select(self::PRODUCTO_SELECT)->whereIn('clave', $cvaClaves)->get();
                 foreach ($fresh as $p) {
-                    $formatted = self::formatProductoForList($p);
+                    $formatted = $this->formatProductoForList($p);
                     $byClave[$p->clave] = $formatted;
                     Cache::put(self::productoCacheKey($p->clave), $formatted, self::PRODUCTO_CACHE_TTL);
                 }
@@ -71,13 +80,22 @@ class FavoritoController extends Controller
             if (! empty($manualClaves)) {
                 $manual = ProductoManual::query()->select(self::PRODUCTO_SELECT)->whereIn('clave', $manualClaves)->where('anulado', false)->get();
                 foreach ($manual as $p) {
-                    $formatted = self::formatProductoForList($p);
+                    $formatted = $this->formatProductoForList($p);
                     $byClave[$p->clave] = $formatted;
                     Cache::put(self::productoCacheKey($p->clave), $formatted, self::PRODUCTO_CACHE_TTL);
                 }
             }
         }
-        return array_values(array_filter(array_map(fn ($c) => $byClave[$c] ?? null, $claves)));
+        $list = array_values(array_filter(array_map(fn ($c) => $byClave[$c] ?? null, $claves)));
+        if ($list === []) {
+            return [];
+        }
+        $vendidos = $this->productoStock->cantidadesVendidasPorClaves(array_column($list, 'clave'));
+
+        return array_map(
+            fn (array $row) => $this->productoStock->aplicarStockMostrado($row, (int) ($vendidos[$row['clave']] ?? 0)),
+            $list
+        );
     }
 
     /** Favoritos con imagen, precio y stock (una petición). */
@@ -110,7 +128,7 @@ class FavoritoController extends Controller
 
             $user = Auth::user();
             $exists = $user->favoritos()->where('clave', $valid['clave'])->exists();
-            if (!$exists) {
+            if (! $exists) {
                 $user->favoritos()->create(['clave' => $valid['clave']]);
             }
 

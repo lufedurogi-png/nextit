@@ -32,6 +32,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'api/v1/carrito/*',
             'api/v1/cotizaciones',
             'api/v1/cotizaciones/*',
+            'api/v1/cotizaciones-invitado',
             'api/v1/favoritos',
             'api/v1/favoritos/*',
             'api/v1/tarjetas-guardadas',

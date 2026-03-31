@@ -10,7 +10,6 @@ use App\Models\ProductoCva;
 use App\Models\ProductoManual;
 use App\Models\RelevanciaProductoTermino;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Servicio de búsqueda tolerante a errores, con registro de búsquedas,
@@ -22,7 +21,10 @@ class BusquedaService
 
     private const CACHE_KNOWN_TERMS_TTL_SECONDS = 3600;
 
-    public function __construct() {}
+    public function __construct(
+        private readonly MargenVentaService $margenVenta,
+        private readonly ProductoStockService $productoStock,
+    ) {}
 
     /**
      * Ejecuta una búsqueda: normaliza la consulta, obtiene productos priorizados
@@ -65,6 +67,12 @@ class BusquedaService
         }
 
         $formateados = $productos->map(fn ($p) => $p instanceof ProductoManual ? $this->formatearProductoManual($p) : $this->formatearProducto($p))->values()->all();
+        $clavesStock = array_values(array_filter(array_column($formateados, 'clave')));
+        $vendidos = $clavesStock === [] ? [] : $this->productoStock->cantidadesVendidasPorClaves($clavesStock);
+        $formateados = array_map(
+            fn (array $row) => $this->productoStock->aplicarStockMostrado($row, (int) ($vendidos[$row['clave']] ?? 0)),
+            $formateados
+        );
 
         return [
             'busqueda_id' => $busqueda->id,
@@ -204,6 +212,27 @@ class BusquedaService
         Cache::forget(self::CACHE_KNOWN_TERMS_KEY);
     }
 
+    /**
+     * Claves de productos que coinciden con la misma lógica que la búsqueda en tienda (sin registrar búsqueda en BD).
+     * Usado para filtros dinámicos en /catalogos/filtros-dinamicos?q=...
+     *
+     * @return array<int, string>
+     */
+    public function clavesParaFiltrosDinamicos(string $query): array
+    {
+        $textoOriginal = $this->normalizarTexto($query);
+        if ($textoOriginal === '') {
+            return [];
+        }
+        $textoNormalizado = $this->normalizarConsulta($textoOriginal);
+
+        return $this->obtenerProductosOrdenadosPorRelevancia($textoNormalizado)
+            ->pluck('clave')
+            ->unique()
+            ->values()
+            ->all();
+    }
+
     private function normalizarTexto(string $s): string
     {
         return trim(preg_replace('/\s+/', ' ', $s));
@@ -220,6 +249,7 @@ class BusquedaService
     private function splitPalabras(string $query): array
     {
         $n = $this->normalizarParaComparar($query);
+
         return $n === '' ? [] : preg_split('/\s+/', $n, -1, PREG_SPLIT_NO_EMPTY);
     }
 
@@ -355,7 +385,7 @@ class BusquedaService
             'descripcion' => $p->descripcion,
             'grupo' => $p->grupo,
             'marca' => $p->marca,
-            'precio' => (float) $p->precio,
+            'precio' => $this->margenVenta->aplicarMargen((float) $p->precio),
             'moneda' => $p->moneda,
             'imagen' => $p->imagen,
             'imagenes' => $p->imagenes ?? [],
@@ -374,7 +404,7 @@ class BusquedaService
             'descripcion' => $p->descripcion,
             'grupo' => $p->grupo,
             'marca' => $p->marca,
-            'precio' => (float) $p->precio,
+            'precio' => $this->margenVenta->aplicarMargen((float) $p->precio),
             'moneda' => $p->moneda ?? 'MXN',
             'imagen' => $p->imagen,
             'imagenes' => $p->imagenes ?? [],

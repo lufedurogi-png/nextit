@@ -1,8 +1,12 @@
 <?php
 
 use App\Jobs\ActualizarTipoCambioJob;
+use App\Models\ProductoCva;
+use App\Models\ProductoManual;
+use App\Services\CatalogoStockPublicoService;
 use App\Services\CVAService;
 use App\Services\DescuentoPrecioService;
+use App\Support\CatalogStockCache;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -47,6 +51,32 @@ Artisan::command('precios:comparar-descuentos', function () {
 
     return 0;
 })->purpose('Comparar precios cada 12 h y actualizar tabla producto_descuento');
+
+Artisan::command('catalogo:sync-stock-publico', function () {
+    $svc = app(CatalogoStockPublicoService::class);
+    $n = 0;
+    ProductoCva::query()->select(['clave', 'disponible', 'disponible_cd'])->orderBy('id')->chunkById(500, function ($rows) use ($svc, &$n) {
+        foreach ($rows as $p) {
+            $svc->sincronizarDesdeFuente($p->clave, (int) $p->disponible, (int) $p->disponible_cd, false);
+            $n++;
+        }
+    });
+    ProductoManual::query()->select(['clave', 'disponible', 'disponible_cd'])->where('anulado', false)->orderBy('id')->chunkById(200, function ($rows) use ($svc, &$n) {
+        foreach ($rows as $p) {
+            $svc->sincronizarDesdeFuente(
+                $p->clave,
+                (int) ($p->disponible ?? 0),
+                (int) ($p->disponible_cd ?? 0),
+                false
+            );
+            $n++;
+        }
+    });
+    CatalogStockCache::bump();
+    $this->info("Filas en catalogo_stock_publico actualizadas desde catálogo ({$n} claves).");
+
+    return 0;
+})->purpose('Rellenar/actualizar catalogo_stock_publico desde productos_cva y productos_manuales activos');
 
 Artisan::command('tipo-cambio:actualizar', function () {
     $this->info('Actualizando tipo de cambio USD → MXN...');

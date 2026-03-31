@@ -3,7 +3,10 @@
 use App\Http\Controllers\Api\V1\Admin\AdminAuthController;
 use App\Http\Controllers\Api\V1\Admin\AdminBackupController;
 use App\Http\Controllers\Api\V1\Admin\AdminChatController;
+use App\Http\Controllers\Api\V1\Admin\AdminCotizacionInvitadoController;
+use App\Http\Controllers\Api\V1\Admin\AdminMargenVentaController;
 use App\Http\Controllers\Api\V1\Admin\AdminStatsController;
+use App\Http\Controllers\Api\V1\Admin\DesarrolladorAdminController;
 use App\Http\Controllers\Api\V1\Admin\ManagerUserController;
 use App\Http\Controllers\Api\V1\Admin\PedidoAdminController;
 use App\Http\Controllers\Api\V1\Admin\ProductoManualAdminController;
@@ -14,7 +17,9 @@ use App\Http\Controllers\Api\V1\CarritoController;
 use App\Http\Controllers\Api\V1\Client\ClientController;
 use App\Http\Controllers\Api\V1\ClienteChatController;
 use App\Http\Controllers\Api\V1\CotizacionController;
+use App\Http\Controllers\Api\V1\CotizacionInvitadoPublicController;
 use App\Http\Controllers\Api\V1\DatoFacturacionController;
+use App\Http\Controllers\Api\V1\DesarrolladorController;
 use App\Http\Controllers\Api\V1\DireccionEnvioController;
 use App\Http\Controllers\Api\V1\FavoritoController;
 use App\Http\Controllers\Api\V1\PayPalController;
@@ -71,6 +76,12 @@ Route::prefix('v1')->group(function () {
 
     // Publicidad (carrusel) - público
     Route::get('/publicidad', [PublicidadController::class, 'index'])->name('publicidad.index');
+    Route::get('/desarrolladores', [DesarrolladorController::class, 'index'])->name('desarrolladores.index');
+
+    // Cotización sin cuenta: envío por correo + registro para administración
+    Route::post('/cotizaciones-invitado', [CotizacionInvitadoPublicController::class, 'store'])
+        ->middleware('throttle:20,1')
+        ->name('cotizaciones-invitado.store');
     // -------------------------------------------------------------
 
     // protected routes here
@@ -173,6 +184,10 @@ Route::prefix('v1')->group(function () {
             Route::get('/publicidad', [PublicidadAdminController::class, 'index'])->name('publicidad.admin.index');
             Route::post('/publicidad', [PublicidadAdminController::class, 'store'])->name('publicidad.admin.store');
             Route::delete('/publicidad/{id}', [PublicidadAdminController::class, 'destroy'])->name('publicidad.admin.destroy');
+            Route::get('/desarrolladores', [DesarrolladorAdminController::class, 'index'])->name('desarrolladores.admin.index');
+            Route::post('/desarrolladores', [DesarrolladorAdminController::class, 'store'])->name('desarrolladores.admin.store');
+            Route::put('/desarrolladores/{id}', [DesarrolladorAdminController::class, 'update'])->name('desarrolladores.admin.update');
+            Route::delete('/desarrolladores/{id}', [DesarrolladorAdminController::class, 'destroy'])->name('desarrolladores.admin.destroy');
 
             Route::get('/productos-manuales', [ProductoManualAdminController::class, 'index'])->name('productos-manuales.index');
             Route::post('/productos-manuales', [ProductoManualAdminController::class, 'store'])->name('productos-manuales.store');
@@ -187,9 +202,18 @@ Route::prefix('v1')->group(function () {
             Route::get('/pedidos/{id}/pdf', [PedidoAdminController::class, 'downloadPdf'])->name('pedidos.admin.pdf');
             Route::get('/pedidos/{id}', [PedidoAdminController::class, 'show'])->name('pedidos.admin.show');
 
+            Route::get('/margen-venta', [AdminMargenVentaController::class, 'show'])->name('margen-venta.show');
+            Route::put('/margen-venta', [AdminMargenVentaController::class, 'update'])->name('margen-venta.update');
+            Route::post('/margen-venta/reset', [AdminMargenVentaController::class, 'reset'])->name('margen-venta.reset');
+
             Route::get('/backup/preview-export', [AdminBackupController::class, 'previewExport'])->name('backup.preview');
             Route::post('/backup/export', [AdminBackupController::class, 'export'])->name('backup.export');
             Route::post('/backup/import', [AdminBackupController::class, 'import'])->name('backup.import');
+
+            Route::get('/cotizaciones-invitado/emails', [AdminCotizacionInvitadoController::class, 'emailsDistinct'])->name('cotizaciones-invitado.admin.emails');
+            Route::get('/cotizaciones-invitado', [AdminCotizacionInvitadoController::class, 'index'])->name('cotizaciones-invitado.admin.index');
+            Route::get('/cotizaciones-invitado/{id}', [AdminCotizacionInvitadoController::class, 'show'])->name('cotizaciones-invitado.admin.show');
+            Route::get('/cotizaciones-invitado/{id}/pdf', [AdminCotizacionInvitadoController::class, 'downloadPdf'])->name('cotizaciones-invitado.admin.pdf');
 
             Route::get('/chat/clientes', [AdminChatController::class, 'indexClientes'])->name('chat.clientes.index');
             Route::get('/chat/clientes/{userId}', [AdminChatController::class, 'show'])->name('chat.clientes.show');

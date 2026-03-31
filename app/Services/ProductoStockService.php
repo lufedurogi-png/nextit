@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\CatalogoStockPublico;
 use App\Models\InventarioVenta;
 use App\Support\CatalogStockCache;
 
@@ -30,29 +31,45 @@ class ProductoStockService
     }
 
     /**
-     * Stock mostrado al cliente: resta ventas confirmadas del total en BD (disponible + disponible_cd).
-     * La suma expuesta sigue siendo disponible + disponible_cd; concentramos el resto en disponible.
+     * Base de stock intermediario: tabla catalogo_stock_publico (espejo de fuente) o, si no hay fila, disponible+cd del producto.
      */
-    public function aplicarStockMostrado(array $formatted, int $vendido): array
+    public function stockBasePublico(string $clave, int $disponible, int $disponibleCd): int
     {
-        if ($vendido <= 0) {
-            return $formatted;
+        if ($clave !== '') {
+            $row = CatalogoStockPublico::query()->where('clave', $clave)->first();
+            if ($row) {
+                return max(0, (int) $row->cantidad_base);
+            }
         }
+
+        return max(0, $disponible + $disponibleCd);
+    }
+
+    /**
+     * Stock mostrado al cliente: base (catálogo público) menos ventas confirmadas en inventario_ventas.
+     * Concentramos el total en disponible; disponible_cd queda en 0.
+     */
+    public function aplicarStockMostrado(array $formatted, int $vendidoAcumulado): array
+    {
+        $clave = (string) ($formatted['clave'] ?? '');
         $d = (int) ($formatted['disponible'] ?? 0);
         $cd = (int) ($formatted['disponible_cd'] ?? 0);
-        $total = max(0, $d + $cd - $vendido);
+        $base = $this->stockBasePublico($clave, $d, $cd);
+        $v = max(0, $vendidoAcumulado);
+        $total = max(0, $base - $v);
         $formatted['disponible'] = $total;
         $formatted['disponible_cd'] = 0;
 
         return $formatted;
     }
 
-    /** Stock efectivo para una clave (producto en BD menos vendido acumulado). */
+    /** Unidades que el cliente puede pedir: base pública menos vendido acumulado. */
     public function stockEfectivoTotal(string $clave, int $disponible, int $disponibleCd): int
     {
+        $base = $this->stockBasePublico($clave, $disponible, $disponibleCd);
         $v = (int) InventarioVenta::query()->where('clave', $clave)->sum('cantidad');
 
-        return max(0, $disponible + $disponibleCd - $v);
+        return max(0, $base - $v);
     }
 
     public function registrarVentasConfirmadas(int $pedidoId, iterable $lineas, bool $bumpCatalogCache = true): void

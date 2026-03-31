@@ -9,8 +9,10 @@ use App\Models\DireccionEnvio;
 use App\Models\Pedido;
 use App\Models\ProductoCva;
 use App\Models\ProductoManual;
+use App\Services\MargenVentaService;
 use App\Services\ProductoStockService;
 use App\Support\CatalogStockCache;
+use App\Support\DocumentoNumeracion;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -20,7 +22,8 @@ use Illuminate\Support\Facades\DB;
 class CarritoController extends Controller
 {
     public function __construct(
-        private readonly ProductoStockService $productoStock
+        private readonly ProductoStockService $productoStock,
+        private readonly MargenVentaService $margenVenta,
     ) {}
 
     private const CART_INDEX_CACHE_TTL = 15;
@@ -44,7 +47,7 @@ class CarritoController extends Controller
     }
 
     /** Misma estructura que ProductoController para reusar caché. */
-    private static function formatProductoForList(ProductoCva|ProductoManual $p): array
+    private function formatProductoForList(ProductoCva|ProductoManual $p): array
     {
         return [
             'id' => $p->id,
@@ -53,7 +56,7 @@ class CarritoController extends Controller
             'descripcion' => $p->descripcion,
             'grupo' => $p->grupo,
             'marca' => $p->marca,
-            'precio' => (float) $p->precio,
+            'precio' => $this->margenVenta->aplicarMargen((float) $p->precio),
             'moneda' => $p->moneda,
             'imagen' => $p->imagen,
             'imagenes' => $p->imagenes ?? [],
@@ -89,7 +92,7 @@ class CarritoController extends Controller
                 if (! empty($cvaClaves)) {
                     $fresh = ProductoCva::query()->select(self::PRODUCTO_SELECT)->whereIn('clave', $cvaClaves)->get();
                     foreach ($fresh as $p) {
-                        $formatted = self::formatProductoForList($p);
+                        $formatted = $this->formatProductoForList($p);
                         $byClave[$p->clave] = $formatted;
                         Cache::put(self::productoCacheKey($p->clave), $formatted, self::PRODUCTO_CACHE_TTL);
                     }
@@ -97,7 +100,7 @@ class CarritoController extends Controller
                 if (! empty($manualClaves)) {
                     $manual = ProductoManual::query()->select(self::PRODUCTO_SELECT)->whereIn('clave', $manualClaves)->where('anulado', false)->get();
                     foreach ($manual as $p) {
-                        $formatted = self::formatProductoForList($p);
+                        $formatted = $this->formatProductoForList($p);
                         $byClave[$p->clave] = $formatted;
                         Cache::put(self::productoCacheKey($p->clave), $formatted, self::PRODUCTO_CACHE_TTL);
                     }
@@ -169,7 +172,7 @@ class CarritoController extends Controller
         $item = $user->carritoItems()->where('clave', $valid['clave'])->first();
 
         $nombre = $producto->descripcion ?? $valid['clave'];
-        $precio = (float) $producto->precio;
+        $precio = $this->margenVenta->aplicarMargen((float) $producto->precio);
 
         $d0 = (int) ($producto->disponible ?? 0);
         $cd0 = (int) ($producto->disponible_cd ?? 0);
@@ -296,8 +299,7 @@ class CarritoController extends Controller
 
         try {
             $pedido = DB::transaction(function () use ($user, $items, $valid) {
-                $lastId = (int) Pedido::withTrashed()->max('id');
-                $folio = str_pad((string) ($lastId + 1), 6, '0', STR_PAD_LEFT);
+                $folio = DocumentoNumeracion::siguienteFolioPedido();
 
                 $p = $user->pedidos()->create([
                     'folio' => $folio,

@@ -5,13 +5,16 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\DatoFacturacion;
 use App\Models\DireccionEnvio;
+use App\Models\PayPalOrderSnapshot;
 use App\Models\Pedido;
 use App\Models\ProductoCva;
 use App\Models\ProductoManual;
 use App\Services\PayPalService;
 use App\Services\ProductoStockService;
+use App\Support\DocumentoNumeracion;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -186,10 +189,16 @@ class PayPalController extends Controller
             'items' => $lines,
         ];
 
-        Cache::put(
-            'paypal_order_'.$paypalOrderId,
-            $snapshot,
-            now()->addMinutes(self::PAYPAL_CACHE_TTL_MINUTES)
+        PayPalOrderSnapshot::query()->where('expires_at', '<', now())->whereNull('pedido_id')->delete();
+
+        PayPalOrderSnapshot::updateOrCreate(
+            ['paypal_order_id' => $paypalOrderId],
+            [
+                'user_id' => $user->id,
+                'snapshot' => $snapshot,
+                'expires_at' => now()->addMinutes(self::PAYPAL_CACHE_TTL_MINUTES),
+                'pedido_id' => null,
+            ]
         );
 
         return response()->json([
@@ -216,8 +225,44 @@ class PayPalController extends Controller
         ]);
 
         $user = Auth::user();
-        $cacheKey = 'paypal_order_'.$valid['order_id'];
-        $snapshot = Cache::get($cacheKey);
+
+        $row = PayPalOrderSnapshot::query()
+            ->where('paypal_order_id', $valid['order_id'])
+            ->where('user_id', $user->id)
+            ->first();
+
+        if ($row !== null && $row->pedido_id !== null) {
+            $existente = Pedido::query()
+                ->where('user_id', $user->id)
+                ->whereKey($row->pedido_id)
+                ->first();
+            if ($existente !== null) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Pago ya confirmado.',
+                    'data' => [
+                        'id' => $existente->id,
+                        'folio' => $existente->folio,
+                    ],
+                ], 200);
+            }
+        }
+
+        if ($row === null) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Orden de pago no encontrada o expirada. Vuelve a iniciar el pago.',
+            ], 404);
+        }
+
+        if ($row->expires_at !== null && $row->expires_at->isPast() && $row->pedido_id === null) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Orden de pago no encontrada o expirada. Vuelve a iniciar el pago.',
+            ], 404);
+        }
+
+        $snapshot = $row->snapshot;
         if (! is_array($snapshot) || (int) ($snapshot['user_id'] ?? 0) !== (int) $user->id) {
             return response()->json([
                 'success' => false,
@@ -235,7 +280,10 @@ class PayPalController extends Controller
                 ], 422);
             }
 
-            $cap = $this->paypal->captureOrder($valid['order_id']);
+            // Si PayPal ya devolvió COMPLETED (p. ej. reintento o flujo distinto), no volver a capturar.
+            $cap = $status === 'COMPLETED'
+                ? $order
+                : $this->paypal->captureOrder($valid['order_id']);
         } catch (Throwable $e) {
             return response()->json([
                 'success' => false,
@@ -286,9 +334,42 @@ class PayPalController extends Controller
             return response()->json(['success' => false, 'message' => 'Snapshot de carrito inválido.'], 500);
         }
 
+        $paypalOrderId = $valid['order_id'];
+
         try {
-            $pedido = DB::transaction(function () use ($user, $snapshot, $itemsPayload, $captureId) {
-                foreach ($itemsPayload as $ln) {
+            $pedido = DB::transaction(function () use ($user, $captureId, $paypalOrderId, $expected) {
+                $rowLocked = PayPalOrderSnapshot::query()
+                    ->where('paypal_order_id', $paypalOrderId)
+                    ->where('user_id', $user->id)
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($rowLocked === null) {
+                    throw new \RuntimeException('Orden de pago no encontrada o expirada. Vuelve a iniciar el pago.');
+                }
+
+                // Idempotencia real: si ya se creó el pedido, no volvemos a registrar ventas ni a descontar stock.
+                if ($rowLocked->pedido_id !== null) {
+                    $existente = Pedido::query()
+                        ->where('user_id', $user->id)
+                        ->whereKey($rowLocked->pedido_id)
+                        ->first();
+
+                    if ($existente !== null) {
+                        $user->carritoItems()->delete();
+                        Cache::forget(self::cartCacheKey($user->id));
+                        return $existente;
+                    }
+                }
+
+                $snapshotLocal = $rowLocked->snapshot;
+                $itemsPayloadLocal = $snapshotLocal['items'] ?? [];
+                if (! is_array($itemsPayloadLocal) || $itemsPayloadLocal === []) {
+                    throw new \RuntimeException('Snapshot de carrito inválido.');
+                }
+
+                // Validación final de stock contra lo que se capturó.
+                foreach ($itemsPayloadLocal as $ln) {
                     if (! is_array($ln)) {
                         continue;
                     }
@@ -308,23 +389,35 @@ class PayPalController extends Controller
                     }
                 }
 
-                $lastId = (int) Pedido::withTrashed()->max('id');
-                $folio = str_pad((string) ($lastId + 1), 6, '0', STR_PAD_LEFT);
-
-                $p = $user->pedidos()->create([
-                    'folio' => $folio,
-                    'fecha' => now()->toDateString(),
-                    'monto' => 0,
-                    'metodo_pago' => 'paypal',
-                    'referencia_pago_externa' => $captureId,
-                    'estado_pago' => 'pagado',
-                    'estatus_pedido' => 'completado',
-                    'direccion_envio_id' => (int) $snapshot['direccion_envio_id'],
-                    'datos_facturacion_id' => (int) $snapshot['datos_facturacion_id'],
-                ]);
+                $p = null;
+                for ($i = 0; $i < 5; $i++) {
+                    try {
+                        $folio = DocumentoNumeracion::siguienteFolioPedido();
+                        $p = $user->pedidos()->create([
+                            'folio' => $folio,
+                            'fecha' => now()->toDateString(),
+                            'monto' => 0,
+                            'metodo_pago' => 'paypal',
+                            'referencia_pago_externa' => $captureId,
+                            'estado_pago' => 'pagado',
+                            'estatus_pedido' => 'pendiente',
+                            'direccion_envio_id' => (int) ($snapshotLocal['direccion_envio_id'] ?? 0),
+                            'datos_facturacion_id' => (int) ($snapshotLocal['datos_facturacion_id'] ?? 0),
+                        ]);
+                        break;
+                    } catch (QueryException $qe) {
+                        $msg = strtolower($qe->getMessage());
+                        if (! str_contains($msg, 'pedidos_folio_unique') && ! str_contains($msg, 'duplicate')) {
+                            throw $qe;
+                        }
+                    }
+                }
+                if (! $p) {
+                    throw new \RuntimeException('No se pudo generar un folio único para el pedido.');
+                }
 
                 $monto = 0.0;
-                foreach ($itemsPayload as $ln) {
+                foreach ($itemsPayloadLocal as $ln) {
                     if (! is_array($ln)) {
                         continue;
                     }
@@ -345,21 +438,47 @@ class PayPalController extends Controller
 
                 $p->update(['monto' => round($monto, 2)]);
 
-                $this->productoStock->registrarVentasConfirmadas($p->id, $itemsPayload);
+                $this->productoStock->registrarVentasConfirmadas($p->id, $itemsPayloadLocal);
 
                 $user->carritoItems()->delete();
                 Cache::forget(self::cartCacheKey($user->id));
 
+                $rowLocked->pedido_id = $p->id;
+                $rowLocked->expires_at = now()->addDays(30);
+                $rowLocked->save();
+
                 return $p;
             });
         } catch (Throwable $e) {
+            // Si ocurrió una carrera y se intentó insertar un folio duplicado, intentamos recuperar el pedido ya creado.
+            if (str_contains(strtolower($e->getMessage()), 'duplicate key') || str_contains(strtolower($e->getMessage()), 'duplicate')) {
+                $pedidoExistente = Pedido::query()
+                    ->where('user_id', $user->id)
+                    ->where('metodo_pago', 'paypal')
+                    ->where('referencia_pago_externa', $captureId)
+                    ->first();
+
+                if ($pedidoExistente !== null) {
+                    // Asegurar consistencia en UI: si hubo carrera, el carrito pudo no haberse limpiado en esta request.
+                    $user->carritoItems()->delete();
+                    Cache::forget(self::cartCacheKey($user->id));
+
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Pago completado (idempotente).',
+                        'data' => [
+                            'id' => $pedidoExistente->id,
+                            'folio' => $pedidoExistente->folio,
+                        ],
+                    ], 201);
+                }
+            }
+
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage(),
             ], 422);
         }
-
-        Cache::forget($cacheKey);
 
         return response()->json([
             'success' => true,

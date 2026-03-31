@@ -66,7 +66,7 @@
             <div class="header-right">
                 <div class="doc-meta">
                     Fecha: {{ $cotizacion->created_at ? $cotizacion->created_at->format('d/m/Y H:i') : now()->format('d/m/Y H:i') }}<br>
-                    Cliente: {{ $cotizacion->user?->name ?? 'No registrado' }}
+                    Cliente (correo): {{ $cotizacion->email }}
                 </div>
             </div>
         </div>
