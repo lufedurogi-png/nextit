@@ -236,6 +236,78 @@ class CarritoController extends Controller
         return response()->json($this->cartResponseSimple($user));
     }
 
+    /**
+     * Reemplaza por completo el carrito del usuario (p. ej. antes de pagar una cotización vía PayPal).
+     * Valida existencia de producto y stock igual que store().
+     */
+    public function sync(Request $request): JsonResponse
+    {
+        $valid = $request->validate([
+            'items' => 'required|array|min:1',
+            'items.*.clave' => 'required|string|max:100',
+            'items.*.cantidad' => 'required|integer|min:1|max:9999',
+        ]);
+
+        $user = Auth::user();
+
+        $byClave = [];
+        foreach ($valid['items'] as $line) {
+            $k = (string) $line['clave'];
+            $q = (int) $line['cantidad'];
+            if (! isset($byClave[$k])) {
+                $byClave[$k] = 0;
+            }
+            $byClave[$k] += $q;
+        }
+
+        $rows = [];
+        foreach ($byClave as $clave => $cantidad) {
+            $producto = null;
+            if (str_starts_with($clave, 'MANUAL-')) {
+                $producto = ProductoManual::where('clave', $clave)->where('anulado', false)->first();
+            } else {
+                $producto = ProductoCva::where('clave', $clave)->first();
+            }
+            if (! $producto) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Producto no encontrado: '.$clave,
+                ], 422);
+            }
+
+            $nombre = $producto->descripcion ?? $clave;
+            $precio = $this->margenVenta->aplicarMargen((float) $producto->precio);
+
+            $d0 = (int) ($producto->disponible ?? 0);
+            $cd0 = (int) ($producto->disponible_cd ?? 0);
+            $maxQty = $this->productoStock->stockEfectivoTotal($clave, $d0, $cd0);
+            if ($cantidad > $maxQty) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Stock insuficiente para '.$nombre.' (máx. '.$maxQty.').',
+                ], 422);
+            }
+
+            $rows[] = [
+                'clave' => $clave,
+                'nombre_producto' => $nombre,
+                'cantidad' => $cantidad,
+                'precio_unitario' => $precio,
+            ];
+        }
+
+        DB::transaction(function () use ($user, $rows) {
+            $user->carritoItems()->delete();
+            foreach ($rows as $r) {
+                $user->carritoItems()->create($r);
+            }
+        });
+
+        Cache::forget(self::cartCacheKey($user->id));
+
+        return $this->index($request);
+    }
+
     /** Checkout: crea pedido y vacía carrito (tarjeta simulada u otros métodos sin pasarela). */
     public function checkout(Request $request): JsonResponse
     {

@@ -18,6 +18,8 @@ return [
         ['id' => 'componentes', 'nombre' => 'Componentes', 'orden' => 6],
         ['id' => 'impresoras', 'nombre' => 'Impresoras', 'orden' => 7],
         ['id' => 'pcs', 'nombre' => 'PC\'s / Computadoras', 'orden' => 8],
+        ['id' => 'infraestructura_servidores', 'nombre' => 'Infraestructura y servidores', 'orden' => 9],
+        ['id' => 'software_polizas', 'nombre' => 'Software y polizas', 'orden' => 10],
         ['id' => 'otros', 'nombre' => 'Otros', 'orden' => 99],
     ],
 
@@ -106,6 +108,9 @@ return [
         'Tarjetas de Red' => 'componentes',
         'Tarjetas de Sonido' => 'componentes',
         'Controladores' => 'componentes',
+        'Gabinetes' => 'componentes',
+        'TARJETA CONTROLADORA' => 'componentes',
+        'VIDEO' => 'componentes',
         // Impresoras (incluye Scanner y Tinta como subcategorías)
         'Impresoras' => 'impresoras',
         'Impresoras de Inyección' => 'impresoras',
@@ -127,6 +132,24 @@ return [
         'Consumibles Tinta' => 'impresoras',
         'Repuestos de Tinta' => 'impresoras',
         'Respuertos de Tinta' => 'impresoras',
+        'CONSUMIBLES' => 'impresoras',
+        'MULTIFUNCIONALES' => 'impresoras',
+        // Infraestructura y servidores (antes Otros / rack)
+        'CONMUTADORES' => 'infraestructura_servidores',
+        'COMUNICACIONES UNIFICADAS' => 'infraestructura_servidores',
+        'OPTICOS' => 'infraestructura_servidores',
+        'ÓPTICOS' => 'infraestructura_servidores',
+        'REDES' => 'infraestructura_servidores',
+        'SERVIDORES' => 'infraestructura_servidores',
+        'GABINETE DE RACK' => 'infraestructura_servidores',
+        'Gabinete de rack' => 'infraestructura_servidores',
+        // Software y polizas (antes Otros)
+        'SOFTWARE' => 'software_polizas',
+        'POLIZA DE SERVICIO' => 'software_polizas',
+        'POLIZAS DE GARANTIA' => 'software_polizas',
+        'POLIZAS DE GARANTÍA' => 'software_polizas',
+        'POLIZA DE GARANTIAS COMPUTO GHIA 2 AÑOS' => 'software_polizas',
+        'POLIZA DE GARANTÍAS COMPUTO GHIA 2 AÑOS' => 'software_polizas',
         // PC's / Computadoras de escritorio
         'PC' => 'pcs',
         'PCs' => 'pcs',
@@ -134,8 +157,13 @@ return [
         'Computadoras de escritorio' => 'pcs',
         'All in One' => 'pcs',
         'Torres' => 'pcs',
-        'Gabinetes' => 'pcs',
         'Kits de Computadora' => 'pcs',
+        // Antes en "Otros" (CVA); visibles bajo PC's / Computadoras
+        'PCS ALTO DESEMPEÑO ( GAMERS )' => 'pcs',
+        'PCS ALTO DESEMPEÑO (GAMERS)' => 'pcs',
+        'PC´S' => 'pcs',
+        "PC'S" => 'pcs',
+        'PC’S' => 'pcs',
     ],
 
     /*
@@ -156,12 +184,16 @@ return [
     ],
 
     'grupo_contiene' => [
+        ['contiene' => ['GABINETE DE RACK', 'GABINETE RACK'], 'categoria' => 'infraestructura_servidores'],
+        ['contiene' => ['POLIZA DE GARANT', 'POLIZA DE SERVICIO'], 'categoria' => 'software_polizas'],
+        ['contiene' => ['Gabinete'], 'categoria' => 'componentes'],
+        ['contiene' => ['PCS ALTO DESEMPEÑO'], 'categoria' => 'pcs'],
         ['contiene' => ['Laptop', 'Notebook', 'Chromebook', 'MacBook', 'Workstation', 'Portatil', 'Portátil'], 'categoria' => 'laptops'],
         ['contiene' => ['Monitor', 'Pantalla'], 'categoria' => 'monitores'],
         ['contiene' => ['Audífono', 'Audifonos', 'Auriculares', 'Bocina', 'Micrófono', 'Micro', 'Audio', 'Sonido'], 'categoria' => 'audio'],
         ['contiene' => ['SSD', 'HDD', 'Disco', 'Almacenamiento', 'NAS', 'Memoria'], 'categoria' => 'almacenamiento'],
         ['contiene' => ['Impresora', 'Printer', 'Scanner', 'Tinta', 'Tóner'], 'categoria' => 'impresoras'],
-        ['contiene' => ['PC ', 'Desktop', 'All in One', 'Torre', 'Gabinete', 'Escritorio', 'Computadora de escritorio'], 'categoria' => 'pcs'],
+        ['contiene' => ['PC ', 'Desktop', 'All in One', 'Torre', 'Escritorio', 'Computadora de escritorio'], 'categoria' => 'pcs'],
         ['contiene' => ['Procesador', 'Tarjeta Madre', 'RAM', 'Fuente', 'GPU', 'Gráfica', 'Refrigeración', 'Ventilador'], 'categoria' => 'componentes'],
         ['contiene' => ['Mouse', 'Teclado', 'Hub', 'Cámara', 'Accesorio', 'Cable', 'Adaptador', 'Cargador', 'Fundas', 'Mochila', 'Soporte', 'VR', 'Silla', 'Pad'], 'categoria' => 'accesorios'],
     ],

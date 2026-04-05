@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Mail\CotizacionInvitadoMail;
 use App\Models\CotizacionInvitado;
+use App\Support\DocumentoNumeracion;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -44,25 +46,46 @@ class CotizacionInvitadoPublicController extends Controller
         $email = $valid['email'];
 
         try {
-            DB::transaction(function () use ($email, $items, $total) {
-                $cotizacion = CotizacionInvitado::create([
-                    'email' => $email,
-                    'total' => round($total, 2),
-                ]);
+            $cotizacion = null;
+            $ultimoError = null;
+            for ($intento = 0; $intento < 8; $intento++) {
+                try {
+                    $cotizacion = DB::transaction(function () use ($email, $items, $total) {
+                        $id = DocumentoNumeracion::reservarSiguienteIdCotizacion();
+                        $c = new CotizacionInvitado([
+                            'email' => $email,
+                            'total' => round($total, 2),
+                        ]);
+                        $c->id = $id;
+                        DocumentoNumeracion::guardarModeloConIdExplicito($c);
 
-                foreach ($items as $it) {
-                    $cotizacion->items()->create([
-                        'clave' => $it['clave'],
-                        'nombre_producto' => $it['nombre_producto'],
-                        'cantidad' => (int) $it['cantidad'],
-                        'precio_unitario' => (float) $it['precio_unitario'],
-                        'imagen' => $it['imagen'] ?? null,
-                    ]);
+                        foreach ($items as $it) {
+                            $c->items()->create([
+                                'clave' => $it['clave'],
+                                'nombre_producto' => $it['nombre_producto'],
+                                'cantidad' => (int) $it['cantidad'],
+                                'precio_unitario' => (float) $it['precio_unitario'],
+                                'imagen' => $it['imagen'] ?? null,
+                            ]);
+                        }
+
+                        $c->load('items');
+                        Mail::to($email)->send(new CotizacionInvitadoMail($c));
+
+                        return $c;
+                    });
+                    break;
+                } catch (QueryException $e) {
+                    $ultimoError = $e;
+                    if (! DocumentoNumeracion::esViolacionClavePrimariaDuplicada($e)) {
+                        throw $e;
+                    }
                 }
+            }
 
-                $cotizacion->load('items');
-                Mail::to($email)->send(new CotizacionInvitadoMail($cotizacion));
-            });
+            if (! $cotizacion) {
+                throw $ultimoError ?? new \RuntimeException('No se pudo asignar folio de cotización.');
+            }
         } catch (\Throwable $e) {
             report($e);
 

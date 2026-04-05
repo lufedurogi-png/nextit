@@ -167,4 +167,31 @@ class PedidoAdminController extends Controller
 
         return $pdf->download('pedido-'.$pedido->folio.'.pdf');
     }
+
+    /**
+     * Actualizar estatus del pedido (admin).
+     */
+    public function updateEstatusPedido(Request $request, int $id): JsonResponse
+    {
+        $valid = $request->validate([
+            'estatus_pedido' => 'required|string|in:pendiente,en_proceso,enviado,completado,cancelado',
+        ]);
+
+        $pedido = Pedido::find($id);
+        if (! $pedido) {
+            return response()->json(['success' => false, 'message' => 'Pedido no encontrado'], 404);
+        }
+
+        $pedido->estatus_pedido = $valid['estatus_pedido'];
+        $pedido->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Estatus actualizado',
+            'data' => [
+                'id' => $pedido->id,
+                'estatus_pedido' => $pedido->estatus_pedido,
+            ],
+        ]);
+    }
 }

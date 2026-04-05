@@ -612,7 +612,8 @@ class ProductoController extends Controller
         return response()->json(['success' => true, 'data' => $data]);
     }
 
-    private const CAMPOS_EXCLUIDOS_FILTROS = ['descripcion', 'id', 'id_producto', 'imagen', 'imagenes', 'brand_image'];
+    /** Nombres de campo que no generan filtro (comparación por segmento, p. ej. "x / id"). */
+    private const CAMPOS_EXCLUIDOS_FILTRO_DINAMICO = ['clave', 'id', 'imagen', 'imagenes', 'descripcion', 'brand_image'];
 
     private function computeFiltrosDinamicos(Request $request): array
     {
@@ -666,8 +667,10 @@ class ProductoController extends Controller
             $manualQuery->where('precio', '<=', $precioMax);
         }
 
-        $cva = $cvaQuery->limit(400)->get();
-        $manual = $manualQuery->limit(150)->get();
+        // Sin límite artificial: se cargan todos los productos que ya filtra el query (grupo / categoría / búsqueda).
+        // El coste es RAM + CPU proporcional a ese conjunto (no usar números absurdos en SQL: el cuello es la memoria PHP).
+        $cva = $cvaQuery->get();
+        $manual = $manualQuery->get();
         $productos = $cva->concat($manual)->values();
 
         if (! empty($filtrosYaSeleccionados)) {
@@ -748,8 +751,8 @@ class ProductoController extends Controller
         $cacheKey = 'claves_filtros_'.md5(serialize([$busquedaQ, $grupo, $categoriaPrincipal, $marca, $precioMin, $precioMax, $filtros]));
 
         return Cache::remember($cacheKey, 300, function () use ($cvaQuery, $manualQuery, $filtros) {
-            $cva = $cvaQuery->limit(1500)->get();
-            $manual = $manualQuery->limit(300)->get();
+            $cva = $cvaQuery->get();
+            $manual = $manualQuery->get();
             $resultado = [];
             foreach ($cva->concat($manual) as $p) {
                 if ($this->productoCoincideConFiltros($p, $filtros)) {
@@ -812,7 +815,7 @@ class ProductoController extends Controller
         $out = [];
         $agregar = function (string $key, $valor) use (&$out) {
             $k = trim($key);
-            if ($k === '') {
+            if ($k === '' || $this->excluirNombreFiltroDinamico($k)) {
                 return;
             }
             $v = is_scalar($valor) ? trim((string) $valor) : null;
@@ -822,9 +825,6 @@ class ProductoController extends Controller
             }
         };
 
-        if ($p->clave) {
-            $agregar('Clave', $p->clave);
-        }
         if ($p->codigo_fabricante) {
             $agregar('Código de fabricante', $p->codigo_fabricante);
         }
@@ -845,10 +845,8 @@ class ProductoController extends Controller
                 }
             }
         }
-        foreach ($p->raw_data ?? [] as $k => $v) {
-            if (is_scalar($v)) {
-                $agregar($k, $v);
-            }
+        foreach ($this->iterarParesRawDataParaFiltros($p->raw_data) as [$k, $v]) {
+            $agregar($k, $v);
         }
         foreach ($p->especificaciones_tecnicas ?? [] as $item) {
             if (is_array($item) && ! empty(trim($item['nombre'] ?? ''))) {
@@ -873,17 +871,12 @@ class ProductoController extends Controller
 
     private function agregarFiltrosDeProducto(ProductoCva|ProductoManual $p, array &$agregados, array &$etiquetas): void
     {
-        $excluidos = array_map('strtolower', self::CAMPOS_EXCLUIDOS_FILTROS);
-
-        $agregar = function (string $key, $valor) use (&$agregados, &$etiquetas, $excluidos) {
+        $agregar = function (string $key, $valor) use (&$agregados, &$etiquetas) {
             $k = trim($key);
-            if ($k === '' || in_array(strtolower($k), $excluidos)) {
+            if ($k === '' || $this->excluirNombreFiltroDinamico($k)) {
                 return;
             }
             $canon = $this->claveCanonicaFiltro($k);
-            if (in_array($canon, array_map('strtolower', self::CAMPOS_EXCLUIDOS_FILTROS))) {
-                return;
-            }
             $v = is_scalar($valor) ? trim((string) $valor) : null;
             if ($v !== null && $v !== '') {
                 $agregados[$canon] = $agregados[$canon] ?? [];
@@ -894,9 +887,6 @@ class ProductoController extends Controller
             }
         };
 
-        if ($p->clave) {
-            $agregar('Clave', $p->clave);
-        }
         if ($p->codigo_fabricante) {
             $agregar('Código de fabricante', $p->codigo_fabricante);
         }
@@ -918,10 +908,8 @@ class ProductoController extends Controller
             }
         }
 
-        foreach ($p->raw_data ?? [] as $rawKey => $v) {
-            if (is_scalar($v) && ! in_array(strtolower(trim((string) $rawKey)), array_map('strtolower', self::CAMPOS_EXCLUIDOS_FILTROS))) {
-                $agregar((string) $rawKey, $v);
-            }
+        foreach ($this->iterarParesRawDataParaFiltros($p->raw_data) as [$rawKey, $rawVal]) {
+            $agregar($rawKey, $rawVal);
         }
 
         foreach ($p->especificaciones_tecnicas ?? [] as $item) {
@@ -933,6 +921,94 @@ class ProductoController extends Controller
         foreach ($p->dimensiones ?? [] as $item) {
             if (is_array($item) && ! empty(trim($item['nombre'] ?? ''))) {
                 $agregar($item['nombre'], $item['valor'] ?? '');
+            }
+        }
+    }
+
+    /**
+     * Excluye si algún segmento del nombre (separado por " / " en rutas anidadas) coincide
+     * con clave, id, imagen, imagenes, descripcion o brand_image (sin distinguir mayúsculas).
+     */
+    private function excluirNombreFiltroDinamico(string $nombre): bool
+    {
+        $nombre = trim($nombre);
+        if ($nombre === '') {
+            return true;
+        }
+        $partes = preg_split('#\s*/\s*#u', $nombre) ?: [];
+        foreach ($partes as $p) {
+            $p = mb_strtolower(trim($p), 'UTF-8');
+            if ($p !== '' && in_array($p, self::CAMPOS_EXCLUIDOS_FILTRO_DINAMICO, true)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @return \Generator<int, array{0: string, 1: string}>
+     */
+    private function iterarParesRawDataParaFiltros(?array $raw): \Generator
+    {
+        if ($raw === null || $raw === []) {
+            return;
+        }
+        yield from $this->recorrerRawDataNodoParaFiltros($raw, '');
+    }
+
+    /**
+     * @return \Generator<int, array{0: string, 1: string}>
+     */
+    private function recorrerRawDataNodoParaFiltros(array $node, string $prefix): \Generator
+    {
+        $keys = array_keys($node);
+        $isList = $keys === range(0, count($node) - 1);
+
+        if ($isList && $node !== []) {
+            $first = $node[0];
+            if (is_array($first) && array_key_exists('nombre', $first)) {
+                foreach ($node as $item) {
+                    if (! is_array($item)) {
+                        continue;
+                    }
+                    $nombre = trim((string) ($item['nombre'] ?? ''));
+                    if ($nombre === '' || $this->excluirNombreFiltroDinamico($nombre)) {
+                        continue;
+                    }
+                    $val = $item['valor'] ?? null;
+                    if (is_scalar($val) && trim((string) $val) !== '') {
+                        yield [$nombre, trim((string) $val)];
+                    }
+                }
+            }
+
+            return;
+        }
+
+        foreach ($node as $k => $v) {
+            $seg = is_string($k) || is_int($k) ? trim((string) $k) : '';
+            if ($seg === '') {
+                continue;
+            }
+            $full = $prefix === '' ? $seg : $prefix.' / '.$seg;
+
+            if ($this->excluirNombreFiltroDinamico($seg)) {
+                continue;
+            }
+
+            if (is_array($v)) {
+                yield from $this->recorrerRawDataNodoParaFiltros($v, $full);
+            } elseif (is_scalar($v)) {
+                $t = trim((string) $v);
+                if ($t === '') {
+                    continue;
+                }
+                $label = $prefix === '' ? $seg : $full;
+                if ($this->excluirNombreFiltroDinamico($label)) {
+                    continue;
+                }
+                yield [$label, $t];
             }
         }
     }

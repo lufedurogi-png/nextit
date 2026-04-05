@@ -89,7 +89,8 @@ class UserService
         }
 
         if ($permission) {
-            $query->whereHas('permissions', fn($q) => $q->where('name', $permission));
+            // Incluye permisos directos y los heredados por rol (getAllPermissions en la API).
+            $query->permission($permission);
         }
 
         return $query->orderBy('created_at', 'desc')->get();

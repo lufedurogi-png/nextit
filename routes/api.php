@@ -120,6 +120,7 @@ Route::prefix('v1')->group(function () {
 
             Route::get('/carrito', [CarritoController::class, 'index'])->name('carrito.index');
             Route::post('/carrito', [CarritoController::class, 'store'])->name('carrito.store');
+            Route::post('/carrito/sync', [CarritoController::class, 'sync'])->name('carrito.sync');
             Route::delete('/carrito/items/{clave}', [CarritoController::class, 'destroy'])->name('carrito.destroy');
             Route::post('/carrito/checkout', [CarritoController::class, 'checkout'])->name('carrito.checkout');
 
@@ -199,6 +200,7 @@ Route::prefix('v1')->group(function () {
             Route::post('/productos-manuales/{id}/anular', [ProductoManualAdminController::class, 'toggleAnulado'])->name('productos-manuales.toggle-anulado');
 
             Route::get('/pedidos', [PedidoAdminController::class, 'index'])->name('pedidos.admin.index');
+            Route::patch('/pedidos/{id}/estatus', [PedidoAdminController::class, 'updateEstatusPedido'])->name('pedidos.admin.estatus');
             Route::get('/pedidos/{id}/pdf', [PedidoAdminController::class, 'downloadPdf'])->name('pedidos.admin.pdf');
             Route::get('/pedidos/{id}', [PedidoAdminController::class, 'show'])->name('pedidos.admin.show');
 

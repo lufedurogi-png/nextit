@@ -5,11 +5,14 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\Cotizacion;
 use App\Models\CotizacionItem;
+use App\Support\DocumentoNumeracion;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class CotizacionController extends Controller
 {
@@ -83,19 +86,44 @@ class CotizacionController extends Controller
             $total += $q * $precio;
         }
 
-        $cotizacion = $user->cotizaciones()->create(['total' => round($total, 2)]);
+        $cotizacion = null;
+        $ultimoError = null;
+        for ($intento = 0; $intento < 8; $intento++) {
+            try {
+                $cotizacion = DB::transaction(function () use ($user, $items, $total) {
+                    $id = DocumentoNumeracion::reservarSiguienteIdCotizacion();
+                    $c = new Cotizacion([
+                        'user_id' => $user->id,
+                        'total' => round($total, 2),
+                    ]);
+                    $c->id = $id;
+                    DocumentoNumeracion::guardarModeloConIdExplicito($c);
 
-        foreach ($items as $it) {
-            $cotizacion->items()->create([
-                'clave' => $it['clave'],
-                'nombre_producto' => $it['nombre_producto'],
-                'cantidad' => (int) $it['cantidad'],
-                'precio_unitario' => (float) $it['precio_unitario'],
-                'imagen' => $it['imagen'] ?? null,
-            ]);
+                    foreach ($items as $it) {
+                        $c->items()->create([
+                            'clave' => $it['clave'],
+                            'nombre_producto' => $it['nombre_producto'],
+                            'cantidad' => (int) $it['cantidad'],
+                            'precio_unitario' => (float) $it['precio_unitario'],
+                            'imagen' => $it['imagen'] ?? null,
+                        ]);
+                    }
+                    $c->load('items');
+
+                    return $c;
+                });
+                break;
+            } catch (QueryException $e) {
+                $ultimoError = $e;
+                if (! DocumentoNumeracion::esViolacionClavePrimariaDuplicada($e)) {
+                    throw $e;
+                }
+            }
         }
 
-        $cotizacion->load('items');
+        if (! $cotizacion) {
+            throw $ultimoError ?? new \RuntimeException('No se pudo asignar folio de cotización.');
+        }
 
         return response()->json([
             'success' => true,
@@ -127,7 +155,7 @@ class CotizacionController extends Controller
         $pdf = Pdf::loadView('pdf.cotizacion', ['cotizacion' => $cotizacion]);
         $pdf->setPaper('a4', 'portrait');
 
-        return $pdf->download('cotizacion-' . $cotizacion->id . '.pdf');
+        return $pdf->download('cotizacion-'.$cotizacion->id.'.pdf');
     }
 
     public function update(Request $request, int $id): JsonResponse
@@ -208,6 +236,7 @@ class CotizacionController extends Controller
                 $limite = $c->deleted_at->copy()->addDays(30);
                 $diasRestantes = $limite->isPast() ? 0 : max(0, (int) now()->startOfDay()->diffInDays($limite->copy()->startOfDay(), false));
             }
+
             return array_merge(self::formatCotizacion($c), [
                 'deleted_at' => $deletedAt,
                 'dias_para_restaurar' => $diasRestantes,
