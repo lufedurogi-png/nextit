@@ -1,0 +1,243 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+@layer base {
+    .font-playfair {
+        font-family: var(--font-playfair), serif;
+    }
+    
+    .font-vt323 {
+        font-family: var(--font-vt323), monospace;
+    }
+}
+
+/* Selects nativos del panel admin: lista desplegable legible en claro/oscuro (evita texto claro sobre fondo claro). */
+@layer components {
+    .admin-native-select-dark {
+        color-scheme: dark;
+    }
+    .admin-native-select-dark option,
+    .admin-native-select-dark optgroup {
+        background-color: rgb(31 41 55);
+        color: rgb(243 244 246);
+    }
+    .admin-native-select-light {
+        color-scheme: light;
+    }
+    .admin-native-select-light option,
+    .admin-native-select-light optgroup {
+        background-color: rgb(255 255 255);
+        color: rgb(17 24 39);
+    }
+
+    /* Inputs type=date en panel admin (modo oscuro): icono de calendario legible (sin color-scheme en el input: evita icono nativo que no invierte bien). */
+    .admin-date-input-dark::-webkit-calendar-picker-indicator {
+        filter: invert(1) !important;
+        opacity: 0.92;
+        cursor: pointer;
+    }
+    .admin-date-input-dark::-webkit-calendar-picker-indicator:hover {
+        opacity: 1;
+    }
+    .admin-date-input-dark::-moz-calendar-picker-indicator {
+        filter: invert(1) !important;
+        opacity: 0.92;
+        cursor: pointer;
+    }
+
+    /* Filtro con valor (fondo claro): icono de calendario oscuro, sin invert */
+    .admin-date-input-filled::-webkit-calendar-picker-indicator {
+        filter: none !important;
+        opacity: 1;
+        cursor: pointer;
+    }
+    .admin-date-input-filled::-moz-calendar-picker-indicator {
+        filter: none !important;
+        opacity: 1;
+        cursor: pointer;
+    }
+}
+
+/* Registro: icono emergencia — tintes sólidos marca (#FF8000 ↔ emerald) */
+.privacy-icon-tint-orange {
+    filter: brightness(0) saturate(100%) invert(54%) sepia(98%) saturate(1800%) hue-rotate(359deg) brightness(103%) contrast(105%);
+}
+.privacy-icon-tint-green {
+    filter: brightness(0) saturate(100%) invert(44%) sepia(72%) saturate(640%) hue-rotate(115deg) brightness(96%) contrast(94%);
+}
+
+@keyframes carrusel-right {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+.animate-carrusel-right {
+    animation: carrusel-right 90s linear infinite;
+}
+
+/* --- Coleccionador (viejo Laravel resources/css/app.css) --- */
+@layer base {
+    :root {
+        --app-primary: #0b1b3c;
+        --app-primary-2: #153777;
+        --app-accent: #c9a227;
+        --app-bg: #f4f3ef;
+        --app-card: #ffffff;
+        --app-text: #111827;
+        --app-subtle: #6b7280;
+    }
+
+    .theme-dark body {
+        background-color: #030712 !important;
+        color: #e5e7eb !important;
+    }
+
+    .theme-dark .app-card,
+    .theme-dark .bg-white,
+    .theme-dark .bg-white\/90,
+    .theme-dark .bg-white\/95,
+    .theme-dark .bg-slate-100 {
+        background-color: #0f172a !important;
+        color: #e5e7eb !important;
+    }
+
+    .theme-dark .app-text,
+    .theme-dark .text-slate-900,
+    .theme-dark .text-gray-900,
+    .theme-dark .text-gray-800,
+    .theme-dark .text-blue-950 {
+        color: #f8fafc !important;
+    }
+
+    .theme-dark .app-subtle,
+    .theme-dark .text-gray-600,
+    .theme-dark .text-gray-500,
+    .theme-dark .text-slate-600,
+    .theme-dark .text-slate-500 {
+        color: #94a3b8 !important;
+    }
+
+    .theme-dark .border-gray-100,
+    .theme-dark .border-gray-200,
+    .theme-dark .border-slate-200,
+    .theme-dark .border-blue-100 {
+        border-color: #1e293b !important;
+    }
+
+    .theme-dark .icon-adapt {
+        filter: brightness(0) invert(1);
+        opacity: 0.95;
+    }
+
+    .theme-dark .theme-logout-btn {
+        background-color: rgba(127, 29, 29, 0.25) !important;
+        border-color: rgba(248, 113, 113, 0.35) !important;
+        color: #fecaca !important;
+    }
+}
+
+@layer components {
+    .app-bg-pattern {
+        background-image:
+            radial-gradient(circle at 10% 10%, rgba(11, 27, 60, 0.12), transparent 28%),
+            radial-gradient(circle at 90% 2%, rgba(21, 55, 119, 0.1), transparent 30%),
+            radial-gradient(circle at 50% 100%, rgba(201, 162, 39, 0.1), transparent 26%);
+    }
+
+    .hero-top {
+        background: linear-gradient(140deg, var(--app-primary) 0%, #102a59 58%, var(--app-primary-2) 100%);
+        border-bottom-left-radius: 2rem;
+        border-bottom-right-radius: 2rem;
+    }
+
+    .metric-card {
+        border-radius: 1.15rem;
+        padding: 1rem;
+        color: #fff;
+        box-shadow: 0 10px 30px rgba(2, 6, 23, 0.15);
+    }
+
+    .metric-gold {
+        background: linear-gradient(130deg, #cfb35f 0%, #a58521 100%);
+    }
+
+    .metric-navy {
+        background: linear-gradient(130deg, #1b3f83 0%, #0b1b3c 100%);
+    }
+
+    .metric-olive {
+        background: linear-gradient(130deg, #70835a 0%, #3f5130 100%);
+    }
+
+    .metric-slate {
+        background: linear-gradient(130deg, #4b5563 0%, #1f2937 100%);
+    }
+
+    .bottom-nav-shell {
+        border-top-left-radius: 1.4rem;
+        border-top-right-radius: 1.4rem;
+        box-shadow: 0 -8px 28px rgba(15, 23, 42, 0.12);
+    }
+
+    .nav-entrance {
+        animation: navSlideIn 360ms ease-out;
+    }
+
+    .nav-item {
+        transition: color 220ms ease, transform 220ms ease;
+    }
+
+    .nav-item .nav-icon-wrap {
+        transition: transform 220ms ease, box-shadow 220ms ease, background-color 220ms ease;
+    }
+
+    .nav-item:active .nav-icon-wrap {
+        transform: scale(0.94);
+    }
+
+    .nav-item.is-active .nav-icon-wrap {
+        animation: softPop 280ms ease-out;
+    }
+
+    .nav-item.is-active::after {
+        content: "";
+        position: absolute;
+        bottom: 3px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 22px;
+        height: 3px;
+        border-radius: 9999px;
+        background: #c9a227;
+    }
+}
+
+@keyframes navSlideIn {
+    from {
+        transform: translateY(16px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes softPop {
+    0% {
+        transform: scale(0.9);
+    }
+    70% {
+        transform: scale(1.06);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
