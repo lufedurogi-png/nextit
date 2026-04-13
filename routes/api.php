@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\V1\DatoFacturacionController;
 use App\Http\Controllers\Api\V1\DesarrolladorController;
 use App\Http\Controllers\Api\V1\DireccionEnvioController;
 use App\Http\Controllers\Api\V1\FavoritoController;
+use App\Http\Controllers\Api\V1\MercadoPagoController;
 use App\Http\Controllers\Api\V1\PayPalController;
 use App\Http\Controllers\Api\V1\PedidoController;
 use App\Http\Controllers\Api\V1\ProductoController;
@@ -82,6 +83,9 @@ Route::prefix('v1')->group(function () {
     Route::post('/cotizaciones-invitado', [CotizacionInvitadoPublicController::class, 'store'])
         ->middleware('throttle:20,1')
         ->name('cotizaciones-invitado.store');
+
+    Route::post('/mercadopago/webhook', [MercadoPagoController::class, 'webhook'])
+        ->name('mercadopago.webhook');
     // -------------------------------------------------------------
 
     // protected routes here
@@ -126,6 +130,9 @@ Route::prefix('v1')->group(function () {
 
             Route::post('/paypal/orders', [PayPalController::class, 'createOrder'])->name('paypal.orders.create');
             Route::post('/paypal/orders/capture', [PayPalController::class, 'capture'])->name('paypal.orders.capture');
+
+            Route::post('/mercadopago/preferences', [MercadoPagoController::class, 'createPreference'])->name('mercadopago.preferences.create');
+            Route::post('/mercadopago/payments/confirm', [MercadoPagoController::class, 'confirm'])->name('mercadopago.payments.confirm');
 
             Route::get('/favoritos', [FavoritoController::class, 'index'])->name('favoritos.index');
             Route::post('/favoritos', [FavoritoController::class, 'store'])->name('favoritos.store');

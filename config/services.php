@@ -56,4 +56,13 @@ return [
         'secret' => env('PAYPAL_SECRET'),
     ],
 
+    'mercadopago' => [
+        'access_token' => env('MERCADOPAGO_ACCESS_TOKEN'),
+        'public_key' => env('MERCADOPAGO_PUBLIC_KEY'),
+        'client_id' => env('MERCADOPAGO_CLIENT_ID'),
+        'client_secret' => env('MERCADOPAGO_CLIENT_SECRET'),
+        // Opcional: HTTPS público para webhooks en local (ej. ngrok). Si no se define, se deriva de APP_URL.
+        'notification_url' => env('MERCADOPAGO_NOTIFICATION_URL'),
+    ],
+
 ];

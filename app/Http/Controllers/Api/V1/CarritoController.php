@@ -342,6 +342,13 @@ class CarritoController extends Controller
             ], 422);
         }
 
+        if (strtolower($valid['metodo_pago']) === 'mercadopago') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Para Mercado Pago usa el flujo de pago dedicado (no este endpoint).',
+            ], 422);
+        }
+
         $items = $user->carritoItems()->get();
 
         if ($items->isEmpty()) {
