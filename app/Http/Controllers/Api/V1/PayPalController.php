@@ -12,6 +12,7 @@ use App\Models\ProductoManual;
 use App\Services\PayPalService;
 use App\Services\ProductoStockService;
 use App\Support\DocumentoNumeracion;
+use App\Support\MetodoPagoToggle;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Database\QueryException;
@@ -50,6 +51,13 @@ class PayPalController extends Controller
     /** Crea orden en PayPal a partir del carrito y devuelve URL de aprobación. */
     public function createOrder(Request $request): JsonResponse
     {
+        if (! MetodoPagoToggle::isEnabled('paypal')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'PayPal está temporalmente desactivado.',
+            ], 422);
+        }
+
         if (! $this->paypal->isConfigured()) {
             return response()->json([
                 'success' => false,
@@ -61,7 +69,7 @@ class PayPalController extends Controller
             'return_url' => 'required|string|max:2048',
             'cancel_url' => 'required|string|max:2048',
             'direccion_envio_id' => 'required|integer',
-            'datos_facturacion_id' => 'required|integer',
+            'datos_facturacion_id' => 'nullable|integer',
         ]);
 
         foreach (['return_url' => $valid['return_url'], 'cancel_url' => $valid['cancel_url']] as $label => $u) {
@@ -83,12 +91,17 @@ class PayPalController extends Controller
             return response()->json(['success' => false, 'message' => 'Dirección de envío no válida.'], 422);
         }
 
-        $fac = DatoFacturacion::query()
-            ->where('user_id', $user->id)
-            ->where('id', $valid['datos_facturacion_id'])
-            ->first();
-        if (! $fac) {
-            return response()->json(['success' => false, 'message' => 'Datos de facturación no válidos.'], 422);
+        $datosFacturacionId = $valid['datos_facturacion_id'] ?? null;
+        $facturacionEtiqueta = 'No solicitada';
+        if ($datosFacturacionId !== null) {
+            $fac = DatoFacturacion::query()
+                ->where('user_id', $user->id)
+                ->where('id', $datosFacturacionId)
+                ->first();
+            if (! $fac) {
+                return response()->json(['success' => false, 'message' => 'Datos de facturación no válidos.'], 422);
+            }
+            $facturacionEtiqueta = trim($fac->razon_social.' · RFC '.$fac->rfc);
         }
 
         $items = $user->carritoItems()->orderBy('updated_at', 'desc')->get();
@@ -183,9 +196,9 @@ class PayPalController extends Controller
             'total' => $total,
             'currency' => $currency,
             'direccion_envio_id' => (int) $valid['direccion_envio_id'],
-            'datos_facturacion_id' => (int) $valid['datos_facturacion_id'],
+            'datos_facturacion_id' => $datosFacturacionId !== null ? (int) $datosFacturacionId : null,
             'direccion_etiqueta' => trim($dir->nombre.' · '.$dir->calle.' '.$dir->numero_exterior.', '.$dir->colonia.', '.$dir->ciudad),
-            'facturacion_etiqueta' => trim($fac->razon_social.' · RFC '.$fac->rfc),
+            'facturacion_etiqueta' => $facturacionEtiqueta,
             'items' => $lines,
         ];
 
@@ -402,7 +415,9 @@ class PayPalController extends Controller
                             'estado_pago' => 'pagado',
                             'estatus_pedido' => 'pendiente',
                             'direccion_envio_id' => (int) ($snapshotLocal['direccion_envio_id'] ?? 0),
-                            'datos_facturacion_id' => (int) ($snapshotLocal['datos_facturacion_id'] ?? 0),
+                            'datos_facturacion_id' => isset($snapshotLocal['datos_facturacion_id']) && $snapshotLocal['datos_facturacion_id'] !== null
+                                ? (int) $snapshotLocal['datos_facturacion_id']
+                                : null,
                         ]);
                         break;
                     } catch (QueryException $qe) {

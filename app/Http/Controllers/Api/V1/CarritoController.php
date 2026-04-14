@@ -13,6 +13,7 @@ use App\Services\MargenVentaService;
 use App\Services\ProductoStockService;
 use App\Support\CatalogStockCache;
 use App\Support\DocumentoNumeracion;
+use App\Support\MetodoPagoToggle;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -314,8 +315,16 @@ class CarritoController extends Controller
         $valid = $request->validate([
             'metodo_pago' => 'required|string|max:50',
             'direccion_envio_id' => 'required|integer',
-            'datos_facturacion_id' => 'required|integer',
+            'datos_facturacion_id' => 'nullable|integer',
         ]);
+
+        $metodo = strtolower(trim((string) $valid['metodo_pago']));
+        if ($metodo === 'tarjeta' && ! MetodoPagoToggle::isEnabled('tarjeta')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Este método de pago está temporalmente desactivado.',
+            ], 422);
+        }
 
         $user = Auth::user();
 
@@ -327,12 +336,15 @@ class CarritoController extends Controller
             return response()->json(['success' => false, 'message' => 'Dirección de envío no válida.'], 422);
         }
 
-        $fac = DatoFacturacion::query()
-            ->where('user_id', $user->id)
-            ->where('id', $valid['datos_facturacion_id'])
-            ->first();
-        if (! $fac) {
-            return response()->json(['success' => false, 'message' => 'Datos de facturación no válidos.'], 422);
+        $datosFacturacionId = $valid['datos_facturacion_id'] ?? null;
+        if ($datosFacturacionId !== null) {
+            $fac = DatoFacturacion::query()
+                ->where('user_id', $user->id)
+                ->where('id', $datosFacturacionId)
+                ->first();
+            if (! $fac) {
+                return response()->json(['success' => false, 'message' => 'Datos de facturación no válidos.'], 422);
+            }
         }
 
         if (strtolower($valid['metodo_pago']) === 'paypal') {
@@ -388,7 +400,7 @@ class CarritoController extends Controller
                     'estado_pago' => 'pagado',
                     'estatus_pedido' => 'completado',
                     'direccion_envio_id' => (int) $valid['direccion_envio_id'],
-                    'datos_facturacion_id' => (int) $valid['datos_facturacion_id'],
+                    'datos_facturacion_id' => $valid['datos_facturacion_id'] !== null ? (int) $valid['datos_facturacion_id'] : null,
                 ]);
 
                 $monto = 0;

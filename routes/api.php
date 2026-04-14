@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\V1\Admin\AdminBackupController;
 use App\Http\Controllers\Api\V1\Admin\AdminChatController;
 use App\Http\Controllers\Api\V1\Admin\AdminCotizacionInvitadoController;
 use App\Http\Controllers\Api\V1\Admin\AdminMargenVentaController;
+use App\Http\Controllers\Api\V1\Admin\AdminMetodoPagoController;
 use App\Http\Controllers\Api\V1\Admin\AdminStatsController;
 use App\Http\Controllers\Api\V1\Admin\DesarrolladorAdminController;
 use App\Http\Controllers\Api\V1\Admin\ManagerUserController;
@@ -23,6 +24,7 @@ use App\Http\Controllers\Api\V1\DesarrolladorController;
 use App\Http\Controllers\Api\V1\DireccionEnvioController;
 use App\Http\Controllers\Api\V1\FavoritoController;
 use App\Http\Controllers\Api\V1\MercadoPagoController;
+use App\Http\Controllers\Api\V1\MetodoPagoController;
 use App\Http\Controllers\Api\V1\PayPalController;
 use App\Http\Controllers\Api\V1\PedidoController;
 use App\Http\Controllers\Api\V1\ProductoController;
@@ -133,6 +135,7 @@ Route::prefix('v1')->group(function () {
 
             Route::post('/mercadopago/preferences', [MercadoPagoController::class, 'createPreference'])->name('mercadopago.preferences.create');
             Route::post('/mercadopago/payments/confirm', [MercadoPagoController::class, 'confirm'])->name('mercadopago.payments.confirm');
+            Route::get('/metodos-pago', [MetodoPagoController::class, 'index'])->name('metodos-pago.index');
 
             Route::get('/favoritos', [FavoritoController::class, 'index'])->name('favoritos.index');
             Route::post('/favoritos', [FavoritoController::class, 'store'])->name('favoritos.store');
@@ -214,6 +217,8 @@ Route::prefix('v1')->group(function () {
             Route::get('/margen-venta', [AdminMargenVentaController::class, 'show'])->name('margen-venta.show');
             Route::put('/margen-venta', [AdminMargenVentaController::class, 'update'])->name('margen-venta.update');
             Route::post('/margen-venta/reset', [AdminMargenVentaController::class, 'reset'])->name('margen-venta.reset');
+            Route::get('/metodos-pago', [AdminMetodoPagoController::class, 'index'])->name('metodos-pago.admin.index');
+            Route::put('/metodos-pago/{codigo}', [AdminMetodoPagoController::class, 'update'])->name('metodos-pago.admin.update');
 
             Route::get('/backup/preview-export', [AdminBackupController::class, 'previewExport'])->name('backup.preview');
             Route::post('/backup/export', [AdminBackupController::class, 'export'])->name('backup.export');
