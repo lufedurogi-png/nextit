@@ -9,7 +9,9 @@ use App\Models\PayPalOrderSnapshot;
 use App\Models\Pedido;
 use App\Models\ProductoCva;
 use App\Models\ProductoManual;
+use App\Services\CarritoEnvioCotizacionService;
 use App\Services\PayPalService;
+use App\Services\PedidoEnvioPersistService;
 use App\Services\ProductoStockService;
 use App\Support\DocumentoNumeracion;
 use App\Support\MetodoPagoToggle;
@@ -28,6 +30,8 @@ class PayPalController extends Controller
     public function __construct(
         private readonly PayPalService $paypal,
         private readonly ProductoStockService $productoStock,
+        private readonly CarritoEnvioCotizacionService $carritoEnvioCotizacion,
+        private readonly PedidoEnvioPersistService $pedidoEnvioPersist,
     ) {}
 
     private static function cartCacheKey(int $userId): string
@@ -146,11 +150,24 @@ class PayPalController extends Controller
             ];
         }
 
-        $total = 0.0;
+        $subtotalProductos = 0.0;
         foreach ($lines as $ln) {
-            $total += $ln['cantidad'] * $ln['precio_unitario'];
+            $subtotalProductos += $ln['cantidad'] * $ln['precio_unitario'];
         }
-        $total = round($total, 2);
+        $subtotalProductos = round($subtotalProductos, 2);
+
+        try {
+            $envioBloque = $this->carritoEnvioCotizacion->cotizarParaUsuario($user, $dir);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e instanceof \InvalidArgumentException
+                    ? $e->getMessage()
+                    : 'No se pudo calcular el envío. Verifica tu dirección o intenta más tarde.',
+            ], $e instanceof \InvalidArgumentException ? 422 : 502);
+        }
+
+        $total = round((float) ($envioBloque['total'] ?? $subtotalProductos), 2);
         $valueStr = number_format($total, 2, '.', '');
 
         $payload = [
@@ -193,6 +210,8 @@ class PayPalController extends Controller
 
         $snapshot = [
             'user_id' => $user->id,
+            'subtotal_productos' => $subtotalProductos,
+            'costo_envio' => (float) ($envioBloque['costo_envio'] ?? 0),
             'total' => $total,
             'currency' => $currency,
             'direccion_envio_id' => (int) $valid['direccion_envio_id'],
@@ -200,6 +219,7 @@ class PayPalController extends Controller
             'direccion_etiqueta' => trim($dir->nombre.' · '.$dir->calle.' '.$dir->numero_exterior.', '.$dir->colonia.', '.$dir->ciudad),
             'facturacion_etiqueta' => $facturacionEtiqueta,
             'items' => $lines,
+            'envio' => $envioBloque,
         ];
 
         PayPalOrderSnapshot::query()->where('expires_at', '<', now())->whereNull('pedido_id')->delete();
@@ -431,7 +451,7 @@ class PayPalController extends Controller
                     throw new \RuntimeException('No se pudo generar un folio único para el pedido.');
                 }
 
-                $monto = 0.0;
+                $sumItems = 0.0;
                 foreach ($itemsPayloadLocal as $ln) {
                     if (! is_array($ln)) {
                         continue;
@@ -448,10 +468,23 @@ class PayPalController extends Controller
                         'precio_unitario' => $precio,
                         'subtotal' => $subtotal,
                     ]);
-                    $monto += $subtotal;
+                    $sumItems += $subtotal;
+                }
+                $sumItems = round($sumItems, 2);
+
+                if (isset($snapshotLocal['subtotal_productos'])) {
+                    $esp = round((float) $snapshotLocal['subtotal_productos'], 2);
+                    if (abs($esp - $sumItems) > 0.05) {
+                        throw new \RuntimeException('El importe de productos ya no coincide con el pago. Vuelve a iniciar el checkout.');
+                    }
                 }
 
-                $p->update(['monto' => round($monto, 2)]);
+                $montoTotal = isset($snapshotLocal['total'])
+                    ? round((float) $snapshotLocal['total'], 2)
+                    : $sumItems;
+                $p->update(['monto' => $montoTotal]);
+
+                $this->pedidoEnvioPersist->persistirDesdeSnapshot($p->fresh(['items']), $snapshotLocal['envio'] ?? null);
 
                 $this->productoStock->registrarVentasConfirmadas($p->id, $itemsPayloadLocal);
 

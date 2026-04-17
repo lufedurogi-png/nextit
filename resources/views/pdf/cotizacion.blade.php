@@ -10,26 +10,27 @@
         body { font-family: 'DejaVu Sans', sans-serif; font-size: 11px; color: #1f2937; line-height: 1.4; }
         .page-bg-image { position: fixed; top: 0; left: 0; width: 210mm; height: 297mm; z-index: -1; }
         .page { padding: 150px 36px 110px; max-width: 100%; }
-        .header { display: table; width: 100%; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid #0f9d7a; }
+        .header { display: table; width: 100%; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid #ea580c; }
         .header-left { display: table-cell; width: 50%; vertical-align: top; }
         .header-right { display: table-cell; width: 50%; text-align: right; vertical-align: top; }
-        .doc-label { font-size: 10px; font-weight: 700; color: #0f9d7a; text-transform: uppercase; letter-spacing: 0.1em; }
-        .doc-id { font-size: 18px; font-weight: 700; color: #0f9d7a; margin-top: 4px; }
+        .doc-label { font-size: 10px; font-weight: 700; color: #ea580c; text-transform: uppercase; letter-spacing: 0.1em; }
+        .doc-id { font-size: 18px; font-weight: 700; color: #ea580c; margin-top: 4px; }
         .doc-meta { font-size: 10px; color: #374151; margin-top: 4px; }
         .section { margin-bottom: 16px; }
-        .section-title { font-size: 10px; font-weight: 700; color: #0f9d7a; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; padding-left: 8px; border-left: 3px solid #0f9d7a; }
+        .section-title { font-size: 10px; font-weight: 700; color: #ea580c; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; padding-left: 8px; border-left: 3px solid #ea580c; }
         table.items { width: 100%; border-collapse: collapse; margin-top: 8px; }
-        table.items th { text-align: left; padding: 10px 12px; background: #ecfdf5; font-size: 9px; text-transform: uppercase; letter-spacing: 0.06em; color: #047857; font-weight: 700; border-bottom: 2px solid #0f9d7a; }
+        table.items th { text-align: left; padding: 10px 12px; background: #fff7ed; font-size: 9px; text-transform: uppercase; letter-spacing: 0.06em; color: #c2410c; font-weight: 700; border-bottom: 2px solid #ea580c; }
         table.items th.qty, table.items th.unit, table.items th.sub { text-align: right; }
-        table.items td { padding: 10px 12px; border-bottom: 1px solid #d1fae5; color: #374151; }
+        table.items td { padding: 10px 12px; border-bottom: 1px solid #ffedd5; color: #374151; }
         table.items td.qty, table.items td.unit, table.items td.sub { text-align: right; }
-        table.items tr:last-child td { border-bottom: 2px solid #d1fae5; }
+        table.items tr:last-child td { border-bottom: 2px solid #ffedd5; }
         .totals { margin-top: 18px; margin-left: auto; width: 260px; }
         .totals tr td { padding: 6px 0; font-size: 11px; }
         .totals tr td:first-child { color: #6b7280; }
-        .totals tr td:last-child { text-align: right; font-weight: 600; color: #111827; }
-        .totals .total-row td { font-size: 14px; font-weight: 700; color: #047857; padding-top: 8px; border-top: 2px solid #0f9d7a; vertical-align: top; }
-        .footer { margin-top: 18px; padding-top: 12px; border-top: 2px solid #0f9d7a; font-size: 9px; color: #6b7280; text-align: center; }
+        .totals tr td:last-child { text-align: right; font-weight: 600; color: #111827; font-size: 10px; }
+        .totals .total-row td { font-size: 14px; font-weight: 700; color: #ea580c; padding-top: 8px; border-top: 2px solid #ea580c; vertical-align: top; }
+        .footer { margin-top: 18px; padding-top: 12px; border-top: 2px solid #ea580c; font-size: 9px; color: #9ca3af; text-align: center; }
+        .footer strong { color: #ea580c; }
         .leyenda-num { font-size: 8.5px; color: #4b5563; margin-top: 2px; font-style: italic; }
     </style>
 </head>

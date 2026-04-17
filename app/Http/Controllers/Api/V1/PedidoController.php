@@ -15,7 +15,7 @@ class PedidoController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $q = Auth::user()->pedidos()->with('items')->orderByDesc('fecha');
+        $q = Auth::user()->pedidos()->with(['items.itemEnvio', 'envio'])->orderByDesc('fecha');
 
         if ($request->filled('fecha_desde')) {
             $q->where('fecha', '>=', $request->fecha_desde);
@@ -45,11 +45,24 @@ class PedidoController extends Controller
             'metodo_pago' => $p->metodo_pago,
             'estado_pago' => $p->estado_pago,
             'estatus_pedido' => $p->estatus_pedido,
+            'envio' => $p->envio ? [
+                'costo_envio' => (float) $p->envio->costo_envio,
+                'subtotal_productos' => (float) $p->envio->subtotal_productos,
+                'fecha_entrega_centro' => $p->envio->fecha_entrega_centro?->format('Y-m-d'),
+                'fecha_entrega_desde' => $p->envio->fecha_entrega_desde?->format('Y-m-d'),
+                'fecha_entrega_hasta' => $p->envio->fecha_entrega_hasta?->format('Y-m-d'),
+            ] : null,
             'items' => $p->items->map(fn (PedidoItem $i) => [
+                'id' => $i->id,
                 'nombre_producto' => $i->nombre_producto,
                 'cantidad' => $i->cantidad,
                 'precio_unitario' => (float) $i->precio_unitario,
                 'subtotal' => (float) $i->subtotal,
+                'envio_linea' => $i->itemEnvio ? [
+                    'costo_envio_prorrateado' => (float) $i->itemEnvio->costo_envio_prorrateado,
+                    'almacen_origen_label' => $i->itemEnvio->almacen_origen_label,
+                    'almacen_cp_origen' => $i->itemEnvio->almacen_cp_origen,
+                ] : null,
             ])->all(),
         ])->all();
 
@@ -67,7 +80,7 @@ class PedidoController extends Controller
 
     public function show(int $id): JsonResponse
     {
-        $pedido = Auth::user()->pedidos()->with(['items', 'direccionEnvio', 'datosFacturacion'])->find($id);
+        $pedido = Auth::user()->pedidos()->with(['items.itemEnvio', 'envio', 'direccionEnvio', 'datosFacturacion'])->find($id);
         if (!$pedido) {
             return response()->json(['success' => false, 'message' => 'Pedido no encontrado'], 404);
         }
@@ -82,11 +95,27 @@ class PedidoController extends Controller
             'estado_pago' => $d->estado_pago,
             'estatus_pedido' => $d->estatus_pedido,
             'items' => $d->items->map(fn (PedidoItem $i) => [
+                'id' => $i->id,
                 'nombre_producto' => $i->nombre_producto,
                 'cantidad' => $i->cantidad,
                 'precio_unitario' => (float) $i->precio_unitario,
                 'subtotal' => (float) $i->subtotal,
+                'envio_linea' => $i->itemEnvio ? [
+                    'costo_envio_prorrateado' => (float) $i->itemEnvio->costo_envio_prorrateado,
+                    'almacen_origen_label' => $i->itemEnvio->almacen_origen_label,
+                    'almacen_cp_origen' => $i->itemEnvio->almacen_cp_origen,
+                    'meta_linea' => $i->itemEnvio->meta_linea,
+                ] : null,
             ])->all(),
+            'envio' => $d->envio ? [
+                'subtotal_productos' => (float) $d->envio->subtotal_productos,
+                'costo_envio' => (float) $d->envio->costo_envio,
+                'moneda' => $d->envio->moneda,
+                'fecha_entrega_centro' => $d->envio->fecha_entrega_centro?->format('Y-m-d'),
+                'fecha_entrega_desde' => $d->envio->fecha_entrega_desde?->format('Y-m-d'),
+                'fecha_entrega_hasta' => $d->envio->fecha_entrega_hasta?->format('Y-m-d'),
+                'detalle_cotizacion' => $d->envio->detalle_cotizacion,
+            ] : null,
             'direccion_envio' => null,
             'datos_facturacion' => null,
         ];
@@ -126,7 +155,7 @@ class PedidoController extends Controller
 
     public function downloadPdf(int $id): Response|JsonResponse
     {
-        $pedido = Auth::user()->pedidos()->with(['items', 'direccionEnvio', 'datosFacturacion', 'user'])->find($id);
+        $pedido = Auth::user()->pedidos()->with(['items.itemEnvio', 'envio', 'direccionEnvio', 'datosFacturacion', 'user'])->find($id);
         if (!$pedido) {
             return response()->json(['success' => false, 'message' => 'Pedido no encontrado'], 404);
         }

@@ -99,6 +99,12 @@
             trim($pedido->datosFacturacion->colonia.', '.$pedido->datosFacturacion->ciudad.', '.$pedido->datosFacturacion->estado.' · CP '.$pedido->datosFacturacion->codigo_postal),
         ])))
         : '';
+
+    $sumaItems = (float) $pedido->items->sum(fn ($i) => (float) $i->subtotal);
+    $envioPedido = $pedido->envio;
+    $costoEnvioPdf = $envioPedido ? (float) $envioPedido->costo_envio : null;
+    $detEnv = $envioPedido && is_array($envioPedido->detalle_cotizacion) ? $envioPedido->detalle_cotizacion : [];
+    $envioOmitidoApi = ! empty($detEnv['omitido']);
 @endphp
 <body>
     @if($bgData)
@@ -187,6 +193,28 @@
                 </tbody>
             </table>
             <table class="totals">
+                <tr>
+                    <td>Subtotal productos</td>
+                    <td>$ {{ number_format($sumaItems, 2, '.', ',') }}</td>
+                </tr>
+                @if($envioPedido)
+                    <tr>
+                        <td>Envío @if($envioOmitidoApi)<span style="font-size:8px;color:#6b7280;">(sin API CVA)</span>@endif</td>
+                        <td>$ {{ number_format((float) $costoEnvioPdf, 2, '.', ',') }}</td>
+                    </tr>
+                    @if($envioPedido->fecha_entrega_desde && $envioPedido->fecha_entrega_hasta)
+                        <tr>
+                            <td colspan="2" style="font-size:8.5px;color:#6b7280;padding-top:4px;">
+                                Entrega estimada entre {{ $envioPedido->fecha_entrega_desde->format('d/m/Y') }} y {{ $envioPedido->fecha_entrega_hasta->format('d/m/Y') }}
+                            </td>
+                        </tr>
+                    @endif
+                @else
+                    <tr>
+                        <td>Envío</td>
+                        <td style="color:#9ca3af;font-size:9px;">— (no registrado en este pedido)</td>
+                    </tr>
+                @endif
                 <tr class="total-row">
                     <td>Total</td>
                     <td>

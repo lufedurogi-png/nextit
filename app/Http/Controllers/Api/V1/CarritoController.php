@@ -9,7 +9,9 @@ use App\Models\DireccionEnvio;
 use App\Models\Pedido;
 use App\Models\ProductoCva;
 use App\Models\ProductoManual;
+use App\Services\CarritoEnvioCotizacionService;
 use App\Services\MargenVentaService;
+use App\Services\PedidoEnvioPersistService;
 use App\Services\ProductoStockService;
 use App\Support\CatalogStockCache;
 use App\Support\DocumentoNumeracion;
@@ -25,6 +27,8 @@ class CarritoController extends Controller
     public function __construct(
         private readonly ProductoStockService $productoStock,
         private readonly MargenVentaService $margenVenta,
+        private readonly CarritoEnvioCotizacionService $carritoEnvioCotizacion,
+        private readonly PedidoEnvioPersistService $pedidoEnvioPersist,
     ) {}
 
     private const CART_INDEX_CACHE_TTL = 15;
@@ -309,6 +313,54 @@ class CarritoController extends Controller
         return $this->index($request);
     }
 
+    /**
+     * Cotiza envío del carrito actual hacia la dirección indicada (sin crear pedido).
+     */
+    public function cotizarEnvio(Request $request): JsonResponse
+    {
+        $valid = $request->validate([
+            'direccion_envio_id' => 'required|integer',
+        ]);
+
+        $user = Auth::user();
+
+        $dir = DireccionEnvio::query()
+            ->where('user_id', $user->id)
+            ->where('id', $valid['direccion_envio_id'])
+            ->first();
+        if (! $dir) {
+            return response()->json(['success' => false, 'message' => 'Dirección de envío no válida.'], 422);
+        }
+
+        try {
+            $data = $this->carritoEnvioCotizacion->cotizarParaUsuario($user, $dir);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se pudo cotizar el envío en este momento. Intenta de nuevo o contacta a soporte.',
+                'error' => config('app.debug') ? $e->getMessage() : null,
+            ], 502);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'subtotal_productos' => $data['subtotal_productos'],
+                'costo_envio' => $data['costo_envio'],
+                'total' => $data['total'],
+                'moneda' => $data['moneda'],
+                'fecha_entrega_centro' => $data['fecha_entrega_centro'],
+                'fecha_entrega_desde' => $data['fecha_entrega_desde'],
+                'fecha_entrega_hasta' => $data['fecha_entrega_hasta'],
+                'detalle_cotizacion' => $data['detalle_cotizacion'],
+                'usa_api_flete_cva' => (bool) ($data['usa_api_flete_cva'] ?? false),
+                'aviso_envio' => $data['aviso_envio'] ?? null,
+            ],
+        ]);
+    }
+
     /** Checkout: crea pedido y vacía carrito (tarjeta simulada u otros métodos sin pasarela). */
     public function checkout(Request $request): JsonResponse
     {
@@ -389,13 +441,25 @@ class CarritoController extends Controller
         }
 
         try {
-            $pedido = DB::transaction(function () use ($user, $items, $valid) {
+            $envioBloque = $this->carritoEnvioCotizacion->cotizarParaUsuario($user, $dir);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e instanceof \InvalidArgumentException ? $e->getMessage() : 'No se pudo calcular el envío para este pedido.',
+                'error' => config('app.debug') && ! ($e instanceof \InvalidArgumentException) ? $e->getMessage() : null,
+            ], $e instanceof \InvalidArgumentException ? 422 : 502);
+        }
+
+        try {
+            $pedido = DB::transaction(function () use ($user, $items, $valid, $envioBloque) {
                 $folio = DocumentoNumeracion::siguienteFolioPedido();
+
+                $montoTotal = (float) ($envioBloque['total'] ?? 0);
 
                 $p = $user->pedidos()->create([
                     'folio' => $folio,
                     'fecha' => now()->toDateString(),
-                    'monto' => 0,
+                    'monto' => round($montoTotal, 2),
                     'metodo_pago' => $valid['metodo_pago'],
                     'estado_pago' => 'pagado',
                     'estatus_pedido' => 'completado',
@@ -403,7 +467,6 @@ class CarritoController extends Controller
                     'datos_facturacion_id' => $valid['datos_facturacion_id'] !== null ? (int) $valid['datos_facturacion_id'] : null,
                 ]);
 
-                $monto = 0;
                 $lineasInventario = [];
                 foreach ($items as $it) {
                     $q = (int) $it->cantidad;
@@ -417,15 +480,14 @@ class CarritoController extends Controller
                         'subtotal' => $subtotal,
                     ]);
                     $lineasInventario[] = ['clave' => $it->clave, 'cantidad' => $q];
-                    $monto += $subtotal;
                 }
 
-                $p->update(['monto' => $monto]);
+                $this->pedidoEnvioPersist->persistirDesdeSnapshot($p->fresh(['items']), $envioBloque);
                 $this->productoStock->registrarVentasConfirmadas($p->id, $lineasInventario);
                 $user->carritoItems()->delete();
                 Cache::forget(self::cartCacheKey($user->id));
 
-                return $p;
+                return $p->fresh(['items']);
             });
         } catch (\Throwable $e) {
             return response()->json([

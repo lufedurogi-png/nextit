@@ -128,6 +128,7 @@ Route::prefix('v1')->group(function () {
             Route::post('/carrito', [CarritoController::class, 'store'])->name('carrito.store');
             Route::post('/carrito/sync', [CarritoController::class, 'sync'])->name('carrito.sync');
             Route::delete('/carrito/items/{clave}', [CarritoController::class, 'destroy'])->name('carrito.destroy');
+            Route::post('/carrito/cotizar-envio', [CarritoController::class, 'cotizarEnvio'])->name('carrito.cotizar-envio');
             Route::post('/carrito/checkout', [CarritoController::class, 'checkout'])->name('carrito.checkout');
 
             Route::post('/paypal/orders', [PayPalController::class, 'createOrder'])->name('paypal.orders.create');

@@ -37,6 +37,12 @@ return [
 
     'cva' => [
         'base_url' => env('CVA_BASE_URL', 'https://apicvaservices.grupocva.com/api/v2'),
+        /**
+         * POST JSON cotización de flete (sin Bearer). Documentación CVA: https://www.grupocva.com/api/paqueteria_service/
+         * Compatibilidad con proyecto Pruebas / NEXT.IT.txt: también se lee CVA_API_URL_FLETE si CVA_FLETE_URL está vacío.
+         * Si queda vacío, el checkout usa envío $0.
+         */
+        'flete_url' => env('CVA_FLETE_URL') ?: env('CVA_API_URL_FLETE', ''),
         'user' => env('CVA_USER'),
         'password' => env('CVA_PASSWORD'),
         'token_ttl_hours' => 12,

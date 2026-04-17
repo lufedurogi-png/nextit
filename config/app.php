@@ -63,11 +63,13 @@ return [
     |
     | Here you may specify the default timezone for your application, which
     | will be used by the PHP date and date-time functions. The timezone
-    | is set to "UTC" by default as it is suitable for most use cases.
+    | Use APP_TIMEZONE (.env). Para fechas de negocio (ej. día del pedido) conviene
+    | la zona del país de operación; si queda en UTC, en México la tarde del día N
+    | puede guardarse como día N+1 al usar now()->toDateString().
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => env('APP_TIMEZONE', 'America/Mexico_City'),
 
     /*
     |--------------------------------------------------------------------------
