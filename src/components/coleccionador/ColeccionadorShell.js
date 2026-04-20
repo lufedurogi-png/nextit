@@ -49,12 +49,22 @@ function IconUsers({ className }) {
     )
 }
 
+function IconSparkles({ className }) {
+    return (
+        <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+            <path d="M12 3l1.6 4.7H19l-3.8 2.8 1.5 4.7L12 14.9 7.3 15.2l1.5-4.7L5 7.7h5.4L12 3z" strokeLinejoin="round" />
+            <path d="M5 20l1-1.5M19 20l-1-1.5M12 21v-2" strokeLinecap="round" />
+        </svg>
+    )
+}
+
 const nav = [
-    { href: '/dashboard', label: 'Inicio', Icon: IconHome },
-    { href: '/scan', label: 'Escanear', Icon: IconCamera },
-    { href: '/collection', label: 'Cartas', Icon: IconCards },
-    { href: '/comunidad', label: 'Comunidad', Icon: IconUsers },
-    { href: '/perfil', label: 'Perfil', Icon: IconUser },
+    { href: '/dashboard', label: 'Inicio', short: 'Inicio', Icon: IconHome },
+    { href: '/scan', label: 'Escanear', short: 'Scan', Icon: IconCamera },
+    { href: '/collection', label: 'Cartas', short: 'Cartas', Icon: IconCards },
+    { href: '/comunidad', label: 'Comunidad', short: 'Social', Icon: IconUsers },
+    { href: '/planes', label: 'Planes', short: 'Planes', Icon: IconSparkles },
+    { href: '/perfil', label: 'Perfil', short: 'Perfil', Icon: IconUser },
 ]
 
 export default function ColeccionadorShell({ children }) {
@@ -68,9 +78,9 @@ export default function ColeccionadorShell({ children }) {
                 className="hidden md:flex md:fixed md:inset-y-0 md:left-0 md:z-[60] md:w-64 md:flex-col md:border-r md:border-slate-200 md:bg-white/95 md:backdrop-blur md:px-3 md:py-4 theme-dark:md:border-slate-800 theme-dark:md:bg-slate-950/95"
                 aria-label="Navegación principal"
             >
-                <div className="px-3 pb-4 border-b border-slate-200 theme-dark:border-slate-800">
-                    <p className="text-[0.72rem] font-bold uppercase tracking-[0.14em] text-[#8f6f11]">Navegacion</p>
-                    <h2 className="mt-1 text-xl font-extrabold text-blue-950 theme-dark:text-slate-50">Vistas</h2>
+                <div className="border-b border-slate-200 px-3 pb-4 theme-dark:border-slate-800">
+                    <p className="text-[0.72rem] font-bold uppercase tracking-[0.14em] text-[#8f6f11]">Coleccionador</p>
+                    <h2 className="mt-1 text-xl font-extrabold text-blue-950 theme-dark:text-slate-50">Mundial 2026</h2>
                 </div>
                 <nav className="mt-3 flex flex-col gap-1 px-1">
                     {nav.map(({ href, label, Icon }) => {
@@ -94,27 +104,34 @@ export default function ColeccionadorShell({ children }) {
                 </nav>
             </aside>
 
-            <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur bottom-nav-shell md:hidden nav-entrance">
-                <div className="grid grid-cols-5 text-[11px] font-semibold px-2 py-1">
-                    {nav.map(({ href, label, Icon }) => {
-                        const active = pathname === href
-                        return (
-                            <Link
-                                key={href}
-                                href={href}
-                                className={`nav-item relative py-2 text-center ${active ? 'text-blue-950 is-active' : 'text-slate-500'}`}
-                            >
-                                <span
-                                    className={`nav-icon-wrap mx-auto block w-11 h-11 rounded-full ${
-                                        active ? 'bg-[#c9a227] shadow-lg' : ''
-                                    } grid place-items-center`}
+            <nav
+                className="bottom-nav-shell fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur nav-entrance md:hidden"
+                aria-label="Navegación principal"
+            >
+                <div className="flex overflow-x-auto px-2 py-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                    <div className="mx-auto flex min-w-full justify-between gap-1 px-1 py-1">
+                        {nav.map(({ href, label, short, Icon }) => {
+                            const active = pathname === href
+                            return (
+                                <Link
+                                    key={href}
+                                    href={href}
+                                    className={`nav-item relative min-w-[3.45rem] flex-1 py-2 text-center ${
+                                        active ? 'text-blue-950 is-active theme-dark:text-slate-50' : 'text-slate-500'
+                                    }`}
                                 >
-                                    <Icon className="mx-auto h-5 w-5" />
-                                </span>
-                                <span className="block mt-1">{label}</span>
-                            </Link>
-                        )
-                    })}
+                                    <span
+                                        className={`nav-icon-wrap mx-auto block h-11 w-11 rounded-full ${
+                                            active ? 'bg-[#c9a227] shadow-lg' : ''
+                                        } grid place-items-center`}
+                                    >
+                                        <Icon className="mx-auto h-5 w-5" />
+                                    </span>
+                                    <span className="mt-1 block truncate px-0.5 text-[10px] font-semibold leading-tight">{short}</span>
+                                </Link>
+                            )
+                        })}
+                    </div>
                 </div>
             </nav>
         </div>

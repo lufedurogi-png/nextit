@@ -1,5 +1,11 @@
 'use client'
 
+import { motion } from 'framer-motion'
+import Link from 'next/link'
+import AppHero from '@/components/coleccionador/AppHero'
+import PageFade from '@/components/coleccionador/PageFade'
+import TradingCard from '@/components/coleccionador/TradingCard'
+
 const MIS_CARTAS_EXTRAS = [
     { id: 41, imageUrl: '/Imagenes/carta_base.png', cantidad: 1 },
     { id: 87, imageUrl: '/Imagenes/carta_base.png', cantidad: 2 },
@@ -16,66 +22,98 @@ const CARTAS_AMIGOS = [
     { amigo: 'Sofia', id: 289, imageUrl: '/Imagenes/carta_base.png', cantidad: 2 },
 ]
 
-export default function ComunidadPage() {
-    return (
-        <>
-            <section className="hero-top px-4 pt-5 pb-6">
-                <div className="max-w-2xl mx-auto">
-                    <p className="text-white/80 text-sm">Intercambia y conecta</p>
-                    <h1 className="text-4xl font-extrabold text-white leading-tight">Comunidad</h1>
-                    <p className="text-white/75 mt-1">Cartas repetidas tuyas y de tus amigos</p>
-                </div>
-            </section>
-
-            <div className="max-w-2xl mx-auto px-4 -mt-3 space-y-4">
-                <section className="rounded-3xl app-card border border-slate-200 shadow-sm p-4">
-                    <h2 className="text-xl font-extrabold app-text">Mis cartas extras</h2>
-                    <p className="text-sm app-subtle mt-1">Contador no editable de cartas repetidas disponibles</p>
-
-                    <div className="mt-4 grid grid-cols-2 gap-3">
-                        {MIS_CARTAS_EXTRAS.map((card) => (
-                            <CartaConContador key={`extra-${card.id}`} id={card.id} imageUrl={card.imageUrl} cantidad={card.cantidad} />
-                        ))}
-                    </div>
-                </section>
-
-                <section className="rounded-3xl app-card border border-slate-200 shadow-sm p-4">
-                    <h2 className="text-xl font-extrabold app-text">Amigos y cartas de amigos</h2>
-                    <p className="text-sm app-subtle mt-1">Listado simulado de cartas repetidas por contacto</p>
-
-                    <div className="mt-4 grid grid-cols-2 gap-3">
-                        {CARTAS_AMIGOS.map((item) => (
-                            <CartaConContador
-                                key={`friend-${item.amigo}-${item.id}`}
-                                id={item.id}
-                                imageUrl={item.imageUrl}
-                                cantidad={item.cantidad}
-                                nombre={item.amigo}
-                            />
-                        ))}
-                    </div>
-                </section>
-            </div>
-        </>
-    )
+const listVariants = {
+    hidden: { opacity: 0 },
+    show: { opacity: 1, transition: { staggerChildren: 0.06 } },
 }
 
-function CartaConContador({ id, imageUrl, cantidad, nombre }) {
+const cardVariants = {
+    hidden: { opacity: 0, y: 14, scale: 0.98 },
+    show: { opacity: 1, y: 0, scale: 1, transition: { type: 'spring', stiffness: 320, damping: 24 } },
+}
+
+export default function ComunidadPage() {
     return (
-        <article className="rounded-2xl bg-white shadow-sm border border-gray-100 p-2 overflow-hidden theme-dark:bg-slate-900 theme-dark:border-slate-700">
-            <div className="relative aspect-[3/4] rounded-xl overflow-hidden border border-gray-100 theme-dark:border-slate-700">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img className="absolute inset-0 w-full h-full object-cover" src={imageUrl} alt={`Carta ${id}`} />
-                <div className="absolute top-2 left-2 rounded-lg bg-black/75 px-2.5 py-1 text-sm font-extrabold text-white">{String(id).padStart(3, '0')}</div>
-            </div>
+        <PageFade>
+            <AppHero eyebrow="Intercambia y conecta" title="Comunidad" subtitle="Tus repetidas y las de tus amigos.">
+                <div className="flex flex-wrap gap-2">
+                    <Link
+                        href="/planes"
+                        className="inline-flex items-center gap-2 rounded-full bg-[#c9a227] px-4 py-2 text-sm font-extrabold text-[#0b1b3c] shadow-lg shadow-amber-900/20 transition hover:brightness-105"
+                    >
+                        Desbloquear matchmaking Pro
+                    </Link>
+                </div>
+            </AppHero>
 
-            <div className="mt-2 rounded-xl border border-cyan-700/30 bg-slate-700 px-2 py-1.5 text-white flex items-center justify-between">
-                <span className="text-lg font-bold text-cyan-300">Cantidad:</span>
-                <span className="rounded-lg bg-slate-600 px-2 py-0.5 text-cyan-300 font-bold">#</span>
-                <span className="rounded-lg bg-slate-600 px-3 py-0.5 text-xl font-bold">{cantidad}</span>
-            </div>
+            <div className="relative z-[1] mx-auto max-w-2xl space-y-4 px-4 pb-12 -mt-3">
+                <motion.section
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="rounded-3xl border border-slate-200 bg-white/90 p-4 shadow-[0_18px_50px_rgba(2,6,23,0.08)] backdrop-blur theme-dark:border-slate-700 theme-dark:bg-slate-900/70"
+                >
+                    <div className="flex items-start justify-between gap-3">
+                        <div>
+                            <h2 className="text-xl font-extrabold app-text">Mis cartas extras</h2>
+                            <p className="mt-1 text-sm app-subtle">Repetidas listas para canjear.</p>
+                        </div>
+                        <span className="rounded-full bg-emerald-500/15 px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-wider text-emerald-700 theme-dark:text-emerald-300">
+                            Inventario
+                        </span>
+                    </div>
 
-            {nombre ? <p className="mt-2 text-xs font-semibold text-slate-600 theme-dark:text-slate-300">Amigo: {nombre}</p> : null}
-        </article>
+                    <motion.div className="mt-4 grid grid-cols-2 gap-3" variants={listVariants} initial="hidden" animate="show">
+                        {MIS_CARTAS_EXTRAS.map((card) => (
+                            <motion.div key={`extra-${card.id}`} variants={cardVariants} className="relative">
+                                <TradingCard
+                                    imageUrl={card.imageUrl}
+                                    idLabel={String(card.id).padStart(3, '0')}
+                                    obtained={false}
+                                    readOnly
+                                    showObtainControl={false}
+                                    footnote={`Extra ×${card.cantidad}`}
+                                />
+                                <div className="pointer-events-none absolute -bottom-1 left-1/2 z-[2] -translate-x-1/2 rounded-full bg-[#0b1b3c]/90 px-3 py-1 text-[0.65rem] font-black text-white shadow-lg">
+                                    ×{card.cantidad}
+                                </div>
+                            </motion.div>
+                        ))}
+                    </motion.div>
+                </motion.section>
+
+                <motion.section
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.08 }}
+                    className="rounded-3xl border border-slate-200 bg-white/90 p-4 shadow-[0_18px_50px_rgba(2,6,23,0.08)] backdrop-blur theme-dark:border-slate-700 theme-dark:bg-slate-900/70"
+                >
+                    <div className="flex items-start justify-between gap-3">
+                        <div>
+                            <h2 className="text-xl font-extrabold app-text">Amigos y repetidas</h2>
+                            <p className="mt-1 text-sm app-subtle">Simulación de red: quién tiene qué, para planear el intercambio.</p>
+                        </div>
+                        <span className="rounded-full bg-blue-500/15 px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-wider text-blue-700 theme-dark:text-blue-300">
+                            Social
+                        </span>
+                    </div>
+
+                    <motion.div className="mt-4 grid grid-cols-2 gap-3" variants={listVariants} initial="hidden" animate="show">
+                        {CARTAS_AMIGOS.map((item) => (
+                            <motion.div key={`friend-${item.amigo}-${item.id}`} variants={cardVariants} className="relative">
+                                <TradingCard
+                                    imageUrl={item.imageUrl}
+                                    idLabel={String(item.id).padStart(3, '0')}
+                                    obtained={false}
+                                    readOnly
+                                    showObtainControl={false}
+                                    footnote={`${item.amigo} · ×${item.cantidad}`}
+                                />
+                                <p className="mt-2 text-center text-xs font-bold text-slate-700 theme-dark:text-slate-200">{item.amigo}</p>
+                            </motion.div>
+                        ))}
+                    </motion.div>
+                </motion.section>
+            </div>
+        </PageFade>
     )
 }

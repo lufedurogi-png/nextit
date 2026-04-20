@@ -1,11 +1,14 @@
 'use client'
 
 import Link from 'next/link'
+import { motion } from 'framer-motion'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { CARDS } from '@/data/cards'
-
-const STORAGE_KEY = 'collected_cards'
+import AppHero from '@/components/coleccionador/AppHero'
+import PageFade from '@/components/coleccionador/PageFade'
+import TradingCard from '@/components/coleccionador/TradingCard'
+import { loadCollectedKeys, saveCollectedKeys } from '@/lib/collectionStorage'
 
 export default function ScanClient() {
     const router = useRouter()
@@ -16,6 +19,12 @@ export default function ScanClient() {
     const [scanInput, setScanInput] = useState('')
 
     const matchedCard = numberParam > 0 ? CARDS.find((c) => c.number === numberParam) : null
+    const [collectionStamp, setCollectionStamp] = useState(0)
+    const isInCollection = useMemo(() => {
+        if (!matchedCard) return false
+        return loadCollectedKeys().includes(matchedCard.key)
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- recalcular al cambiar número o al guardar
+    }, [matchedCard, collectionStamp, numberParam])
 
     const startCamera = async () => {
         const video = videoRef.current
@@ -41,37 +50,50 @@ export default function ScanClient() {
     }
 
     const saveScanned = useCallback(() => {
-        if (!numberParam) return
-        try {
-            const list = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
-            const set = new Set(Array.isArray(list) ? list : [])
-            set.add(numberParam)
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(set)))
-        } catch {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify([numberParam]))
-        }
+        if (!matchedCard?.key) return
+        const next = new Set(loadCollectedKeys())
+        next.add(matchedCard.key)
+        saveCollectedKeys(next)
+        setCollectionStamp((s) => s + 1)
         router.push('/collection')
-    }, [numberParam, router])
+    }, [matchedCard, router])
+
+    const toggleFromPreview = useCallback(() => {
+        if (!matchedCard?.key) return
+        const next = new Set(loadCollectedKeys())
+        if (next.has(matchedCard.key)) next.delete(matchedCard.key)
+        else next.add(matchedCard.key)
+        saveCollectedKeys(next)
+        setCollectionStamp((s) => s + 1)
+    }, [matchedCard])
 
     const numberText = numberParam ? String(numberParam).padStart(4, '0') : ''
 
     return (
-        <>
-            <section className="hero-top px-4 pt-5 pb-6">
-                <div className="max-w-2xl mx-auto">
-                    <p className="text-white/80 text-sm">Registro inteligente</p>
-                    <h1 className="text-4xl font-extrabold text-white leading-tight">Escanear carta</h1>
-                    <p className="text-white/75 mt-1">Alinea la carta dentro del marco</p>
-                </div>
-            </section>
+        <PageFade>
+            <AppHero eyebrow="Registro inteligente" title="Escanear carta" />
 
-            <div className="max-w-2xl mx-auto px-4 -mt-3">
-                <div className="rounded-3xl app-card border border-slate-200 shadow-sm overflow-hidden">
+            <div className="relative z-[1] mx-auto max-w-2xl px-4 pb-12 -mt-3">
+                <motion.div
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="overflow-hidden rounded-3xl border border-slate-200 bg-white/90 shadow-[0_18px_50px_rgba(2,6,23,0.08)] backdrop-blur theme-dark:border-slate-700 theme-dark:bg-slate-900/70"
+                >
                     <div className="p-4">
-                        <div className="rounded-2xl bg-gray-50 border border-slate-200 overflow-hidden relative">
-                            <video ref={videoRef} className="w-full aspect-[3/4] bg-black" autoPlay playsInline />
+                        <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-gray-50 theme-dark:border-slate-700 theme-dark:bg-slate-950">
+                            <video ref={videoRef} className="aspect-[3/4] w-full bg-black object-cover" autoPlay playsInline />
                             <div className="pointer-events-none absolute inset-0 grid place-items-center">
-                                <div className="w-52 h-64 border-2 border-white/80 rounded-2xl shadow-[0_0_0_9999px_rgba(2,6,23,0.35)]" />
+                                <div className="relative h-64 w-52">
+                                    <span className="absolute inset-0 rounded-2xl border-2 border-white/85 shadow-[0_0_0_9999px_rgba(2,6,23,0.38)]" />
+                                    <motion.span
+                                        className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[#c9a227] to-transparent"
+                                        animate={{ top: ['18%', '82%', '18%'] }}
+                                        transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
+                                    />
+                                </div>
+                            </div>
+                            <div className="pointer-events-none absolute left-3 top-3 rounded-full bg-black/55 px-3 py-1 text-[0.65rem] font-bold uppercase tracking-[0.2em] text-white">
+                                Vista previa
                             </div>
                         </div>
 
@@ -79,23 +101,23 @@ export default function ScanClient() {
                             <button
                                 type="button"
                                 onClick={startCamera}
-                                className="rounded-xl bg-[#0b1b3c] px-4 py-3 text-white text-sm font-semibold active:scale-[0.99]"
+                                className="rounded-xl bg-[#0b1b3c] px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-slate-900/25 transition active:scale-[0.99] theme-dark:bg-[#1e3a8a]"
                             >
                                 Activar cámara
                             </button>
                             <Link
                                 href="/collection"
-                                className="rounded-xl border border-slate-300 px-4 py-3 text-center text-sm font-semibold text-slate-700"
+                                className="rounded-xl border border-slate-300 px-4 py-3 text-center text-sm font-semibold text-slate-700 transition hover:border-[#c9a227] theme-dark:border-slate-600 theme-dark:text-slate-200"
                             >
                                 Ver colección
                             </Link>
                         </div>
 
-                        <div className="mt-5 rounded-2xl border border-slate-200 p-3">
+                        <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50/80 p-3 theme-dark:border-slate-700 theme-dark:bg-slate-950/40">
                             <label className="text-sm font-semibold app-text" htmlFor="scanNumber">
-                                Número de carta
+                                Escaneo por número
                             </label>
-                            <div className="mt-2 flex gap-2 items-center">
+                            <div className="mt-3 flex items-center gap-2">
                                 <input
                                     id="scanNumber"
                                     type="number"
@@ -103,59 +125,69 @@ export default function ScanClient() {
                                     step={1}
                                     value={scanInput}
                                     onChange={(e) => setScanInput(e.target.value)}
-                                    className="flex-1 rounded-xl border border-slate-300 px-3 py-2 text-sm bg-white theme-dark:bg-slate-900 theme-dark:border-slate-600"
-                                    placeholder="Ej: 2"
+                                    className="flex-1 rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm font-semibold theme-dark:border-slate-600 theme-dark:bg-slate-900"
+                                    placeholder="Ej: 12"
                                 />
                                 <button
                                     type="button"
                                     onClick={onSimulateScan}
-                                    className="rounded-xl bg-[#c9a227] px-4 py-2 text-[#0b1b3c] text-sm font-extrabold active:scale-[0.99]"
+                                    className="rounded-xl bg-[#c9a227] px-4 py-2.5 text-sm font-extrabold text-[#0b1b3c] shadow-md transition active:scale-[0.99]"
                                 >
                                     Buscar
                                 </button>
                             </div>
                         </div>
                     </div>
-                </div>
+                </motion.div>
 
                 {numberParam > 0 && (
-                    <div className="mt-4 rounded-3xl app-card border border-slate-200 shadow-sm overflow-hidden">
-                        <div className="p-3 border-b border-slate-200">
-                            <div className="text-sm font-bold app-text">Carta detectada</div>
+                    <motion.div
+                        initial={{ opacity: 0, y: 16 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ type: 'spring', stiffness: 260, damping: 24 }}
+                        className="mt-4 overflow-hidden rounded-3xl border border-slate-200 bg-white/90 shadow-[0_18px_50px_rgba(2,6,23,0.08)] backdrop-blur theme-dark:border-slate-700 theme-dark:bg-slate-900/70"
+                    >
+                        <div className="border-b border-slate-200 px-4 py-3 theme-dark:border-slate-700">
+                            <p className="text-sm font-bold app-text">Resultado del escaneo</p>
+                            <p className="text-xs app-subtle">Número detectado · {numberText}</p>
                         </div>
                         <div className="p-4">
                             {matchedCard ? (
-                                <>
-                                    <div className="relative aspect-[3/4] rounded-2xl overflow-hidden border border-slate-200">
-                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        <img
-                                            src={matchedCard.imageUrl}
-                                            alt={`Carta ${numberText}`}
-                                            className="absolute inset-0 w-full h-full object-cover"
+                                <div className="space-y-4">
+                                    <div className="mx-auto max-w-[220px]">
+                                        <TradingCard
+                                            imageUrl={matchedCard.imageUrl}
+                                            idLabel={String(matchedCard.number).padStart(3, '0')}
+                                            obtained={isInCollection}
+                                            onToggleObtained={toggleFromPreview}
                                         />
-                                        <div className="absolute top-2 left-2 rounded-lg bg-black/60 px-2 py-0.5 text-xs font-bold text-white">
-                                            {numberText}
-                                        </div>
                                     </div>
-                                    <div className="mt-3">
+                                    <div className="grid gap-2 sm:grid-cols-2">
                                         <button
                                             type="button"
                                             onClick={saveScanned}
-                                            className="w-full rounded-xl bg-[#0b1b3c] px-4 py-3 text-white text-sm font-semibold active:scale-[0.99]"
+                                            className="w-full rounded-2xl bg-[#0b1b3c] px-4 py-3 text-sm font-semibold text-white shadow-lg transition hover:brightness-110 active:scale-[0.99]"
                                         >
-                                            Guardar carta en mi colección
+                                            {isInCollection ? 'Ir a mi colección' : 'Guardar en mi colección'}
                                         </button>
+                                        <Link
+                                            href="/planes"
+                                            className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-center text-sm font-semibold text-slate-700 transition hover:border-[#c9a227] theme-dark:border-slate-600 theme-dark:text-slate-200"
+                                        >
+                                            Ver planes Pro
+                                        </Link>
                                     </div>
-                                </>
+                                </div>
                             ) : (
                                 <p className="text-sm app-subtle">
-                                    No hay carta con el número {numberText} en el catálogo local (<code className="text-xs">src/data/cards.js</code>).
+                                    No hay carta con el número {numberText} en el catálogo local. Revisa el rango generado en{' '}
+                                    <code className="rounded bg-slate-100 px-1 text-xs theme-dark:bg-slate-800">worldCupDashboardData</code>.
                                 </p>
                             )}
                         </div>
-                    </div>
+                    </motion.div>
                 )}
             </div>
-        </>
+        </PageFade>
     )
 }

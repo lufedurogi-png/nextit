@@ -1,13 +1,16 @@
 'use client'
 
-import { useAuth } from '@/hooks/auth'
 import Link from 'next/link'
+import { motion } from 'framer-motion'
+import { useAuth } from '@/hooks/auth'
 import { useEffect, useMemo, useState } from 'react'
 import FiltroGrupoSelects from '@/components/dashboard/FiltroGrupoSelects'
 import EquipoSection from '@/components/dashboard/EquipoSection'
 import { WORLD_CUP_DASHBOARD_DATA, TOTAL_WORLD_CUP_CARDS } from '@/data/worldCupDashboardData'
-
-const STORAGE_KEY = 'collected_cards_worldcup_2026'
+import AppHero from '@/components/coleccionador/AppHero'
+import PageFade from '@/components/coleccionador/PageFade'
+import AnimatedInteger from '@/components/coleccionador/AnimatedInteger'
+import { loadCollectedKeys, saveCollectedKeys } from '@/lib/collectionStorage'
 
 export default function DashboardPage() {
     const { user } = useAuth({})
@@ -16,13 +19,7 @@ export default function DashboardPage() {
     const [obtainedSet, setObtainedSet] = useState(() => new Set())
 
     useEffect(() => {
-        try {
-            const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
-            const safe = Array.isArray(raw) ? raw.filter((x) => typeof x === 'string') : []
-            setObtainedSet(new Set(safe))
-        } catch {
-            setObtainedSet(new Set())
-        }
+        setObtainedSet(new Set(loadCollectedKeys()))
     }, [])
 
     const groups = useMemo(() => WORLD_CUP_DASHBOARD_DATA.map((g) => g.group), [])
@@ -42,55 +39,98 @@ export default function DashboardPage() {
 
     const kpiRegistered = obtainedSet.size
     const total = TOTAL_WORLD_CUP_CARDS
-    const kpiPercent = `${total ? Math.round((kpiRegistered / total) * 100) : 0}%`
+    const kpiPercent = total ? Math.round((kpiRegistered / total) * 100) : 0
 
     const toggleObtained = (cardKey) => {
         const next = new Set(obtainedSet)
         if (next.has(cardKey)) next.delete(cardKey)
         else next.add(cardKey)
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(next)))
+        saveCollectedKeys(next)
         setObtainedSet(next)
     }
 
     return (
-        <>
-            <section className="hero-top px-4 pt-5 pb-6">
-                <div className="max-w-2xl mx-auto">
-                    <p className="text-white/80 text-sm">Hola, {user?.name || 'coleccionista'}</p>
-                    <h1 className="text-4xl font-extrabold text-white leading-tight">Tu panel</h1>
-                    <p className="text-white/75 mt-1">Resumen de actividad y progreso de cartas</p>
-                </div>
-            </section>
-
-            <div className="max-w-2xl mx-auto px-4 -mt-3">
-                <div className="grid grid-cols-2 gap-3">
-                    <div className="metric-card metric-gold">
-                        <p className="text-sm opacity-90">Registradas</p>
-                        <p className="text-4xl font-extrabold leading-none mt-1">{kpiRegistered}</p>
-                        <p className="text-sm opacity-80 mt-1">cartas</p>
-                    </div>
-                    <div className="metric-card metric-navy">
-                        <p className="text-sm opacity-90">Disponibles</p>
-                        <p className="text-4xl font-extrabold leading-none mt-1">{total}</p>
-                        <p className="text-sm opacity-80 mt-1">en listado</p>
-                    </div>
-                    <div className="metric-card metric-olive">
-                        <p className="text-sm opacity-90">Progreso</p>
-                        <p className="text-4xl font-extrabold leading-none mt-1">{kpiPercent}</p>
-                        <p className="text-sm opacity-80 mt-1">coleccion</p>
-                    </div>
-                    <Link href="/scan" className="metric-card metric-slate block">
-                        <p className="text-sm opacity-90">Escanear</p>
-                        <p className="text-2xl font-extrabold leading-none mt-2">Nueva carta</p>
-                        <p className="text-sm opacity-80 mt-2">Abrir camara</p>
+        <PageFade>
+            <AppHero
+                eyebrow={`Hola, ${user?.name || 'coleccionista'}`}
+                title="Tu panel del mundial"
+                subtitle="Progreso vivo."
+            >
+                <div className="flex flex-wrap gap-2">
+                    <Link
+                        href="/planes"
+                        className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-2 text-sm font-bold text-white backdrop-blur transition hover:bg-white/15"
+                    >
+                        Ver planes
+                        <span aria-hidden>→</span>
+                    </Link>
+                    <Link
+                        href="/scan"
+                        className="inline-flex items-center gap-2 rounded-full bg-[#c9a227] px-4 py-2 text-sm font-extrabold text-[#0b1b3c] shadow-lg shadow-amber-900/20 transition hover:brightness-105"
+                    >
+                        Escanear carta
                     </Link>
                 </div>
+            </AppHero>
 
-                <section className="mt-5 rounded-3xl app-card border border-slate-200 shadow-sm p-4">
+            <div className="relative z-[1] mx-auto max-w-2xl px-4 pb-10 -mt-3">
+                <div className="grid grid-cols-2 gap-3">
+                    <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}>
+                        <div className="metric-card metric-gold relative overflow-hidden">
+                            <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
+                            <p className="text-sm opacity-90">Registradas</p>
+                            <p className="mt-1 text-4xl font-extrabold leading-none">
+                                <AnimatedInteger value={kpiRegistered} />
+                            </p>
+                            <p className="mt-2 text-sm opacity-80">cartas</p>
+                        </div>
+                    </motion.div>
+
+                    <motion.div
+                        initial={{ opacity: 0, y: 14 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.05, duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                    >
+                        <div className="metric-card metric-navy relative overflow-hidden">
+                            <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
+                            <p className="text-sm opacity-90">Disponibles</p>
+                            <p className="mt-1 text-4xl font-extrabold leading-none">{total}</p>
+                            <p className="mt-2 text-sm opacity-80">en listado</p>
+                        </div>
+                    </motion.div>
+
+                    <motion.div
+                        initial={{ opacity: 0, y: 14 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1, duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                    >
+                        <div className="metric-card metric-olive relative overflow-hidden">
+                            <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
+                            <p className="text-sm opacity-90">Progreso</p>
+                            <p className="mt-1 text-4xl font-extrabold leading-none">
+                                <AnimatedInteger value={kpiPercent} />%
+                            </p>
+                            <p className="mt-2 text-sm opacity-80">del álbum</p>
+                        </div>
+                    </motion.div>
+
+                    <motion.div
+                        initial={{ opacity: 0, y: 14 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.15, duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                    >
+                        <Link href="/scan" className="metric-card metric-slate block h-full">
+                            <p className="text-sm opacity-90">Escanear</p>
+                            <p className="mt-1 text-2xl font-extrabold leading-none">Nueva carta</p>
+                            <p className="mt-2 text-sm opacity-80">Abrir cámara</p>
+                        </Link>
+                    </motion.div>
+                </div>
+
+                <section className="mt-5 rounded-3xl border border-slate-200 bg-white/90 p-4 shadow-[0_18px_50px_rgba(2,6,23,0.08)] backdrop-blur theme-dark:border-slate-700 theme-dark:bg-slate-900/70">
                     <div className="flex items-center justify-between gap-3">
                         <div>
-                            <h2 className="text-xl font-extrabold app-text">Catalogo</h2>
-                            <p className="text-sm app-subtle">Selecciona grupo y pais</p>
+                            <h2 className="text-xl font-extrabold app-text">Catálogo</h2>
                         </div>
                         <IconCardsSmall />
                     </div>
@@ -117,8 +157,12 @@ export default function DashboardPage() {
                         )}
                     </div>
                 </section>
+
+                <p className="mt-4 text-center text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-slate-500 theme-dark:text-slate-400">
+                    Progreso guardado en este dispositivo (demo local)
+                </p>
             </div>
-        </>
+        </PageFade>
     )
 }
 
