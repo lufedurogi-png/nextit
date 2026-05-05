@@ -35,4 +35,44 @@ return [
         ],
     ],
 
+    'paypal' => [
+        'mode' => env('PAYPAL_MODE', 'sandbox'),
+        'client_id' => env('PAYPAL_CLIENT_ID'),
+        'secret' => env('PAYPAL_SECRET'),
+    ],
+
+    'mercadopago' => [
+        'access_token' => env('MERCADOPAGO_ACCESS_TOKEN'),
+        'public_key' => env('MERCADOPAGO_PUBLIC_KEY'),
+        'client_id' => env('MERCADOPAGO_CLIENT_ID'),
+        'client_secret' => env('MERCADOPAGO_CLIENT_SECRET'),
+        'notification_url' => env('MERCADOPAGO_NOTIFICATION_URL'),
+    ],
+
+    'google_vision' => [
+        /*
+         * Ruta al JSON de la cuenta de servicio. Puede ser absoluta o relativa a la raíz del proyecto Laravel
+         * (donde está artisan), p. ej. storage/app/private/google-vision/clave.json
+         */
+        'credentials' => (static function (): ?string {
+            $raw = env('GOOGLE_VISION_CREDENTIALS_PATH');
+            if (! is_string($raw)) {
+                return null;
+            }
+            $raw = trim($raw);
+            if ($raw === '') {
+                return null;
+            }
+            if (is_file($raw)) {
+                return $raw;
+            }
+            $fromBase = base_path($raw);
+            if (is_file($fromBase)) {
+                return $fromBase;
+            }
+
+            return $raw;
+        })(),
+    ],
+
 ];
