@@ -2,6 +2,7 @@ import useSWR from 'swr'
 import axios from '@/lib/axios'
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { applyUiTheme, normalizeUiThemeId, persistUiThemeSideEffects } from '@/lib/uiThemes'
 
 export const useAuth = ({ middleware, redirectIfAuthenticated } = {}) => {
     const router = useRouter()
@@ -15,7 +16,13 @@ export const useAuth = ({ middleware, redirectIfAuthenticated } = {}) => {
         const cachedUser = localStorage.getItem('auth_user')
         if (cachedUser) {
             try {
-                return JSON.parse(cachedUser)
+                const u = JSON.parse(cachedUser)
+                if (u?.role !== 'admin' && u?.ui_theme != null) {
+                    const tid = normalizeUiThemeId(u.ui_theme)
+                    applyUiTheme(tid)
+                    persistUiThemeSideEffects(tid)
+                }
+                return u
             } catch (e) {
                 // continuar con API
             }
@@ -25,6 +32,11 @@ export const useAuth = ({ middleware, redirectIfAuthenticated } = {}) => {
             const response = await axios.get('/auth/me')
             const userData = response.data
             localStorage.setItem('auth_user', JSON.stringify(userData))
+            if (userData?.role !== 'admin' && userData?.ui_theme != null) {
+                const tid = normalizeUiThemeId(userData.ui_theme)
+                applyUiTheme(tid)
+                persistUiThemeSideEffects(tid)
+            }
             return userData
         } catch (error) {
             localStorage.removeItem('auth_token')
@@ -54,13 +66,27 @@ export const useAuth = ({ middleware, redirectIfAuthenticated } = {}) => {
             })
 
             if (response.data?.token) {
+                const u = response.data?.user
+                if (u?.role === 'admin') {
+                    localStorage.setItem('auth_token', response.data.token)
+                    if (u) localStorage.setItem('auth_user', JSON.stringify(u))
+                    localStorage.setItem('auth_admin', 'true')
+                    await mutate()
+                    router.push('/admin-home')
+                    return
+                }
                 localStorage.removeItem('auth_admin')
                 localStorage.setItem('auth_token', response.data.token)
-                if (response.data?.user) {
-                    localStorage.setItem('auth_user', JSON.stringify(response.data.user))
+                if (u) {
+                    localStorage.setItem('auth_user', JSON.stringify(u))
+                    if (u?.ui_theme != null) {
+                        const tid = normalizeUiThemeId(u.ui_theme)
+                        applyUiTheme(tid)
+                        persistUiThemeSideEffects(tid)
+                    }
                 }
                 await mutate()
-                router.push(redirectIfAuthenticated || '/dashboard')
+                router.push(redirectIfAuthenticated || '/inicio')
             } else {
                 setErrors({
                     general: [response.data?.message || 'Error al registrar usuario'],
@@ -89,13 +115,27 @@ export const useAuth = ({ middleware, redirectIfAuthenticated } = {}) => {
             })
 
             if (response.data?.token) {
+                const u = response.data?.user
+                if (u?.role === 'admin') {
+                    localStorage.setItem('auth_token', response.data.token)
+                    if (u) localStorage.setItem('auth_user', JSON.stringify(u))
+                    localStorage.setItem('auth_admin', 'true')
+                    await mutate()
+                    router.push('/admin-home')
+                    return
+                }
                 localStorage.removeItem('auth_admin')
                 localStorage.setItem('auth_token', response.data.token)
-                if (response.data?.user) {
-                    localStorage.setItem('auth_user', JSON.stringify(response.data.user))
+                if (u) {
+                    localStorage.setItem('auth_user', JSON.stringify(u))
+                    if (u?.ui_theme != null) {
+                        const tid = normalizeUiThemeId(u.ui_theme)
+                        applyUiTheme(tid)
+                        persistUiThemeSideEffects(tid)
+                    }
                 }
                 await mutate()
-                router.push(redirectIfAuthenticated || '/dashboard')
+                router.push(redirectIfAuthenticated || '/inicio')
             } else {
                 setErrors({
                     email: [response.data?.message || 'Las credenciales proporcionadas son incorrectas.'],
@@ -117,13 +157,13 @@ export const useAuth = ({ middleware, redirectIfAuthenticated } = {}) => {
         }
     }
 
-    const forgotPassword = async ({ setErrors, setStatus, email }) => {
+    const forgotPassword = async ({ setErrors, setStatus }) => {
         setErrors([])
         setStatus?.(null)
         setErrors({ email: ['Función no disponible con el backend actual.'] })
     }
 
-    const resetPassword = async ({ setErrors, setStatus, ...props }) => {
+    const resetPassword = async ({ setErrors, setStatus }) => {
         setErrors([])
         setStatus?.(null)
         setErrors({ general: ['Función no disponible con el backend actual.'] })
@@ -157,20 +197,46 @@ export const useAuth = ({ middleware, redirectIfAuthenticated } = {}) => {
     }
 
     useEffect(() => {
-        if (middleware === 'guest' && redirectIfAuthenticated && user)
-            router.push(redirectIfAuthenticated)
+        if (middleware === 'guest' && redirectIfAuthenticated && user) {
+            if (user.role === 'admin') {
+                try {
+                    localStorage.setItem('auth_admin', 'true')
+                } catch {
+                    void 0
+                }
+                router.replace('/admin-home')
+            } else {
+                router.push(redirectIfAuthenticated)
+            }
+        }
 
         if (
             typeof window !== 'undefined' &&
             window.location.pathname === '/verify-email' &&
-            user?.email_verified_at
+            user?.email_verified_at &&
+            redirectIfAuthenticated
         )
             router.push(redirectIfAuthenticated)
-        if (middleware === 'auth' && error) logout()
-    }, [user, error])
+
+        if (middleware === 'auth') {
+            if (error) {
+                logout()
+                return
+            }
+            if (user?.role === 'admin') {
+                try {
+                    localStorage.setItem('auth_admin', 'true')
+                } catch {
+                    void 0
+                }
+                router.replace('/admin-home')
+            }
+        }
+    }, [user, error, middleware, redirectIfAuthenticated, router])
 
     return {
         user,
+        mutate,
         register,
         login,
         forgotPassword,

@@ -1,47 +1,35 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { motion } from 'framer-motion'
-import { useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import AppHero from '@/components/coleccionador/AppHero'
 import PageFade from '@/components/coleccionador/PageFade'
+import {
+    fetchPlanCatalog,
+    fetchPaymentMethodFlags,
+    fetchPlanSubscription,
+    createPlanMercadoPagoPreference,
+    confirmPlanMercadoPagoPayment,
+    createPlanPayPalOrder,
+    capturePlanPayPalOrder,
+    checkoutPlanTarjeta,
+    cancelPlanSubscription,
+    resumePlanSubscription,
+} from '@/lib/planCheckout'
 
-const PLANS = [
-    {
-        id: 'starter',
-        name: 'Starter',
-        price: '$0',
-        cadence: 'para siempre',
-        blurb: 'Perfecto para empezar el álbum y sentir la experiencia.',
-        highlight: false,
-        features: ['Checklist completo del catálogo demo', 'Escaneo simulado + cámara', 'Progreso local en tu celular', 'Tema claro / oscuro'],
-        cta: 'Ya lo tienes',
-        tone: 'border-slate-200 bg-white/90 theme-dark:border-slate-700 theme-dark:bg-slate-900/70',
-    },
-    {
-        id: 'pro',
-        name: 'Pro Coleccionista',
-        price: '$99',
-        cadence: '/ año',
-        blurb: 'Para quien quiere llevar el hobby en serio.',
-        highlight: true,
-        badge: 'Más popular',
-        features: [
-            'Sincronización en la nube',
-            'Estadísticas avanzadas de completitud',
-            'Intercambios priorizados en Comunidad',
-            'Alertas de cartas nuevas / ofertas',
-            'Soporte prioritario por correo',
-        ],
-        cta: 'Elegir Pro',
-        tone: 'border-[#c9a227]/70 bg-[linear-gradient(180deg,rgba(201,162,39,0.18),rgba(255,255,255,0.92))] shadow-[0_26px_80px_rgba(201,162,39,0.22)] theme-dark:bg-[linear-gradient(180deg,rgba(201,162,39,0.22),rgba(15,23,42,0.92))]',
-    },
-]
+const METHOD_ICON = {
+    paypal: '/Imagenes/PayPal.png',
+    mercadopago: '/Imagenes/mercado%20pago.png',
+    tarjeta: '/Imagenes/icons_metodosdepago.png',
+}
 
 const FAQ = [
     {
         q: '¿Esto ya cobra de verdad?',
-        a: 'Los cobros se habilitan al elegir un plan y completar el proceso de pago.',
+        a: 'Sí: el importe del plan Pro se cobra con la pasarela que elijas (Mercado Pago, PayPal o tarjeta simulada).',
     },
     {
         q: '¿Qué pasa con mis cartas si cambio de teléfono?',
@@ -53,28 +41,305 @@ const FAQ = [
     },
 ]
 
+function formatMoney(amount, currency) {
+    try {
+        return new Intl.NumberFormat('es-MX', { style: 'currency', currency: currency || 'MXN' }).format(Number(amount) || 0)
+    } catch {
+        return `${currency || ''} ${amount}`
+    }
+}
+
+function formatCountdown(totalSeconds) {
+    const s = Math.max(0, Math.floor(totalSeconds || 0))
+    const d = Math.floor(s / 86400)
+    const h = Math.floor((s % 86400) / 3600)
+    const m = Math.floor((s % 3600) / 60)
+    const sec = s % 60
+    return `${d}d ${h}h ${m}m ${sec}s`
+}
+
+function cadenceLabel(days) {
+    const n = Number(days) || 30
+    if (n === 7) return '/ semana'
+    if (n === 30) return '/ mes'
+    if (n === 365) return '/ año'
+    return `/ ${n} días`
+}
+
 export default function PlanesPage() {
+    const router = useRouter()
+    const searchParams = useSearchParams()
     const [openFaq, setOpenFaq] = useState(0)
+    const [mounted, setMounted] = useState(false)
+    const [hasToken, setHasToken] = useState(false)
+    const [catalog, setCatalog] = useState({ amount: 99, currency: 'MXN', period_days: 30, features: [] })
+    const [subscription, setSubscription] = useState(null)
+    const [payOpen, setPayOpen] = useState(false)
+    const [flags, setFlags] = useState({ paypal: true, mercadopago: true, tarjeta: true })
+    const [checkoutLoading, setCheckoutLoading] = useState(false)
+    const [checkoutError, setCheckoutError] = useState('')
+    const [failModal, setFailModal] = useState('')
+    const [successModal, setSuccessModal] = useState(false)
+    const [cancelOpen, setCancelOpen] = useState(false)
+    const [cancelBusy, setCancelBusy] = useState(false)
+
+    useEffect(() => {
+        setMounted(true)
+        setHasToken(typeof window !== 'undefined' && !!localStorage.getItem('auth_token'))
+    }, [])
+
+    const loadCatalog = useCallback(async () => {
+        try {
+            const c = await fetchPlanCatalog()
+            setCatalog(c)
+        } catch {
+            /* defaults */
+        }
+    }, [])
+
+    const loadSubscription = useCallback(async () => {
+        if (typeof window === 'undefined' || !localStorage.getItem('auth_token')) {
+            setSubscription(null)
+            return
+        }
+        try {
+            const s = await fetchPlanSubscription()
+            setSubscription(s)
+        } catch {
+            setSubscription(null)
+        }
+    }, [])
+
+    useEffect(() => {
+        loadCatalog()
+    }, [loadCatalog])
+
+    useEffect(() => {
+        if (!mounted) return
+        loadSubscription()
+    }, [mounted, loadSubscription])
+
+    const [clock, setClock] = useState(0)
+    useEffect(() => {
+        if (!subscription?.pro_active) return
+        const id = setInterval(() => setClock((c) => c + 1), 1000)
+        return () => clearInterval(id)
+    }, [subscription?.pro_active])
+
+    const secondsLeft = useMemo(() => {
+        if (!subscription?.pro_active || !subscription?.pro_ends_at) return 0
+        const end = new Date(subscription.pro_ends_at).getTime()
+        return Math.max(0, Math.floor((end - Date.now()) / 1000))
+    }, [subscription, clock])
+
+    const openPayModal = async () => {
+        if (!hasToken) {
+            router.push('/login')
+            return
+        }
+        setCheckoutError('')
+        try {
+            const f = await fetchPaymentMethodFlags()
+            setFlags(f)
+        } catch {
+            setFlags({ paypal: true, mercadopago: true, tarjeta: true })
+        }
+        setPayOpen(true)
+    }
+
+    const plansBase = useMemo(() => {
+        const proPrice = formatMoney(catalog.amount, catalog.currency)
+        const proFeatures = Array.isArray(catalog.features) ? catalog.features.filter((t) => String(t).trim()) : []
+        return [
+            {
+                id: 'starter',
+                name: 'Inicial',
+                price: '$0',
+                cadence: 'para siempre',
+                blurb: 'Perfecto para empezar el álbum y sentir la experiencia.',
+                highlight: false,
+                features: ['Checklist completo del catálogo demo', 'Escaneo simulado + cámara', 'Progreso local en tu celular', 'Tema claro / oscuro'],
+                cta: 'Ya lo tienes',
+                tone: 'border-slate-200 bg-white/90 dark:border-slate-700 dark:bg-slate-900/70',
+            },
+            {
+                id: 'pro',
+                name: 'Pro Coleccionista',
+                price: proPrice,
+                cadence: cadenceLabel(catalog.period_days),
+                blurb: 'Para quien quiere llevar el hobby en serio.',
+                highlight: true,
+                badge: 'Más popular',
+                features: proFeatures,
+                cta: 'Comprar',
+                tone: 'border-[#c9a227]/70 bg-[linear-gradient(180deg,rgba(201,162,39,0.18),rgba(255,255,255,0.92))] shadow-[0_26px_80px_rgba(201,162,39,0.22)] dark:bg-[linear-gradient(180deg,rgba(201,162,39,0.22),rgba(15,23,42,0.92))]',
+            },
+        ]
+    }, [catalog])
+
+    const proActive = !!subscription?.pro_active
+    const proCancelled = !!subscription?.pro_cancelled
+    const visiblePlans = proActive ? plansBase.filter((p) => p.id === 'pro') : plansBase
+
+    const handleCheckout = async (metodoPago) => {
+        setCheckoutError('')
+        setCheckoutLoading(true)
+        try {
+            const base = typeof window !== 'undefined' ? `${window.location.origin}/planes` : '/planes'
+
+            if (metodoPago === 'mercadopago') {
+                const { init_point: mpUrl } = await createPlanMercadoPagoPreference({
+                    success: `${base}?mp_ok=1`,
+                    failure: `${base}?mp_cancel=1`,
+                    pending: `${base}?mp_pending=1`,
+                })
+                if (typeof window !== 'undefined' && mpUrl) window.location.assign(mpUrl)
+                return
+            }
+
+            if (metodoPago === 'paypal') {
+                const { approve_url: approveUrl } = await createPlanPayPalOrder(`${base}?paypal_ok=1`, `${base}?paypal_cancel=1`)
+                if (typeof window !== 'undefined' && approveUrl) window.location.assign(approveUrl)
+                return
+            }
+
+            if (metodoPago === 'tarjeta') {
+                await checkoutPlanTarjeta()
+                setPayOpen(false)
+                await loadSubscription()
+                setSuccessModal(true)
+                return
+            }
+
+            setCheckoutError('Método de pago no soportado.')
+        } catch (err) {
+            setCheckoutError(err?.message || err?.response?.data?.message || 'Error al procesar el pago')
+        } finally {
+            setCheckoutLoading(false)
+        }
+    }
+
+    useEffect(() => {
+        if (!mounted || !hasToken) return
+        if (searchParams.get('paypal_cancel') === '1') {
+            setFailModal('El pago no se completó en PayPal o fue cancelado.')
+            router.replace('/planes', { scroll: false })
+            return
+        }
+        if (searchParams.get('mp_cancel') === '1') {
+            setFailModal('El pago no se completó en Mercado Pago o fue cancelado.')
+            router.replace('/planes', { scroll: false })
+            return
+        }
+        if (searchParams.get('mp_pending') === '1') {
+            setFailModal('Tu pago está pendiente de confirmación. Cuando se apruebe, verás el plan activo al volver a esta página.')
+            router.replace('/planes', { scroll: false })
+            return
+        }
+        if (searchParams.get('paypal_ok') !== '1') return
+        const orderId = searchParams.get('token')
+        if (!orderId) {
+            setFailModal('No se recibió la orden de PayPal.')
+            router.replace('/planes', { scroll: false })
+            return
+        }
+        const doneKey = `plan_paypal_done_${orderId}`
+        if (sessionStorage.getItem(doneKey)) {
+            router.replace('/planes', { scroll: false })
+            return
+        }
+        const lockKey = `plan_paypal_lock_${orderId}`
+        if (sessionStorage.getItem(lockKey)) return
+        sessionStorage.setItem(lockKey, '1')
+        ;(async () => {
+            setCheckoutLoading(true)
+            try {
+                await capturePlanPayPalOrder(orderId)
+                sessionStorage.setItem(doneKey, '1')
+                sessionStorage.removeItem(lockKey)
+                router.replace('/planes', { scroll: false })
+                await loadSubscription()
+                setSuccessModal(true)
+            } catch (e) {
+                sessionStorage.removeItem(lockKey)
+                setFailModal(e?.message || e?.response?.data?.message || 'No se pudo confirmar PayPal.')
+            } finally {
+                setCheckoutLoading(false)
+            }
+        })()
+    }, [mounted, hasToken, router, searchParams, loadSubscription])
+
+    useEffect(() => {
+        if (!mounted || !hasToken) return
+        if (searchParams.get('mp_ok') !== '1') return
+        const paymentId = searchParams.get('payment_id') || searchParams.get('collection_id')
+        const preferenceId = searchParams.get('preference_id')
+        if (!paymentId) {
+            setFailModal('No se recibió el identificador de pago de Mercado Pago.')
+            router.replace('/planes', { scroll: false })
+            return
+        }
+        const doneKey = `plan_mp_done_${paymentId}`
+        if (sessionStorage.getItem(doneKey)) {
+            router.replace('/planes', { scroll: false })
+            return
+        }
+        const lockKey = `plan_mp_lock_${paymentId}`
+        if (sessionStorage.getItem(lockKey)) return
+        sessionStorage.setItem(lockKey, '1')
+        ;(async () => {
+            setCheckoutLoading(true)
+            try {
+                await confirmPlanMercadoPagoPayment({
+                    payment_id: paymentId,
+                    preference_id: preferenceId || undefined,
+                })
+                sessionStorage.setItem(doneKey, '1')
+                sessionStorage.removeItem(lockKey)
+                router.replace('/planes', { scroll: false })
+                await loadSubscription()
+                setSuccessModal(true)
+            } catch (e) {
+                sessionStorage.removeItem(lockKey)
+                setFailModal(e?.message || e?.response?.data?.message || 'No se pudo confirmar Mercado Pago.')
+            } finally {
+                setCheckoutLoading(false)
+            }
+        })()
+    }, [mounted, hasToken, router, searchParams, loadSubscription])
+
+    const startedLabel = subscription?.pro_started_at
+        ? new Date(subscription.pro_started_at).toLocaleString('es-MX', {
+              dateStyle: 'medium',
+              timeStyle: 'short',
+          })
+        : null
 
     return (
         <PageFade>
             <AppHero eyebrow="Membresías" title="Planes">
                 <div className="flex flex-wrap gap-2">
                     <span className="inline-flex items-center rounded-full border border-white/25 bg-white/10 px-3 py-2 text-xs font-semibold text-white/90">
-                        Demo visual · sin cobro todavía
+                        Pro · periodo {catalog.period_days || 30} días · pasarelas reales
                     </span>
                     <Link
-                        href="/dashboard"
+                        href="/inicio"
                         className="inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-sm font-bold text-white backdrop-blur transition hover:bg-white/20"
                     >
-                        Volver al panel
+                        Volver al inicio
                     </Link>
                 </div>
             </AppHero>
 
             <div className="relative z-[1] mx-auto max-w-5xl px-4 pb-14 -mt-4">
-                <div className="mx-auto grid max-w-3xl gap-4 lg:grid-cols-2">
-                    {PLANS.map((plan, idx) => (
+                {checkoutLoading ? (
+                    <div className="mb-4 rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 text-sm font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-200">
+                        Confirmando pago…
+                    </div>
+                ) : null}
+
+                <div className={`mx-auto grid max-w-3xl gap-4 ${visiblePlans.length > 1 ? 'lg:grid-cols-2' : 'lg:max-w-lg'}`}>
+                    {visiblePlans.map((plan, idx) => (
                         <motion.article
                             key={plan.id}
                             initial={{ opacity: 0, y: 16 }}
@@ -90,38 +355,110 @@ export default function PlanesPage() {
                                     {plan.badge}
                                 </div>
                             ) : null}
-                            <h2 className="font-playfair text-2xl font-extrabold text-slate-900 theme-dark:text-slate-50">{plan.name}</h2>
-                            <p className="mt-2 text-sm text-slate-600 theme-dark:text-slate-300">{plan.blurb}</p>
+                            <h2 className="font-playfair text-2xl font-extrabold text-slate-900 dark:text-slate-50">{plan.name}</h2>
+                            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{plan.blurb}</p>
                             <div className="mt-5 flex items-end gap-2">
-                                <p className="font-playfair text-4xl font-extrabold text-slate-900 theme-dark:text-slate-50">{plan.price}</p>
-                                <p className="pb-1 text-sm font-semibold text-slate-500 theme-dark:text-slate-400">{plan.cadence}</p>
+                                <p className="font-playfair text-4xl font-extrabold text-slate-900 dark:text-slate-50">{plan.price}</p>
+                                <p className="pb-1 text-sm font-semibold text-slate-500 dark:text-slate-400">{plan.cadence}</p>
                             </div>
 
-                            <ul className="mt-5 space-y-2">
-                                {plan.features.map((f) => (
-                                    <li key={f} className="flex gap-2 text-sm text-slate-700 theme-dark:text-slate-200">
-                                        <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-700 theme-dark:text-emerald-300">
-                                            ✓
-                                        </span>
-                                        <span>{f}</span>
-                                    </li>
-                                ))}
-                            </ul>
+                            {plan.id === 'pro' && proActive ? (
+                                <div className="mt-4 space-y-2 rounded-2xl border border-emerald-200 bg-emerald-50/80 p-4 text-sm text-emerald-950 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-100">
+                                    <p className="font-extrabold">Plan activo</p>
+                                    {startedLabel ? (
+                                        <p>
+                                            <span className="font-semibold text-emerald-800 dark:text-emerald-200">Inicio del periodo: </span>
+                                            {startedLabel}
+                                        </p>
+                                    ) : null}
+                                    <p>
+                                        <span className="font-semibold text-emerald-800 dark:text-emerald-200">Tiempo restante: </span>
+                                        {formatCountdown(secondsLeft)}
+                                    </p>
+                                    {proCancelled ? (
+                                        <p className="text-xs font-semibold text-amber-800 dark:text-amber-200">
+                                            Marcaste cancelación; puedes reanudar mientras siga vigente el periodo pagado.
+                                        </p>
+                                    ) : null}
+                                </div>
+                            ) : null}
 
-                            <div className="mt-6">
-                                <button
-                                    type="button"
-                                    className={`w-full rounded-2xl px-4 py-3 text-sm font-extrabold shadow-sm transition active:scale-[0.99] ${
-                                        plan.highlight
-                                            ? 'bg-[#0b1b3c] text-white hover:brightness-110'
-                                            : 'border border-slate-300 bg-white text-slate-900 hover:border-[#c9a227] theme-dark:border-slate-600 theme-dark:bg-slate-950 theme-dark:text-slate-50'
-                                    }`}
-                                >
-                                    {plan.cta}
-                                </button>
-                                <p className="mt-2 text-center text-[0.7rem] font-semibold text-slate-500 theme-dark:text-slate-400">
-                                    Sin cargo real en esta versión demo
+                            {plan.id === 'pro' && plan.features.length === 0 ? (
+                                <p className="mt-5 rounded-2xl border border-dashed border-slate-300 bg-slate-50/80 px-4 py-3 text-sm font-semibold text-slate-600 dark:border-slate-600 dark:bg-slate-950/40 dark:text-slate-300">
+                                    Los beneficios del plan Pro se configuran desde el panel de administración.
                                 </p>
+                            ) : (
+                                <ul className="mt-5 space-y-2">
+                                    {plan.features.map((f, fi) => (
+                                        <li key={`${plan.id}-${fi}-${f.slice(0, 24)}`} className="flex gap-2 text-sm text-slate-700 dark:text-slate-200">
+                                            <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">
+                                                ✓
+                                            </span>
+                                            <span>{f}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+
+                            <div className="mt-6 space-y-2">
+                                {plan.id === 'starter' ? (
+                                    <button
+                                        type="button"
+                                        disabled
+                                        className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-extrabold text-slate-900 opacity-80 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-50"
+                                    >
+                                        {plan.cta}
+                                    </button>
+                                ) : null}
+
+                                {plan.id === 'pro' && !proActive ? (
+                                    <button
+                                        type="button"
+                                        onClick={openPayModal}
+                                        className="w-full rounded-2xl bg-[#0b1b3c] px-4 py-3 text-sm font-extrabold text-white shadow-sm transition hover:brightness-110 active:scale-[0.99]"
+                                    >
+                                        {plan.cta}
+                                    </button>
+                                ) : null}
+
+                                {plan.id === 'pro' && proActive && !proCancelled ? (
+                                    <button
+                                        type="button"
+                                        onClick={() => setCancelOpen(true)}
+                                        className="w-full rounded-2xl border border-red-200 bg-white px-4 py-3 text-sm font-extrabold text-red-700 transition hover:bg-red-50 dark:border-red-900/60 dark:bg-slate-950 dark:text-red-300 dark:hover:bg-red-950/30"
+                                    >
+                                        Cancelar plan
+                                    </button>
+                                ) : null}
+
+                                {plan.id === 'pro' && proActive && proCancelled ? (
+                                    <button
+                                        type="button"
+                                        onClick={async () => {
+                                            setCheckoutError('')
+                                            try {
+                                                await resumePlanSubscription()
+                                                await loadSubscription()
+                                            } catch (e) {
+                                                setCheckoutError(e?.message || 'No se pudo reanudar')
+                                            }
+                                        }}
+                                        className="w-full rounded-2xl bg-[#0b1b3c] px-4 py-3 text-sm font-extrabold text-white shadow-sm transition hover:brightness-110"
+                                    >
+                                        Reanudar plan
+                                    </button>
+                                ) : null}
+
+                                {plan.id === 'pro' ? (
+                                    <p className="text-center text-[0.7rem] font-semibold text-slate-500 dark:text-slate-400">
+                                        El cobro usa el importe mostrado y la moneda configurada en el servidor.
+                                    </p>
+                                ) : (
+                                    <p className="text-center text-[0.7rem] font-semibold text-slate-500 dark:text-slate-400">
+                                        Plan base sin cargo.
+                                    </p>
+                                )}
+                                {checkoutError ? <p className="text-center text-xs font-bold text-red-600">{checkoutError}</p> : null}
                             </div>
                         </motion.article>
                     ))}
@@ -131,34 +468,34 @@ export default function PlanesPage() {
                     initial={{ opacity: 0, y: 14 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.15 }}
-                    className="mt-8 rounded-[1.6rem] border border-slate-200 bg-white/90 p-5 shadow-[0_18px_60px_rgba(2,6,23,0.08)] backdrop-blur theme-dark:border-slate-700 theme-dark:bg-slate-900/70"
+                    className="mt-8 rounded-[1.6rem] border border-slate-200 bg-white/90 p-5 shadow-[0_18px_60px_rgba(2,6,23,0.08)] backdrop-blur dark:border-slate-700 dark:bg-slate-900/70"
                 >
                     <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
                         <div>
-                            <h3 className="font-playfair text-2xl font-extrabold text-slate-900 theme-dark:text-slate-50">Comparación rápida</h3>
-                            <p className="mt-1 text-sm text-slate-600 theme-dark:text-slate-300">Dos niveles: empezar y crecer con Pro.</p>
+                            <h3 className="font-playfair text-2xl font-extrabold text-slate-900 dark:text-slate-50">Comparación rápida</h3>
+                            <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Dos niveles: empezar y crecer con Pro.</p>
                         </div>
                     </div>
 
                     <div className="mt-5 overflow-x-auto">
                         <table className="w-full min-w-[520px] border-separate border-spacing-0 text-sm">
                             <thead>
-                                <tr className="text-left text-xs font-black uppercase tracking-[0.18em] text-slate-500 theme-dark:text-slate-400">
-                                    <th className="rounded-l-2xl bg-slate-50 px-4 py-3 theme-dark:bg-slate-950/40">Beneficio</th>
-                                    <th className="bg-slate-50 px-4 py-3 theme-dark:bg-slate-950/40">Inicial</th>
-                                    <th className="rounded-r-2xl bg-[#c9a227]/15 px-4 py-3 text-[#0b1b3c] theme-dark:bg-[#c9a227]/20 theme-dark:text-slate-50">
+                                <tr className="text-left text-xs font-black uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                                    <th className="rounded-l-2xl bg-slate-50 px-4 py-3 dark:bg-slate-950/40">Beneficio</th>
+                                    <th className="bg-slate-50 px-4 py-3 dark:bg-slate-950/40">Inicial</th>
+                                    <th className="rounded-r-2xl bg-[#c9a227]/15 px-4 py-3 text-[#0b1b3c] dark:bg-[#c9a227]/20 dark:text-slate-50">
                                         Pro
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody className="text-slate-700 theme-dark:text-slate-200">
+                            <tbody className="text-slate-700 dark:text-slate-200">
                                 {[
                                     ['Sincronización en la nube', '—', '✓'],
                                     ['Intercambios priorizados', '—', '✓'],
                                     ['Estadísticas avanzadas', '—', '✓'],
                                     ['Soporte prioritario', '—', '✓'],
                                 ].map((row) => (
-                                    <tr key={row[0]} className="border-t border-slate-200 theme-dark:border-slate-800">
+                                    <tr key={row[0]} className="border-t border-slate-200 dark:border-slate-800">
                                         <td className="px-4 py-3 font-semibold">{row[0]}</td>
                                         <td className="px-4 py-3">{row[1]}</td>
                                         <td className="bg-[#c9a227]/5 px-4 py-3 font-bold">{row[2]}</td>
@@ -173,9 +510,9 @@ export default function PlanesPage() {
                     initial={{ opacity: 0, y: 14 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
-                    className="mt-8 rounded-[1.6rem] border border-slate-200 bg-white/90 p-5 theme-dark:border-slate-700 theme-dark:bg-slate-900/70"
+                    className="mt-8 rounded-[1.6rem] border border-slate-200 bg-white/90 p-5 dark:border-slate-700 dark:bg-slate-900/70"
                 >
-                    <h3 className="font-playfair text-2xl font-extrabold text-slate-900 theme-dark:text-slate-50">Preguntas frecuentes</h3>
+                    <h3 className="font-playfair text-2xl font-extrabold text-slate-900 dark:text-slate-50">Preguntas frecuentes</h3>
                     <div className="mt-4 space-y-2">
                         {FAQ.map((item, idx) => {
                             const open = openFaq === idx
@@ -184,19 +521,177 @@ export default function PlanesPage() {
                                     key={item.q}
                                     type="button"
                                     onClick={() => setOpenFaq(open ? -1 : idx)}
-                                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-left transition hover:border-[#c9a227]/60 theme-dark:border-slate-800 theme-dark:bg-slate-950/35"
+                                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-left transition hover:border-[#c9a227]/60 dark:border-slate-800 dark:bg-slate-950/35"
                                 >
                                     <div className="flex items-center justify-between gap-3">
-                                        <p className="text-sm font-extrabold text-slate-900 theme-dark:text-slate-50">{item.q}</p>
+                                        <p className="text-sm font-extrabold text-slate-900 dark:text-slate-50">{item.q}</p>
                                         <span className="text-slate-400">{open ? '−' : '+'}</span>
                                     </div>
-                                    {open ? <p className="mt-2 text-sm text-slate-600 theme-dark:text-slate-300">{item.a}</p> : null}
+                                    {open ? <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{item.a}</p> : null}
                                 </button>
                             )
                         })}
                     </div>
                 </motion.section>
             </div>
+
+            {payOpen ? (
+                <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true">
+                    <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-700 dark:bg-slate-900">
+                        <div className="flex items-start justify-between gap-3">
+                            <div>
+                                <p className="text-xs font-black uppercase tracking-[0.2em] text-[#c9a227]">Checkout</p>
+                                <h3 className="mt-1 font-playfair text-xl font-extrabold text-slate-900 dark:text-slate-50">Métodos de pago</h3>
+                                <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                                    Importe: <span className="font-bold">{formatMoney(catalog.amount, catalog.currency)}</span> · periodo{' '}
+                                    {catalog.period_days || 30} días
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setPayOpen(false)
+                                    setCheckoutError('')
+                                }}
+                                className="rounded-full border border-slate-200 px-3 py-1 text-sm font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
+                            >
+                                Cerrar
+                            </button>
+                        </div>
+
+                        {checkoutError ? <p className="mt-3 text-sm font-bold text-red-600">{checkoutError}</p> : null}
+
+                        <div className="mt-5 space-y-3">
+                            {flags.mercadopago ? (
+                                <button
+                                    type="button"
+                                    disabled={checkoutLoading}
+                                    onClick={() => handleCheckout('mercadopago')}
+                                    className="flex w-full items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-left transition hover:border-[#c9a227] disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950"
+                                >
+                                    <Image src={METHOD_ICON.mercadopago} alt="" width={40} height={28} className="object-contain" />
+                                    <div>
+                                        <p className="font-extrabold text-slate-900 dark:text-slate-50">Mercado Pago</p>
+                                        <p className="text-xs text-slate-600 dark:text-slate-400">Checkout Pro (redirección)</p>
+                                    </div>
+                                </button>
+                            ) : null}
+                            {flags.paypal ? (
+                                <button
+                                    type="button"
+                                    disabled={checkoutLoading}
+                                    onClick={() => handleCheckout('paypal')}
+                                    className="flex w-full items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-left transition hover:border-[#c9a227] disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950"
+                                >
+                                    <Image src={METHOD_ICON.paypal} alt="" width={40} height={28} className="object-contain" />
+                                    <div>
+                                        <p className="font-extrabold text-slate-900 dark:text-slate-50">PayPal</p>
+                                        <p className="text-xs text-slate-600 dark:text-slate-400">Sandbox / producción según API</p>
+                                    </div>
+                                </button>
+                            ) : null}
+                            {flags.tarjeta ? (
+                                <button
+                                    type="button"
+                                    disabled={checkoutLoading}
+                                    onClick={() => handleCheckout('tarjeta')}
+                                    className="flex w-full items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-left transition hover:border-[#c9a227] disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950"
+                                >
+                                    <Image src={METHOD_ICON.tarjeta} alt="" width={40} height={28} className="object-contain" />
+                                    <div>
+                                        <p className="font-extrabold text-slate-900 dark:text-slate-50">Tarjeta bancaria</p>
+                                        <p className="text-xs text-slate-600 dark:text-slate-400">Simulación en servidor (sin pasarela)</p>
+                                    </div>
+                                </button>
+                            ) : null}
+                            {!flags.mercadopago && !flags.paypal && !flags.tarjeta ? (
+                                <p className="text-sm font-semibold text-amber-700 dark:text-amber-300">
+                                    No hay métodos de pago habilitados. Un administrador puede activarlos en el panel.
+                                </p>
+                            ) : null}
+                        </div>
+                    </div>
+                </div>
+            ) : null}
+
+            {failModal ? (
+                <div className="fixed inset-0 z-[210] flex items-center justify-center bg-black/55 p-4" role="dialog" aria-modal="true">
+                    <div className="w-full max-w-md rounded-[1.5rem] border border-red-200 bg-white p-6 text-center shadow-2xl dark:border-red-900/50 dark:bg-slate-900">
+                        <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-red-100 text-2xl dark:bg-red-950/60">
+                            !
+                        </div>
+                        <h3 className="font-playfair text-xl font-extrabold text-slate-900 dark:text-slate-50">No se completó el pago</h3>
+                        <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{failModal}</p>
+                        <button
+                            type="button"
+                            onClick={() => setFailModal('')}
+                            className="mt-5 w-full rounded-2xl bg-[#0b1b3c] px-4 py-3 text-sm font-extrabold text-white"
+                        >
+                            Entendido
+                        </button>
+                    </div>
+                </div>
+            ) : null}
+
+            {successModal ? (
+                <div className="fixed inset-0 z-[210] flex items-center justify-center bg-black/55 p-4" role="dialog" aria-modal="true">
+                    <div className="w-full max-w-md rounded-[1.5rem] border border-emerald-200 bg-white p-6 text-center shadow-2xl dark:border-emerald-900/40 dark:bg-slate-900">
+                        <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-2xl text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">
+                            ✓
+                        </div>
+                        <h3 className="font-playfair text-xl font-extrabold text-slate-900 dark:text-slate-50">¡Pago exitoso!</h3>
+                        <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Tu plan Pro Coleccionista ya está activo en esta cuenta.</p>
+                        <button
+                            type="button"
+                            onClick={() => setSuccessModal(false)}
+                            className="mt-5 w-full rounded-2xl bg-[#0b1b3c] px-4 py-3 text-sm font-extrabold text-white"
+                        >
+                            Continuar
+                        </button>
+                    </div>
+                </div>
+            ) : null}
+
+            {cancelOpen ? (
+                <div className="fixed inset-0 z-[210] flex items-center justify-center bg-black/55 p-4" role="dialog" aria-modal="true">
+                    <div className="w-full max-w-md rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-700 dark:bg-slate-900">
+                        <h3 className="font-playfair text-xl font-extrabold text-slate-900 dark:text-slate-50">Cancelar plan Pro</h3>
+                        <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                            Marcaremos el plan como cancelado. Mientras siga vigente el tiempo que ya pagaste, podrás reanudarlo y seguirás teniendo acceso a las
+                            funciones del periodo (por ejemplo el botón Escanear).
+                        </p>
+                        <div className="mt-5 flex flex-col gap-2 sm:flex-row">
+                            <button
+                                type="button"
+                                disabled={cancelBusy}
+                                onClick={() => setCancelOpen(false)}
+                                className="flex-1 rounded-2xl border border-slate-200 px-4 py-3 text-sm font-extrabold text-slate-800 dark:border-slate-600 dark:text-slate-100"
+                            >
+                                Volver
+                            </button>
+                            <button
+                                type="button"
+                                disabled={cancelBusy}
+                                onClick={async () => {
+                                    setCancelBusy(true)
+                                    try {
+                                        await cancelPlanSubscription()
+                                        setCancelOpen(false)
+                                        await loadSubscription()
+                                    } catch (e) {
+                                        setCheckoutError(e?.message || 'No se pudo cancelar')
+                                    } finally {
+                                        setCancelBusy(false)
+                                    }
+                                }}
+                                className="flex-1 rounded-2xl bg-red-600 px-4 py-3 text-sm font-extrabold text-white hover:bg-red-700 disabled:opacity-60"
+                            >
+                                {cancelBusy ? 'Procesando…' : 'Sí, cancelar'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            ) : null}
         </PageFade>
     )
 }

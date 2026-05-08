@@ -11,7 +11,18 @@ export default function HomePage() {
         if (typeof window === 'undefined') return
         const token = localStorage.getItem('auth_token')
         const t = window.setTimeout(() => {
-            router.replace(token ? '/dashboard' : '/login')
+            if (!token) {
+                router.replace('/login')
+                return
+            }
+            let dest = '/inicio'
+            try {
+                const u = JSON.parse(localStorage.getItem('auth_user') || 'null')
+                if (u?.role === 'admin') dest = '/admin-home'
+            } catch {
+                void 0
+            }
+            router.replace(dest)
         }, 900)
         return () => window.clearTimeout(t)
     }, [router])
@@ -32,13 +43,13 @@ export default function HomePage() {
                     animate={{ rotate: [0, 1.2, -1.2, 0] }}
                     transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
                 >
-                    <span className="text-3xl">⚽</span>
+                    <span className="text-3xl">📦</span>
                 </motion.div>
                 <p className="text-xs font-black uppercase tracking-[0.35em] text-white/70">Coleccionador</p>
-                <h1 className="font-playfair mt-3 text-3xl font-extrabold text-white">Mundial 2026</h1>
+                <h1 className="font-playfair mt-3 text-3xl font-extrabold text-white">Red de coleccionistas</h1>
                 <div className="mt-6 h-1.5 overflow-hidden rounded-full bg-white/10">
                     <motion.div
-                        className="h-full w-1/2 rounded-full bg-[#c9a227]"
+                        className="h-full w-1/2 rounded-full bg-indigo-400"
                         initial={{ x: '-120%' }}
                         animate={{ x: '220%' }}
                         transition={{ duration: 1.1, repeat: Infinity, ease: 'linear' }}

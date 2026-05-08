@@ -10,6 +10,7 @@ import { useCarrito } from '@/lib/carrito'
 import { useFavoritos } from '@/lib/favoritos'
 import { useProductosByClaves } from '@/hooks/useProductosChunked'
 import IconoNavegacion from '@/components/IconoNavegacion'
+import { isClienteUser } from '@/lib/clientAuth'
 
 /**
  * Barra de navegación de la tienda: logo, toggle oscuro, Favoritos, Carrito; enlaces Tienda/Inicio según ruta.
@@ -28,7 +29,7 @@ export default function TiendaNavHeader({ darkMode, setDarkMode, onToggleLeftSid
     useEffect(() => {
         setHasToken(typeof window !== 'undefined' && !!localStorage.getItem('auth_token'))
     }, [])
-    const isLogged = !!user || hasToken
+    const isLogged = isClienteUser(user) || (!user && hasToken)
     const { items: cartItems } = useCarrito(isLogged)
     const cartCount = (cartItems || []).reduce((s, i) => s + (Number(i.cantidad) || 0), 0)
     const { claves: favoritosClaves } = useFavoritos(isLogged)
@@ -81,9 +82,6 @@ export default function TiendaNavHeader({ darkMode, setDarkMode, onToggleLeftSid
         }
     }
 
-    const pill = `inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium transition-colors ${
-        darkMode ? 'bg-gray-800/80 text-gray-200 hover:bg-gray-700' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-    }`
     const pillSm = `inline-flex items-center justify-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium transition-colors ${
         darkMode ? 'bg-gray-800/80 text-gray-200 hover:bg-gray-700' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
     }`
@@ -128,7 +126,7 @@ export default function TiendaNavHeader({ darkMode, setDarkMode, onToggleLeftSid
                                 {darkMode ? 'Oscuro' : 'Claro'}
                             </span>
                         </div>
-                        {user && (
+                        {isClienteUser(user) && (
                             <Link
                                 href="/favoritos"
                                 className={`flex items-center gap-1.5 transition-colors font-medium ${darkMode ? 'text-gray-300 hover:text-[#FF8000]' : 'text-gray-700 hover:text-[#FF8000]'}`}
@@ -178,7 +176,7 @@ export default function TiendaNavHeader({ darkMode, setDarkMode, onToggleLeftSid
                                 Inicio
                             </Link>
                         )}
-                        {user ? (
+                        {isClienteUser(user) ? (
                             <div className="relative tienda-nav-user-dropdown">
                                 <button
                                     onClick={() => setUserDropdownOpen(!userDropdownOpen)}
@@ -233,6 +231,13 @@ export default function TiendaNavHeader({ darkMode, setDarkMode, onToggleLeftSid
                                     </>
                                 )}
                             </div>
+                        ) : user?.role === 'admin' ? (
+                            <Link
+                                href="/admin-home"
+                                className={`transition-colors font-medium ${darkMode ? 'text-gray-300 hover:text-[#FF8000]' : 'text-gray-700 hover:text-[#FF8000]'}`}
+                            >
+                                Panel admin
+                            </Link>
                         ) : (
                             <Link href="/login" className={`transition-colors font-medium ${darkMode ? 'text-gray-300 hover:text-[#FF8000]' : 'text-gray-700 hover:text-[#FF8000]'}`}>
                                 Iniciar sesión
@@ -293,7 +298,7 @@ export default function TiendaNavHeader({ darkMode, setDarkMode, onToggleLeftSid
                                     className="h-7 w-auto max-w-[min(100%,180px)] sm:h-8"
                                 />
                             </Link>
-                            {user ? (
+                            {isClienteUser(user) ? (
                                 <button
                                     type="button"
                                     onClick={() => logout()}
@@ -308,12 +313,20 @@ export default function TiendaNavHeader({ darkMode, setDarkMode, onToggleLeftSid
                                         className={`object-contain ${darkMode ? 'brightness-0 invert' : ''}`}
                                     />
                                 </button>
+                            ) : user?.role === 'admin' ? (
+                                <Link
+                                    href="/admin-home"
+                                    className={`shrink-0 rounded-xl p-2 transition-colors ${darkMode ? 'hover:bg-gray-800' : 'hover:bg-gray-100'}`}
+                                    aria-label="Ir al panel de administración"
+                                >
+                                    <span className={`text-xs font-semibold px-1 ${darkMode ? 'text-emerald-400' : 'text-emerald-700'}`}>ADM</span>
+                                </Link>
                             ) : (
                                 <span className="w-11 shrink-0" aria-hidden />
                             )}
                         </div>
 
-                        {user && (
+                        {isClienteUser(user) && (
                             <>
                                 <p
                                     className={`mt-1.5 truncate text-center text-[10px] font-semibold uppercase tracking-wide ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}

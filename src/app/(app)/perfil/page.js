@@ -1,166 +1,612 @@
 'use client'
 
-import Link from 'next/link'
 import { motion } from 'framer-motion'
+import { createPortal } from 'react-dom'
+import Link from 'next/link'
 import { useAuth } from '@/hooks/auth'
-import { useEffect, useState } from 'react'
-import { getStoredDarkMode, applyThemeToDocument, persistTheme, broadcastThemeChange } from '@/lib/appTheme'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import PageFade from '@/components/coleccionador/PageFade'
+import ProfileFeedPost from '@/components/coleccionador/ProfileFeedPost'
+import axios from '@/lib/axios'
+import { storageUrl } from '@/lib/storageUrl'
+import { profileHref } from '@/lib/profileUrl'
 
 export default function PerfilPage() {
-    const { user, logout } = useAuth({})
-    const [dark, setDark] = useState(false)
+    const { user, mutate: mutateUser } = useAuth({})
+    const [name, setName] = useState('')
+    const [saving, setSaving] = useState(false)
+    const [collectionsCount, setCollectionsCount] = useState(0)
+    const [posts, setPosts] = useState([])
+    const [newPost, setNewPost] = useState('')
+    const [newPostEntries, setNewPostEntries] = useState([])
+    const [publishingPost, setPublishingPost] = useState(false)
+    const [newPostMessage, setNewPostMessage] = useState('')
+    const newPostFilesRef = useRef(null)
+    const [loadingPosts, setLoadingPosts] = useState(true)
+    const [mediaMessage, setMediaMessage] = useState('')
+    const [imgBust, setImgBust] = useState(0)
+    const avatarInputRef = useRef(null)
+    const coverInputRef = useRef(null)
+    const [friends, setFriends] = useState([])
+    const [incomingRequests, setIncomingRequests] = useState([])
+    const [outgoingRequests, setOutgoingRequests] = useState([])
+    const [friendsModalOpen, setFriendsModalOpen] = useState(false)
+    const [friendsTab, setFriendsTab] = useState('friends')
+
+    const clearNewPostEntries = useCallback(() => {
+        setNewPostEntries((prev) => {
+            prev.forEach((e) => URL.revokeObjectURL(e.previewUrl))
+            return []
+        })
+    }, [])
+
+    const appendNewPostFiles = useCallback((fileList) => {
+        const files = Array.from(fileList || []).filter((f) => f instanceof File && f.size > 0)
+        if (files.length === 0) return
+        setNewPostEntries((prev) => [
+            ...prev,
+            ...files.map((file) => ({
+                id: `${file.name}-${file.size}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+                file,
+                previewUrl: URL.createObjectURL(file),
+            })),
+        ])
+    }, [])
+
+    const removeNewPostEntry = useCallback((id) => {
+        setNewPostEntries((prev) => {
+            const found = prev.find((x) => x.id === id)
+            if (found) URL.revokeObjectURL(found.previewUrl)
+            return prev.filter((x) => x.id !== id)
+        })
+    }, [])
+
+    useEffect(
+        () => () => {
+            clearNewPostEntries()
+        },
+        [clearNewPostEntries]
+    )
 
     useEffect(() => {
-        setDark(getStoredDarkMode())
+        setName(user?.name || '')
+    }, [user?.name])
+
+    const loadPosts = useCallback(async () => {
+        setLoadingPosts(true)
+        try {
+            const { data } = await axios.get('/profile/posts')
+            setPosts(Array.isArray(data) ? data : [])
+        } catch {
+            setPosts([])
+        } finally {
+            setLoadingPosts(false)
+        }
     }, [])
 
     useEffect(() => {
-        const onEvent = (e) => {
-            if (typeof e.detail === 'boolean') setDark(e.detail)
-        }
-        const onStorage = (ev) => {
-            if (ev.key === 'darkMode' && ev.newValue !== null) {
-                try {
-                    setDark(JSON.parse(ev.newValue))
-                } catch {
-                    // ignorar
-                }
+        let cancelled = false
+        ;(async () => {
+            try {
+                const { data } = await axios.get('/collections')
+                if (!cancelled) setCollectionsCount(Array.isArray(data) ? data.length : 0)
+            } catch {
+                if (!cancelled) setCollectionsCount(0)
             }
-        }
-        window.addEventListener('darkModeChange', onEvent)
-        window.addEventListener('storage', onStorage)
+        })()
         return () => {
-            window.removeEventListener('darkModeChange', onEvent)
-            window.removeEventListener('storage', onStorage)
+            cancelled = true
         }
     }, [])
 
-    const toggleTheme = () => {
-        const next = !getStoredDarkMode()
-        applyThemeToDocument(next)
-        persistTheme(next)
-        broadcastThemeChange(next)
-        setDark(next)
+    useEffect(() => {
+        loadPosts()
+    }, [loadPosts])
+
+    const loadFriendData = useCallback(async () => {
+        if (!user?.id) return
+        try {
+            const [{ data: list }, { data: req }] = await Promise.all([axios.get(`/friendships/users/${user.id}`), axios.get('/friendships/requests')])
+            setFriends(Array.isArray(list) ? list : [])
+            setIncomingRequests(Array.isArray(req?.incoming) ? req.incoming : [])
+            setOutgoingRequests(Array.isArray(req?.outgoing) ? req.outgoing : [])
+        } catch {
+            setFriends([])
+            setIncomingRequests([])
+            setOutgoingRequests([])
+        }
+    }, [user?.id])
+
+    useEffect(() => {
+        loadFriendData()
+    }, [loadFriendData])
+
+    useEffect(() => {
+        if (!friendsModalOpen) return
+        const prev = document.body.style.overflow
+        document.body.style.overflow = 'hidden'
+        return () => {
+            document.body.style.overflow = prev
+        }
+    }, [friendsModalOpen])
+
+    const persistSessionUser = async (nextUser) => {
+        if (nextUser) {
+            localStorage.setItem('auth_user', JSON.stringify(nextUser))
+            await mutateUser(nextUser, false)
+        }
+    }
+
+    const saveName = async () => {
+        const trimmed = name.trim()
+        if (!trimmed || trimmed === user?.name) return
+        setSaving(true)
+        try {
+            const { data } = await axios.patch('/profile', { name: trimmed })
+            await persistSessionUser(data)
+        } catch {
+            // ignorar
+        } finally {
+            setSaving(false)
+        }
+    }
+
+    const onAvatarChange = async (e) => {
+        const input = e.currentTarget
+        const file = input.files?.[0]
+        if (!file) return
+        const fd = new FormData()
+        fd.append('avatar', file)
+        setMediaMessage('Guardando foto de perfil…')
+        try {
+            const { data } = await axios.post('/profile/media', fd)
+            await persistSessionUser(data)
+            setImgBust((n) => n + 1)
+            setMediaMessage('Foto de perfil actualizada.')
+        } catch (err) {
+            const msg =
+                err.response?.data?.message ||
+                (err.response?.status === 422
+                    ? 'No se pudo validar la imagen (tamaño o formato).'
+                    : 'No se pudo guardar la foto. Revisa conexión y tamaño máx. ~10 MB.')
+            setMediaMessage(msg)
+        } finally {
+            input.value = ''
+            window.setTimeout(() => setMediaMessage(''), 4000)
+        }
+    }
+
+    const onCoverChange = async (e) => {
+        const input = e.currentTarget
+        const file = input.files?.[0]
+        if (!file) return
+        const fd = new FormData()
+        fd.append('cover', file)
+        setMediaMessage('Guardando portada…')
+        try {
+            const { data } = await axios.post('/profile/media', fd)
+            await persistSessionUser(data)
+            setImgBust((n) => n + 1)
+            setMediaMessage('Portada actualizada.')
+        } catch (err) {
+            const msg =
+                err.response?.data?.message ||
+                (err.response?.status === 422
+                    ? 'No se pudo validar la imagen (tamaño o formato).'
+                    : 'No se pudo guardar la portada. Revisa conexión y tamaño máx. ~15 MB.')
+            setMediaMessage(msg)
+        } finally {
+            input.value = ''
+            window.setTimeout(() => setMediaMessage(''), 4000)
+        }
+    }
+
+    const publishPost = async () => {
+        const body = newPost.trim()
+        if (!body && newPostEntries.length === 0) return
+        setPublishingPost(true)
+        setNewPostMessage('')
+        const fd = new FormData()
+        if (body) fd.append('body', body)
+        newPostEntries.forEach((e) => fd.append('images[]', e.file))
+        try {
+            const { data } = await axios.post('/feed', fd)
+            const createdPost =
+                data && typeof data === 'object'
+                    ? {
+                          ...data,
+                          comments: Array.isArray(data.comments) ? data.comments : [],
+                          likes_count: data.likes_count ?? 0,
+                          dislikes_count: data.dislikes_count ?? 0,
+                      }
+                    : null
+
+            if (createdPost?.id) {
+                setPosts((prev) => [createdPost, ...prev])
+            } else {
+                await loadPosts()
+            }
+            setNewPost('')
+            clearNewPostEntries()
+            if (newPostFilesRef.current) newPostFilesRef.current.value = ''
+        } catch (err) {
+            const msg =
+                err.response?.data?.errors?.images?.[0] ||
+                err.response?.data?.errors?.['images.0']?.[0] ||
+                err.response?.data?.message ||
+                'No se pudo crear la publicación. Verifica formato (jpeg/png/jpg/gif/webp) y tamaño máximo de 10 MB por imagen.'
+            setNewPostMessage(msg)
+        } finally {
+            setPublishingPost(false)
+        }
+    }
+
+    const respondRequest = async (friendshipId, action) => {
+        await axios.post(`/friendships/${friendshipId}/respond`, { action })
+        await loadFriendData()
     }
 
     return (
         <PageFade>
-            <div className="relative mx-auto max-w-2xl px-4 pb-12 pt-4">
+            <div className="relative mx-auto w-full max-w-full px-4 pb-12 pt-4 sm:px-5 md:px-6 lg:px-8 xl:px-10">
                 <motion.div
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-[0_22px_70px_rgba(2,6,23,0.12)] theme-dark:border-slate-700 theme-dark:bg-slate-900"
+                    className="w-full overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-[0_22px_70px_rgba(2,6,23,0.12)] dark:border-slate-700 dark:bg-[#101a2c]"
                 >
-                    <div className="relative h-44 overflow-hidden bg-[linear-gradient(120deg,#0b1b3c_0%,#1d4ed8_55%,#c9a227_160%)]">
-                        <div className="foil-back-pattern absolute inset-0 opacity-40 mix-blend-screen" />
-                        <motion.div
-                            className="absolute -left-24 top-0 h-56 w-56 rounded-full bg-white/15 blur-3xl"
-                            animate={{ x: [0, 18, 0], y: [0, -10, 0] }}
-                            transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
-                        />
-                        <div className="absolute right-4 top-4 rounded-full border border-white/25 bg-black/20 px-3 py-1 text-[0.65rem] font-black uppercase tracking-[0.25em] text-white">
-                            Coleccionador Pass
+                    <div className="relative z-0 h-44 overflow-hidden bg-[linear-gradient(125deg,#1e293b_0%,#334155_52%,#4f46e5_130%)]">
+                        {user?.cover_path ? (
+                            <>
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                    src={`${storageUrl(user.cover_path)}?v=${imgBust}`}
+                                    alt=""
+                                    className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+                                />
+                                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-black/25 to-black/10" />
+                            </>
+                        ) : (
+                            <>
+                                <div className="pointer-events-none foil-back-pattern absolute inset-0 opacity-35 mix-blend-screen" />
+                                <motion.div
+                                    className="pointer-events-none absolute -left-24 top-0 h-56 w-56 rounded-full bg-white/15 blur-3xl"
+                                    animate={{ x: [0, 18, 0], y: [0, -10, 0] }}
+                                    transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
+                                />
+                            </>
+                        )}
+                        <div className="pointer-events-auto absolute right-4 top-4 z-30 rounded-full border border-white/25 bg-black/20 px-3 py-1 text-[0.65rem] font-black uppercase tracking-[0.25em] text-white">
+                            Tu perfil
                         </div>
+                        <input
+                            ref={coverInputRef}
+                            type="file"
+                            accept="image/*"
+                            className="sr-only"
+                            onChange={onCoverChange}
+                        />
+                        <button
+                            type="button"
+                            onClick={() => coverInputRef.current?.click()}
+                            className="absolute bottom-3 right-3 z-30 rounded-full border border-white/30 bg-black/35 px-3 py-1.5 text-[0.65rem] font-bold text-white backdrop-blur transition hover:bg-black/50"
+                        >
+                            Cambiar portada
+                        </button>
                     </div>
 
-                    <div className="relative px-5 pb-6 -mt-14">
-                        <motion.div
-                            initial={{ scale: 0.92, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-                            className="mx-auto flex h-28 w-28 items-center justify-center rounded-[1.35rem] border-[5px] border-white bg-slate-100 shadow-[0_18px_45px_rgba(2,6,23,0.22)] theme-dark:border-slate-800 theme-dark:bg-slate-800"
-                        >
-                            <svg
-                                className="h-14 w-14 opacity-85 text-slate-600 theme-dark:text-slate-200"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                aria-hidden
+                    <div className="relative z-20 -mt-14 px-5 pb-6 pointer-events-none">
+                        <div className="pointer-events-none flex justify-center">
+                            <motion.div
+                                initial={{ scale: 0.92, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                transition={{ type: 'spring', stiffness: 260, damping: 20 }}
+                                className="pointer-events-auto relative mx-auto flex h-28 w-28 items-center justify-center overflow-hidden rounded-[1.35rem] border-[5px] border-white bg-slate-100 shadow-[0_18px_45px_rgba(2,6,23,0.22)] dark:border-slate-800 dark:bg-slate-800"
                             >
-                                <circle cx="12" cy="8" r="3.5" />
-                                <path d="M5 20v-1a7 7 0 0114 0v1" strokeLinecap="round" />
-                            </svg>
-                        </motion.div>
-
-                        <div className="mt-4 text-center">
-                            <p className="text-[0.72rem] font-bold uppercase tracking-[0.28em] text-slate-500 theme-dark:text-slate-400">Perfil verificado</p>
-                            <h1 className="font-playfair mt-2 text-3xl font-extrabold text-slate-900 theme-dark:text-slate-50">{user?.name || '—'}</h1>
-                            <p className="mt-1 text-sm text-slate-600 theme-dark:text-slate-300">{user?.email || '—'}</p>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                                src={user?.avatar_path ? `${storageUrl(user.avatar_path)}?v=${imgBust}` : storageUrl(null)}
+                                alt=""
+                                className="h-full w-full object-cover"
+                            />
+                            <input
+                                ref={avatarInputRef}
+                                type="file"
+                                accept="image/*"
+                                className="sr-only"
+                                onChange={onAvatarChange}
+                            />
+                            <button
+                                type="button"
+                                onClick={() => avatarInputRef.current?.click()}
+                                className="absolute inset-0 z-[1] flex items-end justify-center bg-gradient-to-t from-black/60 to-transparent pb-2 text-[0.65rem] font-bold text-white opacity-0 transition hover:opacity-100"
+                            >
+                                Cambiar foto
+                            </button>
+                            </motion.div>
                         </div>
 
-                        <div className="mt-6 grid grid-cols-3 gap-2 text-center">
-                            {[
-                                { k: 'Nivel', v: 'Gold', hint: 'demo' },
-                                { k: 'Racha', v: '7 días', hint: 'local' },
-                                { k: 'Album', v: '2026', hint: 'Mundial' },
-                            ].map((x) => (
-                                <div
-                                    key={x.k}
-                                    className="rounded-2xl border border-slate-200 bg-slate-50 px-2 py-3 theme-dark:border-slate-700 theme-dark:bg-slate-950/40"
-                                >
-                                    <p className="text-[0.62rem] font-bold uppercase tracking-wider text-slate-500 theme-dark:text-slate-400">{x.k}</p>
-                                    <p className="mt-1 text-lg font-black text-slate-900 theme-dark:text-slate-50">{x.v}</p>
-                                    <p className="mt-1 text-[0.62rem] font-semibold text-slate-400">{x.hint}</p>
-                                </div>
-                            ))}
-                        </div>
+                        {mediaMessage ? (
+                            <p className="pointer-events-auto mt-3 text-center text-xs font-semibold text-slate-600 dark:text-slate-300">
+                                {mediaMessage}
+                            </p>
+                        ) : null}
 
-                        <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 theme-dark:border-slate-700 theme-dark:bg-slate-950/30">
-                            <div className="flex items-center justify-between gap-3">
-                                <div>
-                                    <p className="text-sm font-bold text-slate-900 theme-dark:text-slate-50">Modo nocturno</p>
-                                    <p className="text-xs text-slate-500 theme-dark:text-slate-400">Se guarda en el navegador, igual que en login.</p>
-                                </div>
+                        <div className="pointer-events-auto mt-4 text-center">
+                            <div className="relative mx-auto w-full max-w-md">
+                                <p className="text-[0.72rem] font-bold uppercase tracking-[0.28em] text-slate-500 dark:text-slate-400">Coleccionista</p>
                                 <button
                                     type="button"
-                                    onClick={toggleTheme}
-                                    className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 theme-dark:border-slate-600 theme-dark:bg-slate-800 theme-dark:text-slate-200"
+                                    onClick={() => {
+                                        if (typeof window !== 'undefined') {
+                                            window.dispatchEvent(new Event('open-account-menu'))
+                                        }
+                                    }}
+                                    className="absolute right-0 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-xl border border-slate-200 bg-slate-100/85 transition hover:scale-[1.03] hover:bg-[var(--app-accent)]/12 dark:border-slate-600 dark:bg-slate-800/90 dark:hover:bg-[var(--app-accent)]/18 md:hidden"
+                                    aria-label="Abrir ajustes de cuenta"
                                 >
-                                    {dark ? (
-                                        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-                                            <circle cx="12" cy="12" r="4" />
-                                            <path
-                                                d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"
-                                                strokeLinecap="round"
-                                            />
-                                        </svg>
-                                    ) : (
-                                        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-                                            <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" strokeLinecap="round" strokeLinejoin="round" />
-                                        </svg>
-                                    )}
-                                    <span>{dark ? 'Desactivar' : 'Activar'}</span>
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img
+                                        src="/Imagenes/icon_engrane.png"
+                                        alt=""
+                                        className="h-[18px] w-[18px] object-contain opacity-90 [filter:brightness(0)_saturate(100%)] dark:[filter:brightness(0)_saturate(100%)_invert(1)]"
+                                    />
                                 </button>
+                            </div>
+                            <div className="mx-auto mt-2 flex w-full max-w-[30rem] flex-col items-center gap-2">
+                                <input
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    className="w-full max-w-[22rem] rounded-2xl border border-slate-200 bg-white px-3 py-2 text-center text-lg font-extrabold text-slate-900 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-50 sm:text-xl"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={saveName}
+                                    disabled={saving}
+                                    className="shrink-0 rounded-2xl bg-[var(--app-accent)] px-4 py-2 text-sm font-extrabold text-white disabled:opacity-50"
+                                >
+                                    {saving ? 'Guardando…' : 'Guardar nombre'}
+                                </button>
+                            </div>
+                            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{user?.email || '—'}</p>
+                        </div>
+
+                        <div className="pointer-events-auto mt-6 grid grid-cols-2 gap-2 text-center sm:grid-cols-3">
+                            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-2 py-3 dark:border-slate-700 dark:bg-slate-950/40">
+                                <p className="text-[0.62rem] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Colecciones</p>
+                                <p className="mt-1 text-lg font-black text-slate-900 dark:text-slate-50">{collectionsCount}</p>
+                            </div>
+                            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-2 py-3 dark:border-slate-700 dark:bg-slate-950/40">
+                                <p className="text-[0.62rem] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Publicaciones</p>
+                                <p className="mt-1 text-lg font-black text-slate-900 dark:text-slate-50">{posts.length}</p>
+                            </div>
+                            <div className="col-span-2 rounded-2xl border border-slate-200 bg-slate-50 px-2 py-3 sm:col-span-1 dark:border-slate-700 dark:bg-slate-950/40">
+                                <p className="text-[0.62rem] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Actividad</p>
+                                <p className="mt-1 text-lg font-black text-slate-900 dark:text-slate-50">En la red</p>
+                            </div>
+                            <div className="col-span-2 rounded-2xl border border-slate-200 bg-slate-50 px-2 py-3 sm:col-span-1 dark:border-slate-700 dark:bg-slate-950/40">
+                                <p className="text-[0.62rem] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Amigos</p>
+                                <p className="mt-1 text-lg font-black text-slate-900 dark:text-slate-50">{friends.length}</p>
                             </div>
                         </div>
 
-                        <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                            <Link
-                                href="/planes"
-                                className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[#c9a227] px-4 py-3 text-sm font-extrabold text-[#0b1b3c] shadow-md transition hover:brightness-105 active:scale-[0.99]"
-                            >
-                                Mejorar plan
-                            </Link>
+                        <div className="pointer-events-auto mt-4 rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900/55">
+                            <div className="flex items-center justify-between gap-2">
+                                <div>
+                                    <p className="text-sm font-extrabold text-slate-900 dark:text-slate-50">Amigos</p>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400">Tus conexiones dentro de la app.</p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setFriendsTab('friends')
+                                        setFriendsModalOpen(true)
+                                    }}
+                                    className="rounded-xl bg-[var(--app-accent)]/10 px-3 py-1.5 text-xs font-extrabold text-[var(--app-accent)]"
+                                >
+                                    Ver más
+                                </button>
+                            </div>
+                            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+                                {friends.slice(0, 6).map((f) => (
+                                    <Link
+                                        key={f.id}
+                                        href={profileHref({ id: f.id, name: f.name, currentUserId: user?.id })}
+                                        className="group relative mx-auto flex w-full max-w-[215px] flex-col items-center gap-2.5 overflow-hidden rounded-3xl border border-slate-200 bg-white px-3 py-3 text-center shadow-[0_8px_24px_rgba(15,23,42,0.06)] transition hover:-translate-y-1 hover:border-[var(--app-accent)]/45 hover:shadow-[0_16px_34px_rgba(79,70,229,0.22)] dark:border-slate-700 dark:bg-slate-900/75"
+                                    >
+                                        <div className="pointer-events-none absolute inset-x-0 top-0 h-10 bg-gradient-to-b from-indigo-100/70 to-transparent dark:from-indigo-500/10" />
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img src={storageUrl(f.avatar_path)} alt="" className="h-24 w-24 rounded-3xl object-cover ring-2 ring-white shadow-lg transition group-hover:scale-[1.03] dark:ring-slate-700" />
+                                        <span className="line-clamp-2 text-[0.95rem] font-black leading-tight text-slate-800 group-hover:text-[var(--app-accent)] dark:text-slate-100">
+                                            {f.name}
+                                        </span>
+                                        <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-500 dark:bg-slate-800 dark:text-slate-300">
+                                            Ver perfil
+                                        </span>
+                                    </Link>
+                                ))}
+                                {friends.length === 0 ? <p className="text-xs text-slate-500">Aún no tienes amigos agregados.</p> : null}
+                            </div>
+                        </div>
+
+                        <div className="pointer-events-auto mt-6 rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900/55">
+                            <p className="text-sm font-bold text-slate-900 dark:text-slate-50">Nueva publicación</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">También aparecerá en Inicio para tus seguidores de la comunidad.</p>
+                            <textarea
+                                value={newPost}
+                                onChange={(e) => setNewPost(e.target.value)}
+                                rows={3}
+                                maxLength={5000}
+                                className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-50"
+                                placeholder="¿Qué coleccionas hoy? Muestra un hallazgo o busca un faltante…"
+                            />
+                            <div className="mt-2">
+                                <input
+                                    ref={newPostFilesRef}
+                                    type="file"
+                                    accept="image/*"
+                                    multiple
+                                    className="w-full text-xs text-slate-600 file:mr-2 file:rounded-lg file:border-0 file:bg-slate-200 file:px-2 file:py-1.5 file:text-xs file:font-bold dark:text-slate-300 dark:file:bg-slate-700"
+                                    onChange={(e) => {
+                                        appendNewPostFiles(e.target.files)
+                                        const input = e.target
+                                        window.queueMicrotask(() => {
+                                            input.value = ''
+                                        })
+                                    }}
+                                />
+                                {newPostEntries.length > 0 ? (
+                                    <div className="mt-2 flex flex-wrap gap-2">
+                                        {newPostEntries.map((entry) => (
+                                            <div
+                                                key={entry.id}
+                                                className="relative h-16 w-16 overflow-hidden rounded-lg border border-slate-200 dark:border-slate-600"
+                                            >
+                                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                <img src={entry.previewUrl} alt="" className="h-full w-full object-cover" />
+                                                <button
+                                                    type="button"
+                                                    title="Quitar"
+                                                    onClick={() => removeNewPostEntry(entry.id)}
+                                                    className="absolute right-0.5 top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-[11px] font-bold text-white"
+                                                >
+                                                    ×
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : null}
+                            </div>
+                            {newPostMessage ? <p className="mt-2 text-xs font-semibold text-amber-600 dark:text-amber-400">{newPostMessage}</p> : null}
                             <button
                                 type="button"
-                                onClick={() => logout()}
-                                className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700 transition active:scale-[0.99] theme-logout-btn theme-dark:border-red-900/50"
+                                onClick={publishPost}
+                                disabled={publishingPost || (!newPost.trim() && newPostEntries.length === 0)}
+                                className="mt-2 w-full rounded-2xl bg-[var(--app-primary)] py-2.5 text-sm font-extrabold text-white shadow-md transition hover:opacity-95 disabled:opacity-45"
                             >
-                                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-                                    <path
-                                        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                    />
-                                </svg>
-                                Cerrar sesión
+                                {publishingPost ? 'Publicando…' : 'Publicar'}
                             </button>
+                        </div>
+
+                        <div className="pointer-events-auto mt-5 space-y-3">
+                            <p className="text-xs font-black uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">Tus publicaciones</p>
+                            {loadingPosts ? (
+                                <p className="text-sm text-slate-500">Cargando…</p>
+                            ) : posts.length === 0 ? (
+                                <p className="rounded-2xl border border-dashed border-slate-200 px-4 py-6 text-center text-sm text-slate-500 dark:border-slate-600">
+                                    Aún no tienes publicaciones en tu perfil.
+                                </p>
+                            ) : (
+                                posts.map((p) => (
+                                    <ProfileFeedPost
+                                        key={p.id}
+                                        post={p}
+                                        currentUserId={user?.id}
+                                        onRefresh={loadPosts}
+                                    />
+                                ))
+                            )}
                         </div>
                     </div>
                 </motion.div>
             </div>
+            {friendsModalOpen && typeof document !== 'undefined'
+                ? createPortal(
+                      <div
+                          className="fixed inset-0 z-[220] flex items-end justify-center bg-transparent p-0 md:items-center md:pl-72"
+                          role="dialog"
+                          aria-modal="true"
+                          onMouseDown={(e) => {
+                              if (e.target === e.currentTarget) setFriendsModalOpen(false)
+                          }}
+                      >
+                          <div className="w-full max-w-4xl rounded-t-3xl border border-slate-200 bg-gradient-to-b from-white to-slate-50 p-6 shadow-2xl dark:border-slate-600 dark:from-slate-900 dark:to-slate-950 md:rounded-3xl">
+                              <div className="mb-4 flex items-center justify-between">
+                                  <h3 className="text-base font-extrabold text-slate-900 dark:text-slate-50">Red de amistades</h3>
+                                  <button type="button" onClick={() => setFriendsModalOpen(false)} className="rounded-full p-2.5 hover:bg-slate-100 dark:hover:bg-slate-800">
+                                      ✕
+                                  </button>
+                              </div>
+                              <div className="mb-5 grid grid-cols-2 gap-2 rounded-2xl bg-slate-100/90 p-1.5 dark:bg-slate-800/90">
+                                  <button
+                                      type="button"
+                                      onClick={() => setFriendsTab('friends')}
+                                      className={`rounded-lg px-3 py-2 text-xs font-extrabold ${friendsTab === 'friends' ? 'bg-white text-[var(--app-accent)] dark:bg-slate-900' : 'text-slate-600 dark:text-slate-300'}`}
+                                  >
+                                      Amigos ({friends.length})
+                                  </button>
+                                  <button
+                                      type="button"
+                                      onClick={() => setFriendsTab('requests')}
+                                      className={`rounded-lg px-3 py-2 text-xs font-extrabold ${friendsTab === 'requests' ? 'bg-white text-[var(--app-accent)] dark:bg-slate-900' : 'text-slate-600 dark:text-slate-300'}`}
+                                  >
+                                      Solicitudes ({incomingRequests.length})
+                                  </button>
+                              </div>
+
+                              {friendsTab === 'friends' ? (
+                                  <div className="max-h-[62vh] grid grid-cols-2 gap-3 overflow-y-auto pr-1 sm:grid-cols-3 lg:grid-cols-4">
+                                      {friends.map((f) => (
+                                          <Link key={f.id} href={profileHref({ id: f.id, name: f.name, currentUserId: user?.id })} className="group relative mx-auto flex w-full max-w-[190px] flex-col items-center gap-2.5 overflow-hidden rounded-3xl border border-slate-200 bg-white px-3 py-3 text-center shadow-[0_10px_24px_rgba(15,23,42,0.08)] transition hover:-translate-y-1 hover:border-[var(--app-accent)]/45 hover:shadow-[0_18px_36px_rgba(79,70,229,0.22)] dark:border-slate-700 dark:bg-slate-900/75">
+                                              <div className="pointer-events-none absolute inset-x-0 top-0 h-12 bg-gradient-to-b from-indigo-100/70 to-transparent dark:from-indigo-500/10" />
+                                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                                              <img src={storageUrl(f.avatar_path)} alt="" className="h-28 w-28 rounded-3xl object-cover ring-2 ring-white shadow-lg transition group-hover:scale-[1.03] dark:ring-slate-700" />
+                                              <p className="line-clamp-2 text-[0.95rem] font-black leading-tight text-slate-900 group-hover:text-[var(--app-accent)] dark:text-slate-100">{f.name}</p>
+                                              <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-500 dark:bg-slate-800 dark:text-slate-300">
+                                                  Abrir perfil
+                                              </span>
+                                          </Link>
+                                      ))}
+                                      {friends.length === 0 ? <p className="text-sm text-slate-500">Aún no tienes amigos.</p> : null}
+                                  </div>
+                              ) : (
+                                  <div className="max-h-[58vh] space-y-3 overflow-y-auto pr-1">
+                                      <div>
+                                          <p className="mb-1 text-xs font-black uppercase tracking-[0.16em] text-slate-400">Recibidas</p>
+                                          <div className="space-y-2">
+                                              {incomingRequests.map((r) => (
+                                                  <div key={r.id} className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-3 dark:border-slate-700 dark:bg-slate-900/50">
+                                                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                      <img src={storageUrl(r.requester?.avatar_path)} alt="" className="h-12 w-12 rounded-xl object-cover ring-1 ring-slate-200 dark:ring-slate-600" />
+                                                      <div className="min-w-0 flex-1">
+                                                          <p className="truncate text-sm font-bold text-slate-900 dark:text-slate-100">{r.requester?.name}</p>
+                                                          <p className="truncate text-xs text-slate-500">{r.requester?.email}</p>
+                                                      </div>
+                                                      <div className="flex gap-1">
+                                                          <button type="button" onClick={() => respondRequest(r.id, 'accept')} className="rounded-lg bg-emerald-600 px-2 py-1 text-[11px] font-bold text-white">
+                                                              Aceptar
+                                                          </button>
+                                                          <button type="button" onClick={() => respondRequest(r.id, 'reject')} className="rounded-lg border border-slate-200 px-2 py-1 text-[11px] font-bold dark:border-slate-600">
+                                                              Rechazar
+                                                          </button>
+                                                      </div>
+                                                  </div>
+                                              ))}
+                                              {incomingRequests.length === 0 ? <p className="text-xs text-slate-500">Sin solicitudes pendientes.</p> : null}
+                                          </div>
+                                      </div>
+                                      <div>
+                                          <p className="mb-1 text-xs font-black uppercase tracking-[0.16em] text-slate-400">Enviadas</p>
+                                          <div className="space-y-2">
+                                              {outgoingRequests.map((r) => (
+                                                  <div key={r.id} className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-3 text-sm dark:border-slate-700 dark:bg-slate-900/50">
+                                                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                      <img src={storageUrl(r.addressee?.avatar_path)} alt="" className="h-12 w-12 rounded-xl object-cover ring-1 ring-slate-200 dark:ring-slate-600" />
+                                                      <div className="min-w-0 flex-1">
+                                                          <p className="truncate font-bold text-slate-900 dark:text-slate-100">{r.addressee?.name}</p>
+                                                          <p className="truncate text-xs text-slate-500">Solicitud enviada</p>
+                                                      </div>
+                                                  </div>
+                                              ))}
+                                              {outgoingRequests.length === 0 ? <p className="text-xs text-slate-500">No has enviado solicitudes.</p> : null}
+                                          </div>
+                                      </div>
+                                  </div>
+                              )}
+                          </div>
+                      </div>,
+                      document.body
+                  )
+                : null}
         </PageFade>
     )
 }

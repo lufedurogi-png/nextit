@@ -21,7 +21,21 @@ const AppLayout = ({ children }) => {
         setCheckedSession(true)
     }, [router])
 
+    useEffect(() => {
+        if (!user || user.role !== 'admin') return
+        try {
+            localStorage.setItem('auth_admin', 'true')
+        } catch {
+            void 0
+        }
+        router.replace('/admin-home')
+    }, [user, router])
+
     if (!checkedSession || !user) {
+        return <Loading />
+    }
+
+    if (user.role === 'admin') {
         return <Loading />
     }
 

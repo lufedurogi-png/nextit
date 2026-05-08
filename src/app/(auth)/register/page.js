@@ -83,12 +83,20 @@ const Page = () => {
         }, 800)
     }
 
-    // Requisitos de contraseña alineados con la API actual.
+    // Misma política que `AdminUserManagementService::passwordRules()` (POST /auth/register).
     const passwordChecks = {
         minLength: password.length >= 8,
+        hasLetters: /\p{L}/u.test(password),
+        hasMixedCase: /[a-z]/.test(password) && /[A-Z]/.test(password),
+        hasNumber: /\d/.test(password),
+        hasSymbol: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password),
     }
     const passwordRequirements = [
         { key: 'minLength', label: 'Mínimo 8 caracteres', met: passwordChecks.minLength },
+        { key: 'hasLetters', label: 'Al menos una letra', met: passwordChecks.hasLetters },
+        { key: 'hasMixedCase', label: 'Mayúscula y minúscula', met: passwordChecks.hasMixedCase },
+        { key: 'hasNumber', label: 'Al menos un número', met: passwordChecks.hasNumber },
+        { key: 'hasSymbol', label: 'Al menos un símbolo (!@#$%…)', met: passwordChecks.hasSymbol },
     ]
 
     const submitForm = event => {
@@ -239,7 +247,7 @@ const Page = () => {
                                                 onClick={() => setShowPasswordModal(false)}
                                             />
                                             <div
-                                                className={`absolute left-full top-1/2 z-50 w-56 max-w-[14rem] -translate-y-1/2 ml-1.5 rounded-xl border-2 shadow-xl transition-all duration-200 ${
+                                                className={`absolute left-full top-1/2 z-50 w-64 max-w-[min(16rem,calc(100vw-2rem))] -translate-y-1/2 ml-1.5 rounded-xl border-2 shadow-xl transition-all duration-200 ${
                                                     darkMode
                                                         ? 'border-gray-600 bg-gray-800'
                                                         : 'border-gray-200 bg-white'

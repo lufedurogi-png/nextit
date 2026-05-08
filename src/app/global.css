@@ -85,50 +85,77 @@ body {
 /* --- Coleccionador (viejo Laravel resources/css/app.css) --- */
 @layer base {
     :root {
-        --app-primary: #0b1b3c;
-        --app-primary-2: #153777;
-        --app-accent: #c9a227;
-        --app-bg: #f4f3ef;
+        --app-primary: #1e1b4b;
+        --app-primary-2: #4338ca;
+        --app-accent: #6366f1;
+        --app-accent-2: #a855f7;
+        --app-bg: #f5f5ff;
         --app-card: #ffffff;
         --app-text: #111827;
         --app-subtle: #6b7280;
     }
 
+    .theme-dark {
+        --app-primary: #334155;
+        --app-primary-2: #475569;
+        --app-accent: #6366f1;
+        --app-accent-2: #8b5cf6;
+        --app-bg: #1a1f2e;
+        --app-card: #252d3f;
+        --app-text: #e8eef8;
+        --app-subtle: #9fb0c8;
+    }
+
     .theme-dark body {
-        background-color: #030712 !important;
-        color: #e5e7eb !important;
+        background-color: var(--app-bg) !important;
+        color: var(--app-text) !important;
     }
 
     .theme-dark .app-card,
     .theme-dark .bg-white,
+    .theme-dark .bg-white\/80,
+    .theme-dark .bg-white\/85,
     .theme-dark .bg-white\/90,
     .theme-dark .bg-white\/95,
-    .theme-dark .bg-slate-100 {
-        background-color: #0f172a !important;
-        color: #e5e7eb !important;
+    .theme-dark .bg-slate-50,
+    .theme-dark .bg-slate-100,
+    .theme-dark .bg-indigo-50,
+    .theme-dark .bg-emerald-50,
+    .theme-dark .bg-amber-50 {
+        background-color: #252d3f !important;
+        color: #dbe5f2 !important;
     }
 
     .theme-dark .app-text,
     .theme-dark .text-slate-900,
+    .theme-dark .text-slate-800,
+    .theme-dark .text-slate-700,
     .theme-dark .text-gray-900,
     .theme-dark .text-gray-800,
     .theme-dark .text-blue-950 {
-        color: #f8fafc !important;
+        color: #e8eef8 !important;
     }
 
     .theme-dark .app-subtle,
+    .theme-dark .text-slate-400,
     .theme-dark .text-gray-600,
     .theme-dark .text-gray-500,
     .theme-dark .text-slate-600,
     .theme-dark .text-slate-500 {
-        color: #94a3b8 !important;
+        color: #9fb0c8 !important;
     }
 
     .theme-dark .border-gray-100,
     .theme-dark .border-gray-200,
+    .theme-dark .border-slate-300,
     .theme-dark .border-slate-200,
     .theme-dark .border-blue-100 {
-        border-color: #1e293b !important;
+        border-color: #25324a !important;
+    }
+
+    .theme-dark input::placeholder,
+    .theme-dark textarea::placeholder {
+        color: #64748b !important;
     }
 
     .theme-dark .icon-adapt {
@@ -146,15 +173,26 @@ body {
 @layer components {
     .app-bg-pattern {
         background-image:
-            radial-gradient(circle at 10% 10%, rgba(11, 27, 60, 0.12), transparent 28%),
-            radial-gradient(circle at 90% 2%, rgba(21, 55, 119, 0.1), transparent 30%),
-            radial-gradient(circle at 50% 100%, rgba(201, 162, 39, 0.1), transparent 26%);
+            radial-gradient(circle at 10% 10%, rgba(99, 102, 241, 0.08), transparent 26%),
+            radial-gradient(circle at 90% 2%, rgba(168, 85, 247, 0.07), transparent 30%),
+            radial-gradient(circle at 50% 100%, rgba(30, 27, 75, 0.05), transparent 24%);
+    }
+
+    .theme-dark .app-bg-pattern {
+        background-image:
+            radial-gradient(circle at 10% 10%, rgba(148, 163, 184, 0.06), transparent 28%),
+            radial-gradient(circle at 90% 2%, rgba(99, 102, 241, 0.09), transparent 30%),
+            radial-gradient(circle at 50% 100%, rgba(148, 163, 184, 0.05), transparent 26%);
     }
 
     .hero-top {
-        background: linear-gradient(140deg, var(--app-primary) 0%, #102a59 58%, var(--app-primary-2) 100%);
+        background: linear-gradient(140deg, #111827 0%, #312e81 55%, var(--app-primary-2) 100%);
         border-bottom-left-radius: 2rem;
         border-bottom-right-radius: 2rem;
+    }
+
+    .theme-dark .hero-top {
+        background: linear-gradient(140deg, #1f2937 0%, #273449 55%, #334155 100%);
     }
 
     .metric-card {
@@ -215,7 +253,7 @@ body {
         width: 22px;
         height: 3px;
         border-radius: 9999px;
-        background: #c9a227;
+        background: var(--app-accent);
     }
 }
 

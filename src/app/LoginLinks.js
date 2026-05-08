@@ -2,18 +2,19 @@
 
 import Link from 'next/link'
 import { useAuth } from '@/hooks/auth'
+import { isClienteUser } from '@/lib/clientAuth'
 
 const LoginLinks = () => {
     const { user } = useAuth({ middleware: 'guest' })
 
     return (
         <div className="hidden fixed top-0 right-0 px-6 py-4 sm:block">
-            {user ? (
+            {isClienteUser(user) ? (
                 <Link
-                    href="/dashboard"
+                    href="/inicio"
                     className="ml-4 text-sm text-gray-700 underline"
                 >
-                    Dashboard
+                    Inicio
                 </Link>
             ) : (
                 <>

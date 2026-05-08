@@ -9,6 +9,7 @@ import { registrarSeleccionBusqueda } from '@/lib/busqueda'
 import { useCarrito } from '@/lib/carrito'
 import { useFavoritos } from '@/lib/favoritos'
 import { useCotizacion } from '@/lib/cotizaciones'
+import { isClienteUser } from '@/lib/clientAuth'
 
 const FALLBACK_IMAGE = '/Imagenes/caja.png'
 
@@ -18,8 +19,6 @@ function getFirstImageUrl(producto) {
     if (Array.isArray(imagenes) && imagenes.length > 0) return resolveStorageUrl(imagenes[0])
     return null
 }
-
-const MAX_COMPARAR = 4
 
 export default function ProductCard({ producto, darkMode, busquedaId = null, comparar = false, seleccionado = false, onCompararChange, compararLleno = false, returnUrl = null }) {
     const { user } = useAuth({ middleware: 'guest' })
@@ -31,10 +30,11 @@ export default function ProductCard({ producto, darkMode, busquedaId = null, com
     const [addingCart, setAddingCart] = useState(false)
     const [togglingFavorito, setTogglingFavorito] = useState(false)
     const [cantidadCart, setCantidadCart] = useState(1)
-    const isLogged = !!user || hasToken
+    const isLogged = isClienteUser(user) || (!user && hasToken)
     const { isFavorito, toggle: toggleFavorito } = useFavoritos(isLogged)
     const { add: addToCarrito, isInCart } = useCarrito(isLogged)
-    const { modoActivo, isInQuote, cantidad: quoteCantidad, toggleItem, setCantidad } = useCotizacion(user)
+    const clienteUser = isClienteUser(user) ? user : null
+    const { modoActivo, isInQuote, cantidad: quoteCantidad, toggleItem, setCantidad } = useCotizacion(clienteUser)
     const imageUrl = getFirstImageUrl(producto)
     const titulo = producto?.descripcion || ''
     const precioFormateado = formatPrecio(producto?.precio, producto?.moneda)
@@ -70,7 +70,7 @@ export default function ProductCard({ producto, darkMode, busquedaId = null, com
                 }}
             >
                 <div className="relative h-48 bg-gray-100 overflow-hidden cursor-pointer">
-                            {user && (
+                            {isClienteUser(user) && (
                         <button
                             type="button"
                             onClick={(e) => {
@@ -268,7 +268,7 @@ export default function ProductCard({ producto, darkMode, busquedaId = null, com
                                 <button
                                     type="button"
                                     aria-label="Aumentar cantidad"
-                                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCantidadCart((p) => Math.min(totalStock, p + 1)); }}
+                                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCantidadCart((p) => Math.min(totalStock, p + 1)) }}
                                     className={`p-1 flex items-center justify-center ${darkMode ? 'hover:bg-gray-600 text-gray-300' : 'hover:bg-gray-300 text-gray-600'}`}
                                 >
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
@@ -276,7 +276,7 @@ export default function ProductCard({ producto, darkMode, busquedaId = null, com
                                 <button
                                     type="button"
                                     aria-label="Disminuir cantidad"
-                                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCantidadCart((p) => Math.max(1, p - 1)); }}
+                                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCantidadCart((p) => Math.max(1, p - 1)) }}
                                     className={`p-1 flex items-center justify-center border-t ${darkMode ? 'border-gray-600 hover:bg-gray-600 text-gray-300' : 'border-gray-400 hover:bg-gray-300 text-gray-600'}`}
                                 >
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
@@ -313,7 +313,7 @@ export default function ProductCard({ producto, darkMode, busquedaId = null, com
                                     <button
                                         type="button"
                                         aria-label="Aumentar cantidad"
-                                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCantidadCart((p) => Math.min(totalStock, p + 1)); }}
+                                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCantidadCart((p) => Math.min(totalStock, p + 1)) }}
                                         className={`p-1 flex items-center justify-center ${darkMode ? 'hover:bg-gray-600 text-gray-300' : 'hover:bg-gray-300 text-gray-600'}`}
                                     >
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
@@ -321,7 +321,7 @@ export default function ProductCard({ producto, darkMode, busquedaId = null, com
                                     <button
                                         type="button"
                                         aria-label="Disminuir cantidad"
-                                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCantidadCart((p) => Math.max(1, p - 1)); }}
+                                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCantidadCart((p) => Math.max(1, p - 1)) }}
                                         className={`p-1 flex items-center justify-center border-t ${darkMode ? 'border-gray-600 hover:bg-gray-600 text-gray-300' : 'border-gray-400 hover:bg-gray-300 text-gray-600'}`}
                                     >
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>

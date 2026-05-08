@@ -228,3 +228,38 @@ export async function downloadInformeProductosPorMarca(marcas) {
 
     doc.save(`Informe_Productos_Por_Marca_${new Date().toISOString().slice(0, 10)}.pdf`)
 }
+
+/**
+ * PDF: historial mensual de uso del escáner IA para un año.
+ * @param {Array<{month_label:string,free_scans:number,paid_scans:number,cost_mxn:number,cost_usd:number}>} rows
+ * @param {number} year
+ */
+export async function downloadInformeUsoEscanerMensual(rows, year) {
+    const { jsPDF } = await import('jspdf')
+    const autoTable = (await import('jspdf-autotable')).default
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+    const bg = await loadBackgroundImageDataUrl()
+
+    const safeRows = Array.isArray(rows) ? rows : []
+    const tableData = safeRows.map((r) => [
+        String(r.month_label || '-'),
+        cantidadSoloNumero(Number(r.free_scans) || 0),
+        cantidadSoloNumero(Number(r.paid_scans) || 0),
+        Number(r.cost_mxn || 0).toFixed(2),
+        Number(r.cost_usd || 0).toFixed(2),
+    ])
+
+    autoTable(doc, {
+        ...reportTableOptions(doc, 'INFORME · USO ESCÁNER IA', 'Consumo mensual y costo', bg),
+        head: [['Mes y año', 'Consultas gratis', 'Consultas de pago', 'Costo MXN', 'Costo USD']],
+        body: tableData.length ? tableData : [['Sin datos', '0', '0', '0.00', '0.00']],
+        columnStyles: {
+            1: { halign: 'right' },
+            2: { halign: 'right' },
+            3: { halign: 'right' },
+            4: { halign: 'right' },
+        },
+    })
+
+    doc.save(`Informe_Uso_Escaner_IA_${year || new Date().getFullYear()}.pdf`)
+}

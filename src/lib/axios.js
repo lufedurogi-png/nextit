@@ -7,7 +7,6 @@ const axios = Axios.create({
     baseURL,
     headers: {
         'X-Requested-With': 'XMLHttpRequest',
-        'Content-Type': 'application/json',
         Accept: 'application/json',
     },
 })
@@ -18,6 +17,33 @@ axios.interceptors.request.use(
         if (token) {
             config.headers.Authorization = `Bearer ${token}`
         }
+
+        const h = config.headers || {}
+        const isForm = typeof FormData !== 'undefined' && config.data instanceof FormData
+
+        if (isForm) {
+            // Multipart: no fijar Content-Type (axios + navegador ponen boundary). Quitar defaults por método.
+            const strip = (obj) => {
+                if (!obj || typeof obj !== 'object') return
+                delete obj['Content-Type']
+                delete obj['content-type']
+            }
+            strip(h)
+            strip(h.common)
+            strip(h.patch)
+            strip(h.post)
+            strip(h.put)
+            strip(h.delete)
+        } else if (
+            config.data != null &&
+            typeof config.data === 'object' &&
+            !(config.data instanceof URLSearchParams) &&
+            (typeof Blob === 'undefined' || !(config.data instanceof Blob)) &&
+            !(config.data instanceof ArrayBuffer)
+        ) {
+            h['Content-Type'] = 'application/json'
+        }
+
         return config
     },
     error => Promise.reject(error)

@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
 
 /**
- * Devuelve un valor debounced: solo se actualiza tras `delay` ms sin cambios.
- * Útil para evitar llamadas API en cada tecla al buscar.
+ * Valor debounced tras `delay` ms sin cambios (búsquedas, filtros).
  */
 export function useDebounce(value, delay = 300) {
     const [debouncedValue, setDebouncedValue] = useState(value)

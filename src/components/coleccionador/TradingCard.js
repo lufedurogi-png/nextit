@@ -59,7 +59,7 @@ export default function TradingCard({
 
     const faceClass =
         'absolute inset-0 block w-full rounded-2xl border border-white/10 bg-slate-900/5 text-left shadow-[0_18px_50px_rgba(2,6,23,0.18)] outline-none ring-offset-2 ring-offset-slate-100 transition ' +
-        (readOnly ? '' : 'focus-visible:ring-2 focus-visible:ring-[#c9a227] theme-dark:ring-offset-slate-950')
+        (readOnly ? '' : 'focus-visible:ring-2 focus-visible:ring-[#c9a227] dark:ring-offset-slate-950')
 
     const faceStyle = {
         backfaceVisibility: 'hidden',

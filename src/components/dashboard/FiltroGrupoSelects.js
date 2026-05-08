@@ -17,14 +17,14 @@ function Chevron({ className }) {
 }
 
 const listButtonClass =
-    'relative w-full cursor-pointer rounded-2xl border border-slate-200/90 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] py-3 pl-4 pr-11 text-left text-sm font-bold text-slate-900 shadow-[0_10px_30px_rgba(2,6,23,0.06)] ring-[#c9a227] transition hover:border-[#c9a227]/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#c9a227]/40 theme-dark:border-slate-600 theme-dark:bg-[linear-gradient(180deg,#0f172a_0%,#020617_100%)] theme-dark:text-slate-50'
+    'relative w-full cursor-pointer rounded-2xl border border-slate-200/90 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] py-3 pl-4 pr-11 text-left text-sm font-bold text-slate-900 shadow-[0_10px_30px_rgba(2,6,23,0.06)] ring-[#c9a227] transition hover:border-[#c9a227]/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#c9a227]/40 dark:border-slate-600 dark:bg-[linear-gradient(180deg,#0f172a_0%,#020617_100%)] dark:text-slate-50'
 
 const optionsPanelClass =
-    'absolute z-[80] mt-2 max-h-60 w-full overflow-auto rounded-2xl border border-slate-200/90 bg-white py-1.5 text-sm shadow-[0_22px_60px_rgba(2,6,23,0.18)] ring-1 ring-black/5 backdrop-blur theme-dark:border-slate-600 theme-dark:bg-slate-900 theme-dark:ring-white/10'
+    'absolute z-[80] mt-2 max-h-60 w-full overflow-auto rounded-2xl border border-slate-200/90 bg-white py-1.5 text-sm shadow-[0_22px_60px_rgba(2,6,23,0.18)] ring-1 ring-black/5 backdrop-blur dark:border-slate-600 dark:bg-slate-900 dark:ring-white/10'
 
 const optionClass = (active, selected) =>
     `relative cursor-pointer select-none py-2.5 pr-10 font-semibold transition ${
-        active ? 'bg-[#c9a227]/15 text-[#0b1b3c] theme-dark:bg-[#c9a227]/20 theme-dark:text-slate-50' : 'text-slate-800 theme-dark:text-slate-200'
+        active ? 'bg-[#c9a227]/15 text-[#0b1b3c] dark:bg-[#c9a227]/20 dark:text-slate-50' : 'text-slate-800 dark:text-slate-200'
     } ${selected ? 'border-l-4 border-[#c9a227] pl-3' : 'pl-4'}`
 
 export default function FiltroGrupoSelects({
@@ -42,7 +42,7 @@ export default function FiltroGrupoSelects({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35 }}
         >
-            <div className="rounded-2xl border border-slate-200/80 bg-white/60 p-3 shadow-sm backdrop-blur theme-dark:border-slate-700 theme-dark:bg-slate-900/40">
+            <div className="rounded-2xl border border-slate-200/80 bg-white/60 p-3 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-slate-900/40">
                 <p className="mb-2 text-[0.65rem] font-black uppercase tracking-[0.2em] text-[#8f6f11]">Grupo</p>
                 <Listbox value={activeGroup} onChange={onGroupChange}>
                     <div className="relative">
@@ -72,7 +72,7 @@ export default function FiltroGrupoSelects({
                 </Listbox>
             </div>
 
-            <div className="rounded-2xl border border-slate-200/80 bg-white/60 p-3 shadow-sm backdrop-blur theme-dark:border-slate-700 theme-dark:bg-slate-900/40">
+            <div className="rounded-2xl border border-slate-200/80 bg-white/60 p-3 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-slate-900/40">
                 <p className="mb-2 text-[0.65rem] font-black uppercase tracking-[0.2em] text-[#8f6f11]">País</p>
                 <Listbox value={activeTeam} onChange={onTeamChange}>
                     <div className="relative">

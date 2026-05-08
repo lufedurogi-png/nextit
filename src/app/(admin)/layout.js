@@ -8,9 +8,22 @@ import { useAdminAuth } from '@/hooks/useAdminAuth'
 import { useMobileLeftDrawerSwipe } from '@/hooks/useMobileLeftDrawerSwipe'
 import IconoNavegacion from '@/components/IconoNavegacion'
 import BrandLogo from '@/components/BrandLogo'
+import { getStoredAdminDarkMode, persistAdminTheme } from '@/lib/appTheme'
+import { applyAdminDocumentTheme, restoreClientDocumentTheme } from '@/lib/themeDocument'
 
 const navItems = [
     { href: '/admin-home', label: 'Inicio', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
+    { href: '/admin-respaldo', label: 'Respaldo BD', icon: 'M12 8c-3.314 0-6 1.343-6 3v2c0 1.657 2.686 3 6 3s6-1.343 6-3v-2c0-1.657-2.686-3-6-3zm0 8c-3.314 0-6-1.343-6-3v3c0 1.657 2.686 3 6 3s6-1.343 6-3v-3c0-1.657-2.686-3-6-3zm0 5c-3.314 0-6-1.343-6-3v3c0 1.657 2.686 3 6 3s6-1.343 6-3v-3c0-1.657-2.686-3-6-3z' },
+    { href: '/admin-catalogo-franquicias', label: 'Catálogo de franquicias', icon: 'M4 7h16M4 12h10M4 17h16' },
+    { href: '/admin-uso-escaner-ia', label: 'Uso escáner IA', icon: 'M11 17a1 1 0 102 0v-4a1 1 0 10-2 0v4zm-4 0a1 1 0 102 0V9a1 1 0 10-2 0v8zm8 0a1 1 0 102 0v-6a1 1 0 10-2 0v6M4 21h16' },
+    { href: '/admin-metodos-pago', label: 'Métodos pago', iconImage: '/Imagenes/icons_metodosdepago.png' },
+    {
+        href: '/admin-plan-pro',
+        label: 'Plan Pro',
+        icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
+    },
+    { href: '/admin-plan-pro-usuarios', label: 'Usuarios Plan Pro', icon: 'M17 20h5V4H2v16h5m10 0v-2a4 4 0 00-4-4H9a4 4 0 00-4 4v2m12 0H7m8-10a3 3 0 11-6 0 3 3 0 016 0z' },
+    { href: '/admin-gestion-usuarios', label: 'Gestionar usuarios', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z' },
 ]
 
 export default function AdminLayout({ children }) {
@@ -30,9 +43,9 @@ export default function AdminLayout({ children }) {
 
     useEffect(() => {
         if (!mounted) return
-        if (typeof window !== 'undefined') {
-            setDarkMode(JSON.parse(localStorage.getItem('darkMode') ?? 'true'))
-        }
+        const initial = getStoredAdminDarkMode()
+        setDarkMode(initial)
+        applyAdminDocumentTheme(initial)
     }, [mounted])
 
     useEffect(() => {
@@ -45,18 +58,27 @@ export default function AdminLayout({ children }) {
     }, [mounted, router])
 
     useEffect(() => {
-        if (darkMode) document.documentElement.classList.add('dark')
-        else document.documentElement.classList.remove('dark')
-    }, [darkMode])
+        return () => {
+            restoreClientDocumentTheme()
+        }
+    }, [])
 
     useEffect(() => {
         if (!mounted) return
         const onToggle = (e) => {
-            setDarkMode(!!e.detail)
+            const v = !!e.detail
+            setDarkMode(v)
+            applyAdminDocumentTheme(v)
         }
         window.addEventListener('darkModeChange', onToggle)
         return () => window.removeEventListener('darkModeChange', onToggle)
     }, [mounted])
+
+    const commitAdminTheme = useCallback((next) => {
+        setDarkMode(next)
+        persistAdminTheme(next)
+        applyAdminDocumentTheme(next)
+    }, [])
 
     useEffect(() => {
         function handleClickOutside(event) {
@@ -129,7 +151,11 @@ export default function AdminLayout({ children }) {
                             <BrandLogo dark={darkMode} compact className="shrink-0 mx-auto" />
                         )}
                     </div>
-                    <button onClick={() => setSidebarOpen((s) => !s)} className="hidden md:inline-flex p-2 rounded hover:bg-gray-700">
+                    <button
+                        type="button"
+                        onClick={() => setSidebarOpen((s) => !s)}
+                        className={`hidden md:inline-flex p-2 rounded ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}
+                    >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
@@ -224,14 +250,8 @@ export default function AdminLayout({ children }) {
                                 <Image src="/Imagenes/icon_modo.webp" alt="" width={16} height={16} className="w-4 h-4 object-contain" />
                             </span>
                             <button
-                                onClick={() => {
-                                    const newMode = !darkMode
-                                    setDarkMode(newMode)
-                                    if (typeof window !== 'undefined') {
-                                        localStorage.setItem('darkMode', JSON.stringify(newMode))
-                                        window.dispatchEvent(new CustomEvent('darkModeChange', { detail: newMode }))
-                                    }
-                                }}
+                                type="button"
+                                onClick={() => commitAdminTheme(!darkMode)}
                                 className={`relative inline-flex h-7 w-14 shrink-0 items-center rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 ${
                                     darkMode ? 'bg-emerald-600' : 'bg-gray-300'
                                 }`}
@@ -272,7 +292,9 @@ export default function AdminLayout({ children }) {
                                 <button
                                     type="button"
                                     onClick={() => { setAdminMenuOpen(false); logout() }}
-                                    className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm font-medium text-red-400 hover:bg-gray-700/50 transition-colors"
+                                    className={`flex w-full items-center gap-2 px-4 py-3 text-left text-sm font-medium transition-colors ${
+                                        darkMode ? 'text-red-400 hover:bg-gray-700/50' : 'text-red-600 hover:bg-red-50'
+                                    }`}
                                 >
                                     <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -285,19 +307,16 @@ export default function AdminLayout({ children }) {
                     </div>
 
                     {/* Móvil: controles siempre visibles bajo el botón lateral (sticky), sin desplegable */}
-                    <div className="md:hidden flex w-full flex-wrap items-center gap-2 border-t border-gray-700/40 pt-2 md:border-0 md:pt-0">
+                    <div
+                        className={`md:hidden flex w-full flex-wrap items-center gap-2 border-t pt-2 md:border-0 md:pt-0 ${
+                            darkMode ? 'border-gray-700/40' : 'border-gray-200'
+                        }`}
+                    >
                         <div className={`flex flex-wrap items-center gap-2 ${mobilePill}`}>
                             <Image src="/Imagenes/icon_modo.webp" alt="" width={16} height={16} className="w-4 h-4 object-contain" />
                             <button
                                 type="button"
-                                onClick={() => {
-                                    const newMode = !darkMode
-                                    setDarkMode(newMode)
-                                    if (typeof window !== 'undefined') {
-                                        localStorage.setItem('darkMode', JSON.stringify(newMode))
-                                        window.dispatchEvent(new CustomEvent('darkModeChange', { detail: newMode }))
-                                    }
-                                }}
+                                onClick={() => commitAdminTheme(!darkMode)}
                                 className={`relative inline-flex h-6 w-12 shrink-0 items-center rounded-full transition-colors ${
                                     darkMode ? 'bg-emerald-600' : 'bg-gray-300'
                                 }`}
