@@ -8,6 +8,7 @@ namespace App\Services\Vision;
  * @return array{
  *   raw_text: string,
  *   country_code: ?string,
+ *   album_number: ?string,
  *   player_name: ?string,
  *   stats_line: ?string,
  *   dob: ?string,
@@ -47,12 +48,14 @@ class StampOcrParser
         }
 
         $country = $this->guessCountryTriplet($upper);
+        $albumNumber = $this->guessAlbumNumber($upper, $country);
 
         $playerName = $this->guessPlayerName($text, $statsLine, $club);
 
         return [
             'raw_text' => $text,
             'country_code' => $country,
+            'album_number' => $albumNumber,
             'player_name' => $playerName,
             'stats_line' => $statsLine,
             'dob' => $dob,
@@ -60,6 +63,42 @@ class StampOcrParser
             'weight' => $weight,
             'club' => $club,
         ];
+    }
+
+    /**
+     * Número junto al código FIFA del país (p. ej. barra vertical "NZL 22") o índice del álbum (p. ej. "MEX" + "3").
+     */
+    private function guessAlbumNumber(string $upper, ?string $countryCode): ?string
+    {
+        if ($countryCode !== null && $countryCode !== '') {
+            $cc = preg_quote($countryCode, '/');
+            if (preg_match('/\b'.$cc.'\s+(\d{1,3})\b/u', $upper, $m)) {
+                return $m[1];
+            }
+        }
+        if (preg_match_all('/\b([A-Z]{3})\s+(\d{1,3})\b/u', $upper, $matches, PREG_SET_ORDER)) {
+            foreach ($matches as $m) {
+                $code = $m[1];
+                if (in_array($code, self::IGNORE_TRIPLETS, true)) {
+                    continue;
+                }
+                if (preg_match('/\b'.preg_quote($code, '/').'\s*\(/u', $upper)) {
+                    continue;
+                }
+
+                return $m[2];
+            }
+        }
+
+        $lines = preg_split('/\R+/u', $upper) ?: [];
+        foreach ($lines as $line) {
+            $t = trim($line);
+            if (preg_match('/^\d{1,3}$/u', $t)) {
+                return $t;
+            }
+        }
+
+        return null;
     }
 
     private function guessCountryTriplet(string $upper): ?string
@@ -89,6 +128,12 @@ class StampOcrParser
             if ($t === '' || mb_strlen($t, 'UTF-8') < 4) {
                 continue;
             }
+            if (preg_match('/^[A-Z]{3}$/u', $t)) {
+                continue;
+            }
+            if (preg_match('/^\d{1,3}$/u', $t)) {
+                continue;
+            }
             if (preg_match('/^\d{1,2}-\d{1,2}-\d{4}/u', $t)) {
                 continue;
             }
@@ -105,7 +150,14 @@ class StampOcrParser
         if ($candidates === []) {
             return null;
         }
-        usort($candidates, fn ($a, $b) => mb_strlen($b, 'UTF-8') <=> mb_strlen($a, 'UTF-8'));
+        if (count($candidates) >= 2) {
+            $a = $candidates[0];
+            $b = $candidates[1];
+            if (mb_strlen($a, 'UTF-8') <= 14 && mb_strlen($b, 'UTF-8') <= 24) {
+                return trim($a.' '.$b);
+            }
+        }
+        usort($candidates, fn ($x, $y) => mb_strlen($y, 'UTF-8') <=> mb_strlen($x, 'UTF-8'));
 
         return $candidates[0];
     }

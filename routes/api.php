@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\AdminFranchiseCatalogController;
 use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\AdminMetodoPagoController;
 use App\Http\Controllers\Api\AdminPlanProController;
+use App\Http\Controllers\Api\AdminScanUsageController;
 use App\Http\Controllers\Api\AdminStatsController;
 use App\Http\Controllers\Api\AdminUserController;
 use App\Http\Controllers\Api\AuthController;
@@ -73,6 +74,12 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('/plan-pro', [AdminPlanProController::class, 'show']);
         Route::put('/plan-pro', [AdminPlanProController::class, 'update']);
+        Route::get('/plan-pro/usuarios-activos', [AdminPlanProController::class, 'usersWithActivePlan']);
+
+        Route::get('/scan-usage/overview', [AdminScanUsageController::class, 'overview']);
+        Route::get('/scan-usage/history', [AdminScanUsageController::class, 'yearlyHistory']);
+        Route::get('/scan-usage/users', [AdminScanUsageController::class, 'usersMonthly']);
+        Route::patch('/scan-usage/users/{user}/scanner', [AdminScanUsageController::class, 'setUserScannerState']);
     });
 
     Route::get('/metodos-pago', [MetodoPagoController::class, 'index']);

@@ -17,6 +17,7 @@ use Laravel\Sanctum\HasApiTokens;
     'name', 'email', 'avatar_path', 'cover_path', 'ui_theme', 'password', 'role', 'extra_permissions', 'revoked_permissions',
     'pro_subscription_started_at', 'pro_subscription_ends_at', 'pro_subscription_cancelled',
     'pro_last_payment_method', 'pro_last_payment_reference',
+    'scanner_enabled',
 ])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
@@ -39,6 +40,7 @@ class User extends Authenticatable
             'pro_subscription_started_at' => 'datetime',
             'pro_subscription_ends_at' => 'datetime',
             'pro_subscription_cancelled' => 'bool',
+            'scanner_enabled' => 'bool',
         ];
     }
 
@@ -80,5 +82,10 @@ class User extends Authenticatable
     public function searchLogs(): HasMany
     {
         return $this->hasMany(UserSearchLog::class);
+    }
+
+    public function scanUsageEvents(): HasMany
+    {
+        return $this->hasMany(ScanUsageEvent::class);
     }
 }

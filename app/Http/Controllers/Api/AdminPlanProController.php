@@ -4,6 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\PlanSetting;
+use App\Models\User;
+use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -90,6 +93,55 @@ class AdminPlanProController extends Controller
                 'billing_period_days' => max(1, (int) $row->billing_period_days),
                 'features' => self::normalizeFeatures($row->pro_features ?? []),
             ],
+        ]);
+    }
+
+    public function usersWithActivePlan(): JsonResponse
+    {
+        Carbon::setLocale('es');
+        $now = now();
+
+        $rows = User::query()
+            ->whereNotNull('pro_subscription_ends_at')
+            ->where('pro_subscription_ends_at', '>', $now)
+            ->orderBy('pro_subscription_ends_at')
+            ->get([
+                'id',
+                'name',
+                'email',
+                'pro_subscription_started_at',
+                'pro_subscription_ends_at',
+                'pro_subscription_cancelled',
+                'pro_last_payment_method',
+            ])
+            ->map(function (User $u) use ($now) {
+                $endsAt = $u->pro_subscription_ends_at;
+                $secondsRemaining = ($endsAt instanceof CarbonInterface)
+                    ? max(0, $endsAt->getTimestamp() - $now->getTimestamp())
+                    : 0;
+
+                $daysRemaining = (int) floor($secondsRemaining / 86400);
+                $hoursRemaining = (int) floor(($secondsRemaining % 86400) / 3600);
+                $minutesRemaining = (int) floor(($secondsRemaining % 3600) / 60);
+
+                return [
+                    'id' => $u->id,
+                    'name' => $u->name,
+                    'email' => $u->email,
+                    'payment_method' => $u->pro_last_payment_method,
+                    'started_at' => $u->pro_subscription_started_at?->toIso8601String(),
+                    'ends_at' => $u->pro_subscription_ends_at?->toIso8601String(),
+                    'cancelled' => (bool) $u->pro_subscription_cancelled,
+                    'seconds_remaining' => $secondsRemaining,
+                    'days_remaining' => $daysRemaining,
+                    'time_remaining' => sprintf('%d días %d horas %d min', $daysRemaining, $hoursRemaining, $minutesRemaining),
+                ];
+            })
+            ->values();
+
+        return response()->json([
+            'success' => true,
+            'data' => $rows,
         ]);
     }
 }
