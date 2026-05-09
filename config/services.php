@@ -63,15 +63,22 @@ return [
             if ($raw === '') {
                 return null;
             }
+            // Ruta absoluta (o relativa al cwd del proceso): solo si existe.
             if (is_file($raw)) {
-                return $raw;
+                $abs = realpath($raw);
+
+                return $abs !== false ? $abs : $raw;
             }
+            // Relativa a la raíz de Laravel (donde está artisan).
             $fromBase = base_path($raw);
             if (is_file($fromBase)) {
-                return $fromBase;
+                $abs = realpath($fromBase);
+
+                return $abs !== false ? $abs : $fromBase;
             }
 
-            return $raw;
+            // No devolver ruta relativa: en Hostinger el cwd suele ser `public/` y `is_file()` fallaría igual.
+            return null;
         })(),
     ],
 

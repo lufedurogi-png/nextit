@@ -63,6 +63,15 @@ class CollectionScanController extends Controller
         $stamps = FranchiseStamp::query()->where('franchise_id', $collection->franchise_id)->get();
         $match = $this->matcher->bestMatch($stamps, $ocr);
         $best = $match['best'];
+
+        // Una fila por cada escaneo que invocó Vision con éxito (con o sin match en catálogo).
+        // Así el conteo mensual refleja lo que Google puede cobrar, no solo guardados en colección.
+        ScanUsageEvent::query()->create([
+            'user_id' => $request->user()->id,
+            'collection_id' => $collection->id,
+            'franchise_stamp_id' => $best?->id,
+        ]);
+
         $mergedPreview = $best ? $this->buildMergedCatalogForItem($best, $ocr) : null;
 
         $payload = [
@@ -149,12 +158,6 @@ class CollectionScanController extends Controller
                 'franchise_stamp_id' => $stamp->id,
             ]);
         }
-
-        ScanUsageEvent::query()->create([
-            'user_id' => $request->user()->id,
-            'collection_id' => $collection->id,
-            'franchise_stamp_id' => $stamp->id,
-        ]);
 
         $payload['saved'] = true;
         $payload['item'] = $item->fresh();
