@@ -23,6 +23,7 @@ export default function InicioPage() {
     const [tab, setTab] = useState(0)
     const [error, setError] = useState('')
     const [focusedPostAnchor, setFocusedPostAnchor] = useState('')
+    const [mobileSearchQ, setMobileSearchQ] = useState('')
     const focusTimerRef = useRef(null)
     const didForceDiscoverRef = useRef(false)
 
@@ -135,44 +136,11 @@ export default function InicioPage() {
         }
     }
 
-    const savePost = async (postId) => {
-        await axios.post(`/feed/${postId}/save`)
-        await loadFeed()
-    }
-
     const postAnchor = useCallback((post) => {
         if (!post) return ''
         const type = post.__feedType === 'group' ? 'group' : 'feed'
         return `${type}-${post.id}`
     }, [])
-
-    const sharePost = useCallback(async (post) => {
-        if (!post || typeof window === 'undefined') return
-        const anchor = postAnchor(post)
-        const type = post.__feedType === 'group' ? 'group' : 'feed'
-        const url = `${window.location.origin}/inicio?type=${type}&post=${post.id}#inicio-post-${anchor}`
-        const shareText = `Mira esta publicación en Viku`
-
-        if (navigator.share) {
-            try {
-                await navigator.share({
-                    title: 'Compartir publicación',
-                    text: shareText,
-                    url,
-                })
-                return
-            } catch (err) {
-                if (err?.name === 'AbortError') return
-            }
-        }
-
-        try {
-            await navigator.clipboard.writeText(url)
-            window.alert('Enlace copiado al portapapeles.')
-        } catch {
-            window.prompt('Copia este enlace:', url)
-        }
-    }, [postAnchor])
 
     useEffect(() => {
         return () => {
@@ -229,9 +197,36 @@ export default function InicioPage() {
         await loadFeed()
     }
 
+    const goMobileSearch = () => {
+        const t = mobileSearchQ.trim()
+        if (t) router.push(`/buscar?q=${encodeURIComponent(t)}`)
+        else router.push('/buscar')
+    }
+
     return (
         <PageFade>
             <div className="relative z-[1] mx-auto max-w-6xl space-y-3 px-4 pb-14 pt-4">
+                <div className="md:hidden rounded-3xl border border-slate-200 bg-white/90 p-4 dark:border-slate-700 dark:bg-slate-900/70">
+                    <div className="flex gap-2">
+                        <input
+                            type="search"
+                            value={mobileSearchQ}
+                            onChange={(e) => setMobileSearchQ(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    e.preventDefault()
+                                    goMobileSearch()
+                                }
+                            }}
+                            placeholder="Buscar..."
+                            className="min-w-0 flex-1 rounded-2xl border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50"
+                            enterKeyHint="search"
+                        />
+                        <button type="button" onClick={goMobileSearch} className="shrink-0 rounded-2xl bg-[var(--app-accent)] px-4 py-2 text-sm font-extrabold text-white">
+                            Buscar
+                        </button>
+                    </div>
+                </div>
                 <section className="rounded-3xl border border-slate-200 bg-white/90 p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
                     <div className="flex items-center justify-between">
                         <p className="text-xs font-black uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">Historias</p>
@@ -413,8 +408,6 @@ export default function InicioPage() {
                                 canModerate={false}
                                 canComment
                                 canInteract
-                                showShare
-                                onSharePost={() => sharePost(p)}
                                 onRefresh={loadFeed}
                             />
                         ) : (
@@ -422,9 +415,6 @@ export default function InicioPage() {
                                 post={p}
                                 currentUserId={user?.id}
                                 onRefresh={loadFeed}
-                                showSaveShare
-                                onSavePost={() => savePost(p.id)}
-                                onSharePost={() => sharePost(p)}
                             />
                         )}
                     </motion.div>

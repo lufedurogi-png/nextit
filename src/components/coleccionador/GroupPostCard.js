@@ -6,6 +6,9 @@ import Link from 'next/link'
 import axios from '@/lib/axios'
 import { storageUrl } from '@/lib/storageUrl'
 import { profileHref } from '@/lib/profileUrl'
+import { buildGroupPostShareUrl, shareNativeOrClipboard } from '@/lib/sharePost'
+import ReactionLikeIcon from '@/components/coleccionador/ReactionLikeIcon'
+import ShareLinkIcon from '@/components/coleccionador/ShareLinkIcon'
 
 const GROUP_MODAL_BACKDROP =
     'fixed inset-0 z-[200] flex items-end justify-center bg-transparent p-0 md:items-center md:justify-center md:pl-72 md:pr-6 md:py-6'
@@ -122,7 +125,6 @@ export default function GroupPostCard({
     canInteract = true,
     onRefresh,
     groupMeta = null,
-    showShare = false,
     onSharePost,
 }) {
     const [menuOpen, setMenuOpen] = useState(false)
@@ -473,6 +475,14 @@ export default function GroupPostCard({
         }
     }
 
+    const handleSharePost = useCallback(() => {
+        if (typeof onSharePost === 'function') {
+            onSharePost()
+            return
+        }
+        void shareNativeOrClipboard(buildGroupPostShareUrl(post.id))
+    }, [onSharePost, post.id])
+
     const reactComment = async (commentId, reaction) => {
         if (!canInteract) return
         try {
@@ -738,7 +748,8 @@ export default function GroupPostCard({
                                     onClick={() => reactComment(cm.id, 'like')}
                                     className="inline-flex flex-1 items-center justify-center gap-1 px-2 py-1.5 text-[0.7rem] font-bold text-emerald-700 transition hover:bg-white/80 disabled:cursor-not-allowed disabled:opacity-40 dark:text-emerald-400 dark:hover:bg-slate-800/80"
                                 >
-                                    👍 {likeN}
+                                    <ReactionLikeIcon className="h-3.5 w-3.5" />
+                                    <span className="tabular-nums">{likeN}</span>
                                 </button>
                                 <button
                                     type="button"
@@ -746,7 +757,8 @@ export default function GroupPostCard({
                                     onClick={() => reactComment(cm.id, 'dislike')}
                                     className="inline-flex flex-1 items-center justify-center gap-1 px-2 py-1.5 text-[0.7rem] font-bold text-slate-600 transition hover:bg-white/80 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-300 dark:hover:bg-slate-800/80"
                                 >
-                                    👎 {dislikeN}
+                                    <ReactionLikeIcon flipped className="h-3.5 w-3.5" />
+                                    <span className="tabular-nums">{dislikeN}</span>
                                 </button>
                                 {inThread ? (
                                     <span className="inline-flex flex-1 items-center justify-center px-2 py-1.5 text-[0.7rem] font-bold text-slate-600 dark:text-slate-300">
@@ -811,24 +823,27 @@ export default function GroupPostCard({
         )
     }
 
+    const actionCell =
+        'flex min-h-[56px] min-w-0 flex-col items-center justify-center gap-1 px-1 py-2.5 text-slate-700 transition-colors duration-150 hover:bg-slate-100/90 active:bg-slate-200/60 sm:flex-row sm:gap-1.5 sm:px-2 dark:text-slate-200 dark:hover:bg-white/[0.06] dark:active:bg-white/[0.1]'
+
     return (
-        <article className="relative z-[1] isolate overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm pointer-events-auto dark:border-slate-700/90 dark:bg-[#0f172a]">
-            <div className="flex gap-3 px-4 pt-3 pb-2">
+        <article className="relative z-[1] isolate overflow-hidden rounded-3xl border border-slate-200/70 bg-white text-[15px] shadow-md shadow-slate-200/50 ring-1 ring-slate-900/[0.03] transition-shadow duration-200 hover:shadow-lg hover:shadow-slate-200/60 pointer-events-auto dark:border-slate-700/50 dark:bg-slate-900/95 dark:shadow-none dark:ring-white/[0.06] dark:hover:shadow-md dark:hover:shadow-black/20">
+            <div className="flex gap-3.5 px-4 pt-4 pb-2">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <Link href={authorHref} className="shrink-0">
+                <Link href={authorHref} className="shrink-0 rounded-full ring-2 ring-slate-200/80 ring-offset-2 ring-offset-white transition hover:ring-[var(--app-accent)]/35 dark:ring-slate-600 dark:ring-offset-slate-900 dark:hover:ring-[var(--app-accent)]/40">
                     <img
                         src={storageUrl(post.user?.avatar_path)}
                         alt=""
-                        className="h-11 w-11 rounded-full border border-slate-200 object-cover dark:border-slate-600"
+                        className="h-11 w-11 rounded-full border border-slate-200/80 object-cover dark:border-slate-600/80"
                     />
                 </Link>
                 <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-2">
                         <div>
-                            <Link href={authorHref} className="font-bold leading-tight text-slate-900 hover:underline dark:text-slate-50">
+                            <Link href={authorHref} className="text-[15px] font-extrabold leading-tight tracking-tight text-slate-900 transition hover:text-[var(--app-accent)] dark:text-slate-50 dark:hover:text-[var(--app-accent)]">
                                 {post.user?.name || 'Usuario'}
                             </Link>
-                            <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{formatFeedDate(post.created_at)}</p>
+                            <p className="mt-1 text-[11px] font-medium uppercase tracking-[0.14em] text-slate-500 dark:text-slate-500">{formatFeedDate(post.created_at)}</p>
                             {groupMeta?.id ? (
                                 <Link
                                     href={`/comunidad/${groupMeta.id}`}
@@ -903,71 +918,72 @@ export default function GroupPostCard({
             </div>
 
             {textBody ? (
-                <div className="px-4 pb-2">
-                    <p className="whitespace-pre-wrap text-slate-800 dark:text-slate-100">{textBody}</p>
+                <div className="px-4 pb-3 pt-0.5">
+                    <p className="whitespace-pre-wrap leading-relaxed text-slate-800 dark:text-slate-100">{textBody}</p>
                 </div>
             ) : null}
 
             {(post.images || []).length > 0 ? (
-                <div className={(post.images || []).length === 1 ? '' : 'grid grid-cols-2 gap-0.5'}>
-                    {(post.images || []).map((img) => (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                            key={img}
-                            src={storageUrl(img)}
-                            alt=""
-                            className={
-                                (post.images || []).length === 1
-                                    ? 'max-h-[min(60vh,480px)] w-full object-cover'
-                                    : 'aspect-[4/3] w-full object-cover sm:aspect-video'
-                            }
-                        />
-                    ))}
+                <div className={`px-4 pb-4 ${(post.images || []).length === 1 ? '' : 'grid grid-cols-2 gap-1'}`}>
+                    {(post.images || []).length === 1 ? (
+                        <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-100 shadow-inner shadow-slate-900/5 ring-1 ring-slate-900/[0.04] dark:border-slate-700/60 dark:bg-slate-950/60 dark:ring-white/[0.05]">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                                src={storageUrl((post.images || [])[0])}
+                                alt=""
+                                className="max-h-[min(60vh,480px)] w-full object-cover"
+                            />
+                        </div>
+                    ) : (
+                        (post.images || []).map((img) => (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                                key={img}
+                                src={storageUrl(img)}
+                                alt=""
+                                className="aspect-[4/3] w-full rounded-xl object-cover ring-1 ring-slate-900/[0.04] dark:ring-white/[0.06] sm:aspect-video"
+                            />
+                        ))
+                    )}
                 </div>
             ) : null}
 
-            <div className="flex min-h-[52px] flex-wrap items-stretch divide-x divide-slate-200 border-t border-slate-200 dark:divide-slate-600 dark:border-slate-700/90">
-                <button
-                    type="button"
-                    onClick={() => reactPost('like')}
-                    disabled={!canInteract}
-                    className="flex min-h-[52px] min-w-0 flex-1 basis-[30%] items-center justify-center gap-2 bg-transparent px-2 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 active:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-200 dark:hover:bg-slate-800/80 dark:active:bg-slate-800"
-                >
-                    <span className="text-lg leading-none" aria-hidden>
-                        👍
-                    </span>
-                    <span className="tabular-nums text-slate-600 dark:text-slate-300">{likesCount}</span>
-                </button>
-                <button
-                    type="button"
-                    onClick={() => reactPost('dislike')}
-                    disabled={!canInteract}
-                    className="flex min-h-[52px] min-w-0 flex-1 basis-[30%] items-center justify-center gap-2 bg-transparent px-2 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 active:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 dark:text-slate-200 dark:hover:bg-slate-800/80 dark:active:bg-slate-800"
-                >
-                    <span className="text-lg leading-none" aria-hidden>
-                        👎
-                    </span>
-                    <span className="tabular-nums text-slate-600 dark:text-slate-300">{dislikesCount}</span>
-                </button>
-                <button
-                    type="button"
-                    onClick={() => setCommentsOpen(true)}
-                    className="flex min-h-[52px] min-w-0 flex-[1.25] basis-[36%] items-center justify-center gap-2 bg-transparent px-2 py-2 text-sm font-semibold text-[var(--app-accent)] transition hover:bg-slate-50 active:bg-slate-100 dark:hover:bg-slate-800/80 dark:active:bg-slate-800"
-                >
-                    <IconChat className="h-5 w-5 shrink-0" />
-                    <span className="truncate">Comentar</span>
-                    {totalComments > 0 ? <span className="tabular-nums font-bold text-slate-500 dark:text-slate-400">({totalComments})</span> : null}
-                </button>
-                {showShare && typeof onSharePost === 'function' ? (
+            <div className="border-t border-slate-200/70 bg-gradient-to-b from-slate-50/95 to-slate-100/70 px-2 pb-2 pt-2 dark:border-slate-700/50 dark:from-slate-950/90 dark:to-slate-900/80">
+                <div className="grid grid-cols-4 gap-1 overflow-hidden rounded-2xl bg-slate-200/50 p-1 dark:bg-slate-800/50">
                     <button
                         type="button"
-                        onClick={onSharePost}
-                        className="flex min-h-[52px] min-w-0 flex-1 basis-[25%] items-center justify-center gap-1.5 bg-transparent px-2 py-2 text-xs font-bold text-slate-600 transition hover:bg-slate-50 active:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800/80 dark:active:bg-slate-800"
+                        onClick={() => reactPost('like')}
+                        disabled={!canInteract}
+                        className={`${actionCell} rounded-xl bg-white/95 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-slate-900/90`}
                     >
-                        <span aria-hidden>🔗</span>
-                        Compartir
+                        <ReactionLikeIcon className="h-4 w-4 shrink-0 sm:h-[1.125rem] sm:w-[1.125rem]" />
+                        <span className="text-[11px] font-bold tabular-nums text-slate-600 sm:text-xs dark:text-slate-400">{likesCount}</span>
                     </button>
-                ) : null}
+                    <button
+                        type="button"
+                        onClick={() => reactPost('dislike')}
+                        disabled={!canInteract}
+                        className={`${actionCell} rounded-xl bg-white/95 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-slate-900/90`}
+                    >
+                        <ReactionLikeIcon flipped className="h-4 w-4 shrink-0 sm:h-[1.125rem] sm:w-[1.125rem]" />
+                        <span className="text-[11px] font-bold tabular-nums text-slate-600 sm:text-xs dark:text-slate-400">{dislikesCount}</span>
+                    </button>
+                    <button type="button" onClick={handleSharePost} className={`${actionCell} rounded-xl bg-white/95 text-slate-600 dark:bg-slate-900/90 dark:text-slate-300`}>
+                        <ShareLinkIcon className="h-4 w-4 shrink-0" />
+                        <span className="max-w-full truncate text-[10px] font-bold sm:text-[11px]">Compartir</span>
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setCommentsOpen(true)}
+                        className={`${actionCell} rounded-xl bg-white/95 text-[var(--app-accent)] dark:bg-slate-900/90`}
+                    >
+                        <IconChat className="h-4 w-4 shrink-0 sm:h-[1.125rem] sm:w-[1.125rem]" />
+                        <span className="max-w-full truncate text-center text-[10px] font-bold sm:text-[11px]">
+                            Comentar
+                            {totalComments > 0 ? <span className="tabular-nums text-slate-500 dark:text-slate-400"> ({totalComments})</span> : null}
+                        </span>
+                    </button>
+                </div>
             </div>
 
             {editOpen && typeof document !== 'undefined'

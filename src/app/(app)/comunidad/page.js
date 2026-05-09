@@ -23,6 +23,7 @@ export default function ComunidadPage() {
     const [joinGroup, setJoinGroup] = useState(null)
     const [confirmJoinOpen, setConfirmJoinOpen] = useState(false)
     const [joining, setJoining] = useState(false)
+    const [groupsTab, setGroupsTab] = useState('mine')
 
     const loadGroups = useCallback(async () => {
         try {
@@ -288,82 +289,118 @@ export default function ComunidadPage() {
                     ) : null}
                 </section>
 
-                <section className="rounded-3xl border border-slate-200 bg-white/90 p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
-                    <p className="text-xs font-black uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">Mis grupos</p>
-                    {myGroups.length === 0 ? <p className="mt-2 text-sm text-slate-500">Aún no te has unido a grupos.</p> : null}
-                    <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                        {myGroups.map((g, idx) => (
-                            <motion.div
-                                key={`my-${g.id}`}
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.03 * idx }}
-                                className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/80"
-                            >
-                                <div className="relative h-28 bg-slate-100 dark:bg-slate-800">
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img src={g.cover_path ? storageUrl(g.cover_path) : '/Imagenes/caja.png'} alt="" className="h-full w-full object-cover" />
-                                </div>
-                                <div className="p-3">
-                                    <div className="mb-2 h-1.5 w-full rounded-full" style={{ backgroundColor: g.accent_color || '#8b5cf6' }} />
-                                    <p className="truncate text-sm font-extrabold text-slate-900 dark:text-slate-50">{g.name}</p>
-                                    <p className="mt-1 text-xs text-slate-500">{g.members_count ?? 0} miembros</p>
-                                    <div className="mt-2 flex items-center justify-between gap-2">
-                                        <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-black uppercase text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
-                                            {g.my_role || 'miembro'}
-                                        </span>
-                                        <Link href={`/comunidad/${g.id}`} className="rounded-full bg-[var(--app-accent)] px-3 py-1.5 text-xs font-extrabold text-white">
-                                            Abrir
-                                        </Link>
-                                    </div>
-                                </div>
-                            </motion.div>
-                        ))}
+                <section className="rounded-3xl border border-slate-200 bg-white/90 p-2 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
+                    <div className="grid grid-cols-2 gap-1 text-xs font-bold">
+                        <button
+                            type="button"
+                            aria-pressed={groupsTab === 'mine'}
+                            onClick={() => setGroupsTab('mine')}
+                            className={`rounded-xl px-3 py-2 ${
+                                groupsTab === 'mine' ? 'bg-[var(--app-accent)] text-white' : 'text-slate-600 dark:text-slate-400'
+                            }`}
+                        >
+                            Mis grupos
+                        </button>
+                        <button
+                            type="button"
+                            aria-pressed={groupsTab === 'explore'}
+                            onClick={() => setGroupsTab('explore')}
+                            className={`rounded-xl px-3 py-2 ${
+                                groupsTab === 'explore' ? 'bg-[var(--app-accent)] text-white' : 'text-slate-600 dark:text-slate-400'
+                            }`}
+                        >
+                            Explorar grupos
+                        </button>
                     </div>
                 </section>
 
-                <section className="rounded-3xl border border-slate-200 bg-white/90 p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
-                    <p className="text-xs font-black uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">Explorar grupos</p>
-                    {discoverGroups.length === 0 ? <p className="mt-2 text-sm text-slate-500">Por ahora no hay más grupos por descubrir.</p> : null}
-                    <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                        {discoverGroups.map((g, idx) => (
-                            <motion.div
-                                key={`explore-${g.id}`}
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.03 * idx }}
-                                className="overflow-hidden rounded-3xl border border-slate-200 bg-white/95 shadow-sm dark:border-slate-700 dark:bg-slate-900/75"
-                            >
-                                <div className="relative h-32 bg-slate-100 dark:bg-slate-800">
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img src={g.cover_path ? storageUrl(g.cover_path) : '/Imagenes/caja.png'} alt="" className="h-full w-full object-cover" />
-                                    <div
-                                        className="absolute inset-x-0 bottom-0 h-16 opacity-60"
-                                        style={{ background: `linear-gradient(to top, ${g.accent_color || '#8b5cf6'}66, transparent)` }}
-                                    />
-                                </div>
-                                <div className="p-4">
-                                    <p className="text-sm font-extrabold text-slate-900 dark:text-slate-50">{g.name}</p>
-                                    <p className="mt-1 line-clamp-2 text-xs text-slate-600 dark:text-slate-300">{g.description || 'Sin descripción.'}</p>
-                                    <p className="mt-2 text-xs text-slate-500">Creador: <span className="font-bold">{g.owner?.name || 'Usuario'}</span></p>
-                                    <p className="mt-1 text-xs font-bold text-slate-500 dark:text-slate-400">{g.members_count ?? 0} miembros</p>
-                                    <div className="mt-3 flex items-center gap-2">
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                setConfirmJoinOpen(false)
-                                                setJoinGroup(g)
-                                            }}
-                                            className="rounded-full border border-[var(--app-accent)] px-3 py-1.5 text-xs font-black text-[var(--app-accent)]"
-                                        >
-                                            Unirme
-                                        </button>
-                                    </div>
-                                </div>
-                            </motion.div>
-                        ))}
-                    </div>
-                </section>
+                {groupsTab === 'mine' ? (
+                    <section className="rounded-3xl border border-slate-200 bg-white/90 p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
+                        <p className="text-xs font-black uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">Mis grupos</p>
+                        {myGroups.length === 0 ? <p className="mt-2 text-sm text-slate-500">Aún no te has unido a grupos.</p> : null}
+                        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                            {myGroups.map((g, idx) => (
+                                <motion.div
+                                    key={`my-${g.id}`}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.03 * idx }}
+                                >
+                                    <Link
+                                        href={`/comunidad/${g.id}`}
+                                        aria-label={`Abrir grupo ${g.name}`}
+                                        className="block overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] focus-visible:ring-offset-2 dark:border-slate-700 dark:bg-slate-900/80 dark:focus-visible:ring-offset-slate-950"
+                                    >
+                                        <div className="relative h-28 bg-slate-100 dark:bg-slate-800">
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img src={g.cover_path ? storageUrl(g.cover_path) : '/Imagenes/caja.png'} alt="" className="h-full w-full object-cover" />
+                                        </div>
+                                        <div className="p-3">
+                                            <div className="mb-2 h-1.5 w-full rounded-full" style={{ backgroundColor: g.accent_color || '#8b5cf6' }} />
+                                            <p className="truncate text-sm font-extrabold text-slate-900 dark:text-slate-50">{g.name}</p>
+                                            <p className="mt-1 text-xs text-slate-500">{g.members_count ?? 0} miembros</p>
+                                            <div className="mt-2 flex items-center justify-between gap-2">
+                                                <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-black uppercase text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
+                                                    {g.my_role || 'miembro'}
+                                                </span>
+                                                <span className="pointer-events-none rounded-full bg-[var(--app-accent)] px-3 py-1.5 text-xs font-extrabold text-white">
+                                                    Abrir
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </Link>
+                                </motion.div>
+                            ))}
+                        </div>
+                    </section>
+                ) : null}
+
+                {groupsTab === 'explore' ? (
+                    <section className="rounded-3xl border border-slate-200 bg-white/90 p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
+                        <p className="text-xs font-black uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">Explorar grupos</p>
+                        {discoverGroups.length === 0 ? <p className="mt-2 text-sm text-slate-500">Por ahora no hay más grupos por descubrir.</p> : null}
+                        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                            {discoverGroups.map((g, idx) => (
+                                <motion.div
+                                    key={`explore-${g.id}`}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.03 * idx }}
+                                >
+                                    <button
+                                        type="button"
+                                        aria-label={`Unirte al grupo ${g.name}`}
+                                        className="block w-full cursor-pointer overflow-hidden rounded-3xl border border-slate-200 bg-white/95 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] focus-visible:ring-offset-2 dark:border-slate-700 dark:bg-slate-900/75 dark:focus-visible:ring-offset-slate-950"
+                                        onClick={() => {
+                                            setConfirmJoinOpen(false)
+                                            setJoinGroup(g)
+                                        }}
+                                    >
+                                        <div className="relative h-32 bg-slate-100 dark:bg-slate-800">
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img src={g.cover_path ? storageUrl(g.cover_path) : '/Imagenes/caja.png'} alt="" className="h-full w-full object-cover" />
+                                            <div
+                                                className="absolute inset-x-0 bottom-0 h-16 opacity-60"
+                                                style={{ background: `linear-gradient(to top, ${g.accent_color || '#8b5cf6'}66, transparent)` }}
+                                            />
+                                        </div>
+                                        <div className="p-4">
+                                            <p className="text-sm font-extrabold text-slate-900 dark:text-slate-50">{g.name}</p>
+                                            <p className="mt-1 line-clamp-2 text-xs text-slate-600 dark:text-slate-300">{g.description || 'Sin descripción.'}</p>
+                                            <p className="mt-2 text-xs text-slate-500">Creador: <span className="font-bold">{g.owner?.name || 'Usuario'}</span></p>
+                                            <p className="mt-1 text-xs font-bold text-slate-500 dark:text-slate-400">{g.members_count ?? 0} miembros</p>
+                                            <div className="mt-3 flex items-center gap-2">
+                                                <span className="pointer-events-none rounded-full border border-[var(--app-accent)] px-3 py-1.5 text-xs font-black text-[var(--app-accent)]">
+                                                    Unirme
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </button>
+                                </motion.div>
+                            ))}
+                        </div>
+                    </section>
+                ) : null}
 
                 {joinGroup ? (
                     <div className="fixed inset-0 z-[320] flex items-end justify-center p-2 md:items-center md:pl-72 md:pr-6 md:py-6">

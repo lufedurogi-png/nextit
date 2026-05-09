@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
@@ -41,7 +41,7 @@ export default function AdminLayout({ children }) {
         setMounted(true)
     }, [])
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         if (!mounted) return
         const initial = getStoredAdminDarkMode()
         setDarkMode(initial)
