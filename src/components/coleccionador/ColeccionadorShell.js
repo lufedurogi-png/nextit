@@ -311,7 +311,7 @@ export default function ColeccionadorShell({ children }) {
             <header className="hidden md:fixed md:inset-x-0 md:top-0 md:z-[70] md:block md:h-16 md:border-b md:border-slate-200/80 md:bg-white/90 md:backdrop-blur md:dark:border-slate-600/50 md:dark:bg-slate-800/95">
                 <div className="mx-auto flex h-full max-w-[1600px] items-center gap-4 px-4">
                     <div className="flex min-w-0 items-center gap-3">
-                        <div className="grid h-10 w-10 place-items-center rounded-xl bg-[var(--app-accent)] text-lg text-white shadow-md">C</div>
+                        <div className="grid h-10 w-10 place-items-center rounded-xl bg-[var(--app-accent)] text-lg font-bold text-white shadow-md">V</div>
                         <div className="relative hidden lg:block">
                             <input
                                 readOnly

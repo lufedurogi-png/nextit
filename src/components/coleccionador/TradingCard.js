@@ -153,7 +153,7 @@ export default function TradingCard({
                             <div className="foil-back-pattern absolute inset-0 opacity-90" />
                             <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(201,162,39,0.35),transparent_45%),radial-gradient(circle_at_80%_70%,rgba(37,99,235,0.35),transparent_50%)]" />
                             <div className="relative flex h-full flex-col items-center justify-center px-4 text-center">
-                                <p className="font-playfair text-2xl font-bold text-white/95 sm:text-3xl">Coleccionador</p>
+                                <p className="font-playfair text-2xl font-bold text-white/95 sm:text-3xl">Viku</p>
                                 <p className="mt-2 text-sm font-semibold uppercase tracking-[0.35em] text-[#c9a227]">Mundial 2026</p>
                                 <p className="mt-6 font-mono text-xs text-white/45">#{idLabel}</p>
                             </div>

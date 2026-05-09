@@ -29,11 +29,11 @@ const METHOD_ICON = {
 const FAQ = [
     {
         q: '¿Esto ya cobra de verdad?',
-        a: 'Sí: el importe del plan Pro se cobra con la pasarela que elijas (Mercado Pago, PayPal o tarjeta simulada).',
+        a: 'No, hasta que pagues el plan Pro Coleccionista.',
     },
     {
-        q: '¿Qué pasa con mis cartas si cambio de teléfono?',
-        a: 'Tu progreso se conserva al iniciar sesión con tu cuenta y mantener la sincronización activa.',
+        q: '¿Qué pasa con mis colecciones y progreso si cambio de teléfono?',
+        a: 'Tu progreso se conserva desde que inicias sesión.',
     },
     {
         q: '¿Incluye cartas físicas?',
@@ -156,9 +156,9 @@ export default function PlanesPage() {
                 name: 'Inicial',
                 price: '$0',
                 cadence: 'para siempre',
-                blurb: 'Perfecto para empezar el álbum y sentir la experiencia.',
+                blurb: 'Perfecto para empezar y sentir la experiencia.',
                 highlight: false,
-                features: ['Checklist completo del catálogo demo', 'Escaneo simulado + cámara', 'Progreso local en tu celular', 'Tema claro / oscuro'],
+                features: ['Registros con cámara', 'Personalización de temas', 'Grupos', 'Mensajería', 'Tienda', 'Búsquedas'],
                 cta: 'Ya lo tienes',
                 tone: 'border-slate-200 bg-white/90 dark:border-slate-700 dark:bg-slate-900/70',
             },
@@ -449,11 +449,7 @@ export default function PlanesPage() {
                                     </button>
                                 ) : null}
 
-                                {plan.id === 'pro' ? (
-                                    <p className="text-center text-[0.7rem] font-semibold text-slate-500 dark:text-slate-400">
-                                        El cobro usa el importe mostrado y la moneda configurada en el servidor.
-                                    </p>
-                                ) : (
+                                {plan.id !== 'pro' ? (
                                     <p className="text-center text-[0.7rem] font-semibold text-slate-500 dark:text-slate-400">
                                         Plan base sin cargo.
                                     </p>
@@ -463,48 +459,6 @@ export default function PlanesPage() {
                         </motion.article>
                     ))}
                 </div>
-
-                <motion.section
-                    initial={{ opacity: 0, y: 14 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.15 }}
-                    className="mt-8 rounded-[1.6rem] border border-slate-200 bg-white/90 p-5 shadow-[0_18px_60px_rgba(2,6,23,0.08)] backdrop-blur dark:border-slate-700 dark:bg-slate-900/70"
-                >
-                    <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-                        <div>
-                            <h3 className="font-playfair text-2xl font-extrabold text-slate-900 dark:text-slate-50">Comparación rápida</h3>
-                            <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Dos niveles: empezar y crecer con Pro.</p>
-                        </div>
-                    </div>
-
-                    <div className="mt-5 overflow-x-auto">
-                        <table className="w-full min-w-[520px] border-separate border-spacing-0 text-sm">
-                            <thead>
-                                <tr className="text-left text-xs font-black uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                                    <th className="rounded-l-2xl bg-slate-50 px-4 py-3 dark:bg-slate-950/40">Beneficio</th>
-                                    <th className="bg-slate-50 px-4 py-3 dark:bg-slate-950/40">Inicial</th>
-                                    <th className="rounded-r-2xl bg-[#c9a227]/15 px-4 py-3 text-[#0b1b3c] dark:bg-[#c9a227]/20 dark:text-slate-50">
-                                        Pro
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="text-slate-700 dark:text-slate-200">
-                                {[
-                                    ['Sincronización en la nube', '—', '✓'],
-                                    ['Intercambios priorizados', '—', '✓'],
-                                    ['Estadísticas avanzadas', '—', '✓'],
-                                    ['Soporte prioritario', '—', '✓'],
-                                ].map((row) => (
-                                    <tr key={row[0]} className="border-t border-slate-200 dark:border-slate-800">
-                                        <td className="px-4 py-3 font-semibold">{row[0]}</td>
-                                        <td className="px-4 py-3">{row[1]}</td>
-                                        <td className="bg-[#c9a227]/5 px-4 py-3 font-bold">{row[2]}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </motion.section>
 
                 <motion.section
                     initial={{ opacity: 0, y: 14 }}
@@ -572,7 +526,6 @@ export default function PlanesPage() {
                                     <Image src={METHOD_ICON.mercadopago} alt="" width={40} height={28} className="object-contain" />
                                     <div>
                                         <p className="font-extrabold text-slate-900 dark:text-slate-50">Mercado Pago</p>
-                                        <p className="text-xs text-slate-600 dark:text-slate-400">Checkout Pro (redirección)</p>
                                     </div>
                                 </button>
                             ) : null}
@@ -586,7 +539,6 @@ export default function PlanesPage() {
                                     <Image src={METHOD_ICON.paypal} alt="" width={40} height={28} className="object-contain" />
                                     <div>
                                         <p className="font-extrabold text-slate-900 dark:text-slate-50">PayPal</p>
-                                        <p className="text-xs text-slate-600 dark:text-slate-400">Sandbox / producción según API</p>
                                     </div>
                                 </button>
                             ) : null}
@@ -600,7 +552,6 @@ export default function PlanesPage() {
                                     <Image src={METHOD_ICON.tarjeta} alt="" width={40} height={28} className="object-contain" />
                                     <div>
                                         <p className="font-extrabold text-slate-900 dark:text-slate-50">Tarjeta bancaria</p>
-                                        <p className="text-xs text-slate-600 dark:text-slate-400">Simulación en servidor (sin pasarela)</p>
                                     </div>
                                 </button>
                             ) : null}

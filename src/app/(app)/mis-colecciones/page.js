@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import axios from '@/lib/axios'
 import { misColeccionPath } from '@/lib/misColeccionPath'
+import AppHero from '@/components/coleccionador/AppHero'
 import PageFade from '@/components/coleccionador/PageFade'
 import CollectionFolderCard from '@/components/coleccionador/CollectionFolderCard'
 import CollectionEditModal from '@/components/coleccionador/CollectionEditModal'
@@ -104,32 +105,38 @@ export default function MisColeccionesPage() {
                     </div>
                 ) : null}
 
-                <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-                    {rows.map((c, idx) => (
-                        <motion.div
-                            key={c.id}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.04 * idx }}
-                        >
-                            <CollectionFolderCard
-                                collection={c}
-                                selected={Number(editingId) === Number(c.id)}
-                                onAddPiece={() => {
-                                    router.push(`/escanear?collectionId=${c.id}`)
-                                }}
-                                onEdit={() => openEdit(c)}
-                                onOpen={() => {
-                                    router.push(misColeccionPath(c.id, c.name))
-                                }}
-                                onDelete={async () => {
-                                    await axios.delete(`/collections/${c.id}`)
-                                    await loadCollections()
-                                }}
-                            />
-                        </motion.div>
-                    ))}
-                </div>
+                {rows.length === 0 && !error ? (
+                    <div className="mt-4 overflow-hidden rounded-3xl border border-slate-200/80 shadow-sm dark:border-slate-700">
+                        <AppHero eyebrow="Organiza tu álbum" title="Mis colecciones" subtitle="Aquí aparecerán las colecciones que vayas creando." />
+                    </div>
+                ) : (
+                    <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                        {rows.map((c, idx) => (
+                            <motion.div
+                                key={c.id}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.04 * idx }}
+                            >
+                                <CollectionFolderCard
+                                    collection={c}
+                                    selected={Number(editingId) === Number(c.id)}
+                                    onAddPiece={() => {
+                                        router.push(`/escanear?collectionId=${c.id}`)
+                                    }}
+                                    onEdit={() => openEdit(c)}
+                                    onOpen={() => {
+                                        router.push(misColeccionPath(c.id, c.name))
+                                    }}
+                                    onDelete={async () => {
+                                        await axios.delete(`/collections/${c.id}`)
+                                        await loadCollections()
+                                    }}
+                                />
+                            </motion.div>
+                        ))}
+                    </div>
+                )}
 
                 <CollectionEditModal
                     open={Boolean(editingId)}

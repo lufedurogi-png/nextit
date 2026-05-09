@@ -193,34 +193,6 @@ const Layout = ({ children }) => {
 
                         <div>
                             <h3 className={`text-lg font-semibold mb-4 ${effectiveDark ? 'text-white' : 'text-gray-900'}`}>
-                                Enlaces rápidos
-                            </h3>
-                            <ul className={`space-y-2 ${effectiveDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                <li>
-                                    <Link href="/" className="hover:text-blue-500 transition-colors">
-                                        Inicio
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link href="/dashboard" className="hover:text-blue-500 transition-colors">
-                                        Colección
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link href="/login" className="hover:text-blue-500 transition-colors">
-                                        Iniciar Sesión
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link href="/admin-login" className="hover:text-blue-500 transition-colors">
-                                        Admin
-                                    </Link>
-                                </li>
-                            </ul>
-                        </div>
-
-                        <div>
-                            <h3 className={`text-lg font-semibold mb-4 ${effectiveDark ? 'text-white' : 'text-gray-900'}`}>
                                 Sobre nosotros
                             </h3>
                             <p className={`text-sm leading-relaxed ${effectiveDark ? 'text-gray-300' : 'text-gray-700'}`}>

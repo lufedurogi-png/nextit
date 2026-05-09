@@ -15,17 +15,14 @@ export default function InicioPage() {
     const { user } = useAuth({})
     const searchParams = useSearchParams()
     const [posts, setPosts] = useState([])
-    const [savedPosts, setSavedPosts] = useState([])
     const [recentUsers, setRecentUsers] = useState([])
     const [missingPosts, setMissingPosts] = useState([])
     const [discovery, setDiscovery] = useState({ trending_collections: [], recommended_users: [], recommended_groups: [] })
     const [groupPosts, setGroupPosts] = useState([])
     const [stories, setStories] = useState([])
-    const [tab, setTab] = useState('discover')
+    const [tab, setTab] = useState(0)
     const [error, setError] = useState('')
     const [focusedPostAnchor, setFocusedPostAnchor] = useState('')
-    const [recommendedGroupsOpen, setRecommendedGroupsOpen] = useState(false)
-    const [recommendedUsersOpen, setRecommendedUsersOpen] = useState(false)
     const focusTimerRef = useRef(null)
     const didForceDiscoverRef = useRef(false)
 
@@ -78,14 +75,12 @@ export default function InicioPage() {
 
     const loadFeed = useCallback(async () => {
         try {
-            const feedTab = tab === 'for_you' ? 'for_you' : 'discover'
+            const feedTab = tab === 1 ? 'for_you' : 'discover'
             const { data } = await axios.get('/feed', { params: { tab: feedTab } })
             setPosts(Array.isArray(data) ? data : [])
             const hi = await axios.get('/feed/highlights')
             setRecentUsers(Array.isArray(hi.data?.recent_users) ? hi.data.recent_users : [])
             setMissingPosts(Array.isArray(hi.data?.missing_posts) ? hi.data.missing_posts : [])
-            const sv = await axios.get('/feed/saved/list')
-            setSavedPosts(Array.isArray(sv.data) ? sv.data : [])
             const dis = await axios.get('/social/discovery')
             setDiscovery({
                 trending_collections: Array.isArray(dis.data?.trending_collections) ? dis.data.trending_collections : [],
@@ -99,6 +94,33 @@ export default function InicioPage() {
             setError('No se pudo cargar el feed todavía.')
         }
     }, [tab, loadGroupPosts, loadStories])
+
+    useEffect(() => {
+        let cancelled = false
+        const loadTabPreference = async () => {
+            try {
+                const { data } = await axios.get('/feed/tab-preference')
+                const value = Number(data?.value)
+                if (!cancelled && Number.isInteger(value) && value >= 0 && value <= 3) {
+                    setTab(value)
+                }
+            } catch {
+                // default = 0
+            }
+        }
+        loadTabPreference()
+        return () => {
+            cancelled = true
+        }
+    }, [])
+
+    useEffect(() => {
+        const value = Number(tab)
+        if (!Number.isInteger(value) || value < 0 || value > 3) return
+        axios.put('/feed/tab-preference', { value }).catch(() => {
+            // ignorar persistencia fallida
+        })
+    }, [tab])
 
     useEffect(() => {
         loadFeed()
@@ -129,7 +151,7 @@ export default function InicioPage() {
         const anchor = postAnchor(post)
         const type = post.__feedType === 'group' ? 'group' : 'feed'
         const url = `${window.location.origin}/inicio?type=${type}&post=${post.id}#inicio-post-${anchor}`
-        const shareText = `Mira esta publicación en Coleccionador Mundial`
+        const shareText = `Mira esta publicación en Viku`
 
         if (navigator.share) {
             try {
@@ -159,7 +181,10 @@ export default function InicioPage() {
     }, [])
 
     const mixedPosts = useMemo(() => [...posts, ...groupPosts].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)), [posts, groupPosts])
-    const visiblePosts = tab === 'saved' ? savedPosts : mixedPosts
+    const visiblePosts = tab === 1 ? mixedPosts : posts
+    const showingRecommendedGroups = tab === 2
+    const showingRecommendedUsers = tab === 3
+    const showingFeed = !showingRecommendedGroups && !showingRecommendedUsers
 
     const orderedStoryGroups = useMemo(() => {
         const uid = user?.id
@@ -172,9 +197,9 @@ export default function InicioPage() {
     useEffect(() => {
         const linkedPostId = searchParams.get('post')
         if (!linkedPostId || didForceDiscoverRef.current) return
-        if (tab !== 'discover') {
+        if (tab !== 0) {
             didForceDiscoverRef.current = true
-            setTab('discover')
+            setTab(0)
         }
     }, [searchParams, tab])
 
@@ -182,7 +207,7 @@ export default function InicioPage() {
         const linkedPostId = searchParams.get('post')
         const linkedType = searchParams.get('type')
         if (!linkedPostId) return
-        if (tab !== 'discover') return
+        if (tab !== 0) return
 
         const normalizedType = linkedType === 'group' ? 'group' : 'feed'
         const target = mixedPosts.find((p) => Number(p.id) === Number(linkedPostId) && (p.__feedType === 'group' ? 'group' : 'feed') === normalizedType)
@@ -259,10 +284,11 @@ export default function InicioPage() {
                 </section>
 
                 <section className="rounded-3xl border border-slate-200 bg-white/90 p-2 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
-                    <div className="grid grid-cols-3 gap-1 text-xs font-bold">
-                        <button type="button" onClick={() => setTab('discover')} className={`rounded-xl px-3 py-2 ${tab === 'discover' ? 'bg-[var(--app-accent)] text-white' : 'text-slate-600'}`}>Descubrir</button>
-                        <button type="button" onClick={() => setTab('for_you')} className={`rounded-xl px-3 py-2 ${tab === 'for_you' ? 'bg-[var(--app-accent)] text-white' : 'text-slate-600'}`}>Para ti</button>
-                        <button type="button" onClick={() => setTab('saved')} className={`rounded-xl px-3 py-2 ${tab === 'saved' ? 'bg-[var(--app-accent)] text-white' : 'text-slate-600'}`}>Guardadas</button>
+                    <div className="grid grid-cols-2 gap-1 text-xs font-bold sm:grid-cols-4">
+                        <button type="button" onClick={() => setTab(0)} className={`rounded-xl px-3 py-2 ${tab === 0 ? 'bg-[var(--app-accent)] text-white' : 'text-slate-600'}`}>Descubrir</button>
+                        <button type="button" onClick={() => setTab(1)} className={`rounded-xl px-3 py-2 ${tab === 1 ? 'bg-[var(--app-accent)] text-white' : 'text-slate-600'}`}>Para ti</button>
+                        <button type="button" onClick={() => setTab(2)} className={`rounded-xl px-3 py-2 ${tab === 2 ? 'bg-[var(--app-accent)] text-white' : 'text-slate-600'}`}>Grupos recomendados</button>
+                        <button type="button" onClick={() => setTab(3)} className={`rounded-xl px-3 py-2 ${tab === 3 ? 'bg-[var(--app-accent)] text-white' : 'text-slate-600'}`}>Usuarios recomendados</button>
                     </div>
                 </section>
 
@@ -317,87 +343,43 @@ export default function InicioPage() {
                 </section>
                 */}
 
-                <section className="rounded-3xl border border-slate-200 bg-white/90 p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
-                    <button
-                        type="button"
-                        onClick={() => setRecommendedGroupsOpen((v) => !v)}
-                        aria-expanded={recommendedGroupsOpen}
-                        className="flex w-full items-center justify-between gap-3 text-left"
-                    >
+                {showingRecommendedGroups ? (
+                    <section className="rounded-3xl border border-slate-200 bg-white/90 p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
                         <p className="text-xs font-black uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">Grupos recomendados</p>
-                        <span
-                            className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition-transform duration-300 dark:border-slate-600 dark:text-slate-300 ${
-                                recommendedGroupsOpen ? 'rotate-180' : ''
-                            }`}
-                            aria-hidden
-                        >
-                            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M6 9l6 6 6-6" />
-                            </svg>
-                        </span>
-                    </button>
-                    <div
-                        className={`grid transition-[grid-template-rows] duration-300 ease-out motion-reduce:transition-none ${
-                            recommendedGroupsOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
-                        }`}
-                    >
-                        <div className="min-h-0 overflow-hidden">
-                            <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                                {(discovery.recommended_groups || []).slice(0, 4).map((g) => (
-                                    <a key={g.id} href={`/comunidad/${g.id}`} className="flex items-center gap-2 rounded-2xl border border-slate-200 p-2 text-xs dark:border-slate-700">
-                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        <img src={g.cover_path ? storageUrl(g.cover_path) : '/Imagenes/caja.png'} alt="" className="h-7 w-7 rounded-lg object-cover" />
-                                        <p className="font-bold">{g.name}</p>
-                                    </a>
-                                ))}
-                            </div>
+                        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                            {(discovery.recommended_groups || []).slice(0, 8).map((g) => (
+                                <a key={g.id} href={`/comunidad/${g.id}`} className="flex items-center gap-2 rounded-2xl border border-slate-200 p-2 text-xs dark:border-slate-700">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src={g.cover_path ? storageUrl(g.cover_path) : '/Imagenes/caja.png'} alt="" className="h-7 w-7 rounded-lg object-cover" />
+                                    <p className="font-bold">{g.name}</p>
+                                </a>
+                            ))}
+                            {(discovery.recommended_groups || []).length === 0 ? <p className="text-xs text-slate-500">Aún no hay grupos recomendados.</p> : null}
                         </div>
-                    </div>
-                </section>
+                    </section>
+                ) : null}
 
-                <section className="rounded-3xl border border-slate-200 bg-white/90 p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
-                    <button
-                        type="button"
-                        onClick={() => setRecommendedUsersOpen((v) => !v)}
-                        aria-expanded={recommendedUsersOpen}
-                        className="flex w-full items-center justify-between gap-3 text-left"
-                    >
+                {showingRecommendedUsers ? (
+                    <section className="rounded-3xl border border-slate-200 bg-white/90 p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
                         <p className="text-xs font-black uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">Usuarios recomendados</p>
-                        <span
-                            className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition-transform duration-300 dark:border-slate-600 dark:text-slate-300 ${
-                                recommendedUsersOpen ? 'rotate-180' : ''
-                            }`}
-                            aria-hidden
-                        >
-                            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M6 9l6 6 6-6" />
-                            </svg>
-                        </span>
-                    </button>
-                    <div
-                        className={`grid transition-[grid-template-rows] duration-300 ease-out motion-reduce:transition-none ${
-                            recommendedUsersOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
-                        }`}
-                    >
-                        <div className="min-h-0 overflow-hidden">
-                            <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                                {(discovery.recommended_users || []).slice(0, 4).map((u) => (
-                                    <div key={u.id} className="flex items-center gap-2 rounded-2xl border border-slate-200 p-2 text-xs dark:border-slate-700">
-                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        <img src={storageUrl(u.avatar_path)} alt="" className="h-8 w-8 rounded-xl object-cover" />
-                                        <div className="min-w-0 flex-1">
-                                            <p className="truncate font-bold">{u.name}</p>
-                                            <p className="truncate text-[10px] text-slate-500">{u.email}</p>
-                                        </div>
-                                        <button type="button" onClick={() => follow(u.id)} className="rounded-lg bg-[var(--app-accent)] px-2 py-1 text-[10px] font-bold text-white">
-                                            Seguir
-                                        </button>
+                        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                            {(discovery.recommended_users || []).slice(0, 8).map((u) => (
+                                <div key={u.id} className="flex items-center gap-2 rounded-2xl border border-slate-200 p-2 text-xs dark:border-slate-700">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src={storageUrl(u.avatar_path)} alt="" className="h-8 w-8 rounded-xl object-cover" />
+                                    <div className="min-w-0 flex-1">
+                                        <p className="truncate font-bold">{u.name}</p>
+                                        <p className="truncate text-[10px] text-slate-500">{u.email}</p>
                                     </div>
-                                ))}
-                            </div>
+                                    <button type="button" onClick={() => follow(u.id)} className="rounded-lg bg-[var(--app-accent)] px-2 py-1 text-[10px] font-bold text-white">
+                                        Seguir
+                                    </button>
+                                </div>
+                            ))}
+                            {(discovery.recommended_users || []).length === 0 ? <p className="text-xs text-slate-500">Aún no hay usuarios recomendados.</p> : null}
                         </div>
-                    </div>
-                </section>
+                    </section>
+                ) : null}
 
                 {error ? (
                     <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-100">
@@ -405,13 +387,13 @@ export default function InicioPage() {
                     </div>
                 ) : null}
 
-                {visiblePosts.length === 0 && !error ? (
+                {showingFeed && visiblePosts.length === 0 && !error ? (
                     <div className="rounded-3xl border border-slate-200 bg-white/90 p-6 text-center text-sm text-slate-600 shadow-sm dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300">
                         Aún no hay publicaciones. Ve a <span className="font-bold">Perfil</span> y comparte tu primera novedad.
                     </div>
                 ) : null}
 
-                {visiblePosts.map((p, idx) => (
+                {showingFeed && visiblePosts.map((p, idx) => (
                     <motion.div
                         key={p.__feedType === 'group' ? `g-${p.id}` : `f-${p.id}`}
                         id={`inicio-post-${postAnchor(p)}`}

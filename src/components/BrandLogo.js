@@ -14,7 +14,7 @@ export default function BrandLogo({ centered = false, compact = false, className
     return (
         <img
             src={LOGO_SRC}
-            alt="Coleccionador"
+            alt="Viku"
             width={compact ? 140 : 240}
             height={compact ? 28 : 48}
             className={`${sizeClass} object-contain ${centered ? 'mx-auto' : 'object-left'} ${className}`.trim()}
