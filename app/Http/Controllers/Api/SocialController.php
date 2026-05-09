@@ -11,6 +11,7 @@ use App\Models\UserFeedPost;
 use App\Models\UserFeedPostComment;
 use App\Models\UserFeedPostCommentReaction;
 use App\Models\UserFollow;
+use App\Models\UserFriendship;
 use App\Models\UserNotification;
 use App\Models\UserSavedPost;
 use App\Models\UserSearchLog;
@@ -358,7 +359,7 @@ class SocialController extends Controller
 
     public function discovery(Request $request)
     {
-        $me = $request->user()->id;
+        $me = (int) $request->user()->id;
 
         $trendingCollections = User::query()
             ->withCount('collections')
@@ -372,24 +373,130 @@ class SocialController extends Controller
                 'collections_count' => $u->collections_count,
             ]);
 
-        $recommendedUsers = User::query()
-            ->where('id', '!=', $me)
-            ->whereNotIn('id', UserFollow::query()->where('follower_id', $me)->pluck('followed_id'))
-            ->latest()
-            ->limit(8)
-            ->get(['id', 'name', 'email', 'avatar_path']);
-
-        $recommendedGroups = CollectorGroup::query()
-            ->withCount('members')
-            ->latest()
-            ->limit(8)
-            ->get(['id', 'name', 'cover_path', 'accent_color']);
+        $friendIds = $this->friendIds($me);
+        $recommendedUsers = $this->recommendedUsersFromFriendsOfFriends($me, $friendIds);
+        $recommendedGroups = $this->recommendedGroupsByNameSimilarity($me);
 
         return response()->json([
             'trending_collections' => $trendingCollections,
             'recommended_users' => $recommendedUsers,
             'recommended_groups' => $recommendedGroups,
         ]);
+    }
+
+    private function friendIds(int $userId): array
+    {
+        return UserFriendship::query()
+            ->where('status', 'accepted')
+            ->where(function ($q) use ($userId) {
+                $q->where('requester_id', $userId)->orWhere('addressee_id', $userId);
+            })
+            ->get(['requester_id', 'addressee_id'])
+            ->map(fn (UserFriendship $f) => (int) $f->requester_id === $userId ? (int) $f->addressee_id : (int) $f->requester_id)
+            ->filter(fn ($id) => $id > 0 && $id !== $userId)
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    private function recommendedUsersFromFriendsOfFriends(int $me, array $friendIds)
+    {
+        if ($friendIds !== []) {
+            $fofIds = UserFriendship::query()
+                ->where('status', 'accepted')
+                ->where(function ($q) use ($friendIds) {
+                    $q->whereIn('requester_id', $friendIds)->orWhereIn('addressee_id', $friendIds);
+                })
+                ->get(['requester_id', 'addressee_id'])
+                ->flatMap(function (UserFriendship $f) use ($friendIds) {
+                    $a = (int) $f->requester_id;
+                    $b = (int) $f->addressee_id;
+                    $out = [];
+                    if (in_array($a, $friendIds, true) && ! in_array($b, $friendIds, true)) {
+                        $out[] = $b;
+                    }
+                    if (in_array($b, $friendIds, true) && ! in_array($a, $friendIds, true)) {
+                        $out[] = $a;
+                    }
+
+                    return $out;
+                })
+                ->filter(fn ($id) => $id > 0 && $id !== $me && ! in_array($id, $friendIds, true))
+                ->unique()
+                ->values()
+                ->all();
+
+            if ($fofIds !== []) {
+                return User::query()
+                    ->whereIn('id', $fofIds)
+                    ->orderByRaw('CASE WHEN id IN ('.implode(',', array_map('intval', $fofIds)).') THEN 0 ELSE 1 END')
+                    ->limit(8)
+                    ->get(['id', 'name', 'email', 'avatar_path']);
+            }
+        }
+
+        return User::query()
+            ->where('id', '!=', $me)
+            ->latest()
+            ->limit(8)
+            ->get(['id', 'name', 'email', 'avatar_path']);
+    }
+
+    private function recommendedGroupsByNameSimilarity(int $me)
+    {
+        $joinedGroups = CollectorGroup::query()
+            ->select('collector_groups.id', 'collector_groups.name')
+            ->join('collector_group_members', 'collector_group_members.group_id', '=', 'collector_groups.id')
+            ->where('collector_group_members.user_id', $me)
+            ->get();
+
+        $joinedIds = $joinedGroups->pluck('id')->map(fn ($id) => (int) $id)->all();
+        $allGroups = CollectorGroup::query()
+            ->withCount('members')
+            ->whereNotIn('id', $joinedIds)
+            ->get(['id', 'name', 'cover_path', 'accent_color', 'created_at']);
+
+        if ($joinedGroups->isEmpty()) {
+            return $allGroups->sortByDesc('created_at')->take(8)->values();
+        }
+
+        $joinedNames = $joinedGroups->pluck('name')
+            ->map(fn ($n) => $this->normalizeText((string) $n))
+            ->filter(fn ($n) => $n !== '')
+            ->values();
+
+        $scored = $allGroups->map(function (CollectorGroup $g) use ($joinedNames) {
+            $groupName = $this->normalizeText((string) $g->name);
+            $bestScore = 0.0;
+            foreach ($joinedNames as $baseName) {
+                similar_text($baseName, $groupName, $pct);
+                $score = (float) $pct;
+                if ($score > $bestScore) {
+                    $bestScore = $score;
+                }
+            }
+
+            return ['score' => $bestScore, 'group' => $g];
+        })->sortByDesc('score')->values();
+
+        $filtered = $scored->filter(fn ($row) => (float) $row['score'] >= 28)->take(8)->pluck('group')->values();
+        if ($filtered->isNotEmpty()) {
+            return $filtered;
+        }
+
+        return $allGroups->sortByDesc('members_count')->take(8)->values();
+    }
+
+    private function normalizeText(string $value): string
+    {
+        $value = mb_strtolower(trim($value));
+        $ascii = @iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $value);
+        if (is_string($ascii) && $ascii !== '') {
+            $value = $ascii;
+        }
+        $value = preg_replace('/[^a-z0-9]+/i', ' ', $value) ?? '';
+
+        return trim($value);
     }
 
     public function globalSearch(Request $request)

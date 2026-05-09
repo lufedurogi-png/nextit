@@ -14,7 +14,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
 #[Fillable([
-    'name', 'email', 'avatar_path', 'cover_path', 'ui_theme', 'password', 'role', 'extra_permissions', 'revoked_permissions',
+    'name', 'email', 'avatar_path', 'cover_path', 'ui_theme', 'feed_tab_preference', 'password', 'role', 'extra_permissions', 'revoked_permissions',
     'pro_subscription_started_at', 'pro_subscription_ends_at', 'pro_subscription_cancelled',
     'pro_last_payment_method', 'pro_last_payment_reference',
     'scanner_enabled',
@@ -37,6 +37,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'extra_permissions' => 'array',
             'revoked_permissions' => 'array',
+            'feed_tab_preference' => 'integer',
             'pro_subscription_started_at' => 'datetime',
             'pro_subscription_ends_at' => 'datetime',
             'pro_subscription_cancelled' => 'bool',

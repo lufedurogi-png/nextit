@@ -3,27 +3,44 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\CollectorGroupMember;
 use App\Models\User;
 use App\Models\UserFeedPost;
 use App\Models\UserFeedPostReaction;
-use App\Models\UserFollow;
+use App\Models\UserFriendship;
 use App\Models\UserNotification;
-use App\Models\UserSearchLog;
 use App\Support\FeedCommentNesting;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
 class FeedPostController extends Controller
 {
+    public function getTabPreference(Request $request)
+    {
+        $value = (int) ($request->user()->feed_tab_preference ?? 0);
+        if ($value < 0 || $value > 3) {
+            $value = 0;
+        }
+
+        return response()->json(['value' => $value]);
+    }
+
+    public function setTabPreference(Request $request)
+    {
+        $data = $request->validate([
+            'value' => ['required', 'integer', 'min:0', 'max:3'],
+        ]);
+
+        $user = $request->user();
+        $user->feed_tab_preference = (int) $data['value'];
+        $user->save();
+
+        return response()->json(['ok' => true, 'value' => (int) $user->feed_tab_preference]);
+    }
+
     public function index(Request $request)
     {
         $me = (int) $request->user()->id;
-        $followedIds = UserFollow::query()
-            ->where('follower_id', $me)
-            ->pluck('followed_id')
-            ->map(fn ($id) => (int) $id)
-            ->values();
+        $friendIds = $this->friendIds($me);
 
         $query = UserFeedPost::query()
             ->with([
@@ -38,60 +55,15 @@ class FeedPostController extends Controller
             ]);
 
         if ($request->query('tab') === 'for_you') {
-            // Para "Para ti", traemos más candidatos y reordenamos por relevancia.
-            $candidates = $query
+            // "Para ti": publicaciones propias + publicaciones de amistades aceptadas.
+            $authorIds = $friendIds->push($me)->unique()->values();
+            $posts = $query
+                ->whereIn('user_feed_posts.user_id', $authorIds)
                 ->orderByDesc('user_feed_posts.created_at')
                 ->orderByDesc('user_feed_posts.id')
-                ->limit(180)
+                ->limit(80)
                 ->get();
 
-            $groupIds = CollectorGroupMember::query()
-                ->where('user_id', $me)
-                ->pluck('group_id');
-
-            $groupMemberIds = CollectorGroupMember::query()
-                ->whereIn('group_id', $groupIds)
-                ->pluck('user_id')
-                ->map(fn ($id) => (int) $id)
-                ->values()
-                ->all();
-
-            $interestTerms = $this->interestTerms($me);
-
-            $scored = $candidates->map(function (UserFeedPost $post) use ($me, $followedIds, $groupMemberIds, $interestTerms) {
-                $score = 0;
-                $authorId = (int) $post->user_id;
-                if ($authorId === $me) {
-                    $score += 18;
-                }
-                if ($followedIds->contains($authorId)) {
-                    $score += 28;
-                }
-                if (in_array($authorId, $groupMemberIds, true)) {
-                    $score += 12;
-                }
-
-                $body = mb_strtolower((string) $post->body);
-                foreach ($interestTerms as $term) {
-                    if (str_contains($body, $term)) {
-                        $score += 9;
-                    }
-                }
-
-                $score += (int) ($post->likes_count ?? 0) * 2;
-                $score += (int) ($post->comments_count ?? 0) * 2;
-                $score += (int) ($post->shares_count ?? 0) * 3;
-
-                return ['score' => $score, 'post' => $post];
-            })->sortByDesc(function ($row) {
-                return sprintf(
-                    '%08d-%s',
-                    (int) $row['score'],
-                    optional($row['post']->created_at)->format('U.u') ?? '0'
-                );
-            })->values();
-
-            $posts = $scored->pluck('post')->take(50)->values();
             FeedCommentNesting::attachToPosts($posts);
 
             return $posts;
@@ -111,29 +83,20 @@ class FeedPostController extends Controller
         return $posts;
     }
 
-    private function interestTerms(int $userId): array
+    private function friendIds(int $me): \Illuminate\Support\Collection
     {
-        $logs = UserSearchLog::query()
-            ->where('user_id', $userId)
-            ->latest()
-            ->limit(30)
-            ->get(['query', 'hits']);
+        $friendships = UserFriendship::query()
+            ->where('status', 'accepted')
+            ->where(function ($q) use ($me) {
+                $q->where('requester_id', $me)->orWhere('addressee_id', $me);
+            })
+            ->get(['requester_id', 'addressee_id']);
 
-        $terms = [];
-        foreach ($logs as $log) {
-            $parts = preg_split('/[^a-z0-9]+/i', mb_strtolower((string) $log->query)) ?: [];
-            foreach ($parts as $part) {
-                $word = trim($part);
-                if (mb_strlen($word) < 3) {
-                    continue;
-                }
-                $terms[$word] = ($terms[$word] ?? 0) + max(1, (int) $log->hits);
-            }
-        }
-
-        arsort($terms);
-
-        return array_slice(array_keys($terms), 0, 8);
+        return $friendships
+            ->map(fn (UserFriendship $f) => (int) $f->requester_id === $me ? (int) $f->addressee_id : (int) $f->requester_id)
+            ->filter(fn ($id) => $id > 0 && $id !== $me)
+            ->unique()
+            ->values();
     }
 
     public function store(Request $request)

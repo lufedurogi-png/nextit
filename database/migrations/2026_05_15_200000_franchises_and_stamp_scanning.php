@@ -39,10 +39,25 @@ return new class extends Migration
         Schema::table('collection_items', function (Blueprint $table) {
             $table->foreignId('franchise_stamp_id')->nullable()->after('collection_id')->constrained('franchise_stamps')->nullOnDelete();
         });
+
+        if (Schema::hasTable('scan_usage_events') && Schema::hasColumn('scan_usage_events', 'franchise_stamp_id')) {
+            Schema::table('scan_usage_events', function (Blueprint $table) {
+                $table->foreign('franchise_stamp_id')
+                    ->references('id')
+                    ->on('franchise_stamps')
+                    ->nullOnDelete();
+            });
+        }
     }
 
     public function down(): void
     {
+        if (Schema::hasTable('scan_usage_events') && Schema::hasColumn('scan_usage_events', 'franchise_stamp_id')) {
+            Schema::table('scan_usage_events', function (Blueprint $table) {
+                $table->dropForeign(['franchise_stamp_id']);
+            });
+        }
+
         Schema::table('collection_items', function (Blueprint $table) {
             $table->dropConstrainedForeignId('franchise_stamp_id');
         });

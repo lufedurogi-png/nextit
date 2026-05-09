@@ -93,6 +93,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/plan/tarjeta/checkout', [PlanTarjetaController::class, 'checkout']);
 
     Route::get('/feed', [FeedPostController::class, 'index']);
+    Route::get('/feed/tab-preference', [FeedPostController::class, 'getTabPreference']);
+    Route::put('/feed/tab-preference', [FeedPostController::class, 'setTabPreference']);
     Route::get('/feed/highlights', [FeedPostController::class, 'highlights']);
     Route::get('/stories', [StoryController::class, 'index']);
     Route::post('/stories', [StoryController::class, 'store']);

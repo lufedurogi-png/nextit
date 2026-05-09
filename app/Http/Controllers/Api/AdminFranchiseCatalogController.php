@@ -163,7 +163,7 @@ class AdminFranchiseCatalogController extends Controller
         $data = $request->validate([
             'password' => ['required', 'string'],
             'name' => ['required', 'string', 'max:160'],
-            'description' => ['nullable', 'string', 'max:500'],
+            'description' => ['nullable', 'string', 'max:65535'],
         ]);
 
         $admin = $request->user();
