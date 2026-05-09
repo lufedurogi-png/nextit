@@ -453,7 +453,7 @@ export default function PlanesPage() {
                                     <p className="text-center text-[0.7rem] font-semibold text-slate-500 dark:text-slate-400">
                                         Plan base sin cargo.
                                     </p>
-                                )}
+                                ) : null}
                                 {checkoutError ? <p className="text-center text-xs font-bold text-red-600">{checkoutError}</p> : null}
                             </div>
                         </motion.article>
