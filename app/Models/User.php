@@ -18,6 +18,7 @@ use Laravel\Sanctum\HasApiTokens;
     'pro_subscription_started_at', 'pro_subscription_ends_at', 'pro_subscription_cancelled',
     'pro_last_payment_method', 'pro_last_payment_reference',
     'scanner_enabled',
+    'viku_chan_mode',
 ])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
@@ -42,6 +43,7 @@ class User extends Authenticatable
             'pro_subscription_ends_at' => 'datetime',
             'pro_subscription_cancelled' => 'bool',
             'scanner_enabled' => 'bool',
+            'viku_chan_mode' => 'integer',
         ];
     }
 

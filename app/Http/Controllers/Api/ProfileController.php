@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Collection;
 use App\Models\User;
+use Carbon\CarbonInterface;
 use App\Models\UserFeedPost;
 use App\Models\UserFriendship;
 use App\Support\FeedCommentNesting;
@@ -19,7 +20,20 @@ class ProfileController extends Controller
         $data = $request->validate([
             'name' => ['sometimes', 'string', 'max:255'],
             'ui_theme' => ['sometimes', 'integer', 'min:1', 'max:10'],
+            'viku_chan_mode' => ['sometimes', 'integer', 'in:0,1'],
         ]);
+
+        if (array_key_exists('viku_chan_mode', $data)) {
+            $end = $user->pro_subscription_ends_at;
+            $proActive = $end instanceof CarbonInterface && $end->isFuture();
+            if (! $proActive) {
+                return response()->json([
+                    'message' => 'Modo Viku chan solo está disponible con plan Pro Coleccionista activo.',
+                ], 422);
+            }
+            $user->viku_chan_mode = (int) $data['viku_chan_mode'];
+            unset($data['viku_chan_mode']);
+        }
 
         if ($data !== []) {
             $user->fill($data);
