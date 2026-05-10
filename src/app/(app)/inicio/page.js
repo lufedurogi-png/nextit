@@ -9,6 +9,7 @@ import PageFade from '@/components/coleccionador/PageFade'
 import ProfileFeedPost from '@/components/coleccionador/ProfileFeedPost'
 import GroupPostCard from '@/components/coleccionador/GroupPostCard'
 import { useAuth } from '@/hooks/auth'
+import { profileHref } from '@/lib/profileUrl'
 
 export default function InicioPage() {
     const router = useRouter()
@@ -192,9 +193,16 @@ export default function InicioPage() {
         focusTimerRef.current = window.setTimeout(() => setFocusedPostAnchor(''), 2600)
     }, [searchParams, tab, mixedPosts, postAnchor])
 
-    const follow = async (userId) => {
-        await axios.post(`/users/${userId}/follow`)
-        await loadFeed()
+    const sendFriendRequest = async (userId) => {
+        if (Number(userId) === Number(user?.id)) return
+        try {
+            await axios.post(`/friendships/request/${userId}`)
+            await loadFeed()
+        } catch (err) {
+            const msg = err.response?.data?.message
+            const text = typeof msg === 'string' ? msg : Array.isArray(msg) ? msg.join(' ') : 'No se pudo enviar la solicitud de amistad.'
+            setError(text)
+        }
     }
 
     const goMobileSearch = () => {
@@ -298,7 +306,7 @@ export default function InicioPage() {
                                         <img src={storageUrl(u.avatar_path)} alt="" className="h-7 w-7 rounded-lg object-cover" />
                                         <p className="font-bold">{u.name}</p>
                                         {u.id !== user?.id ? (
-                                            <button type="button" onClick={() => follow(u.id)} className="ml-auto rounded-lg bg-[var(--app-accent)] px-2 py-0.5 text-[10px] font-bold text-white">
+                                            <button type="button" onClick={() => sendFriendRequest(u.id)} className="ml-auto rounded-lg bg-[var(--app-accent)] px-2 py-0.5 text-[10px] font-bold text-white">
                                                 Seguir
                                             </button>
                                         ) : null}
@@ -358,19 +366,62 @@ export default function InicioPage() {
                     <section className="rounded-3xl border border-slate-200 bg-white/90 p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
                         <p className="text-xs font-black uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">Usuarios recomendados</p>
                         <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                            {(discovery.recommended_users || []).slice(0, 8).map((u) => (
-                                <div key={u.id} className="flex items-center gap-2 rounded-2xl border border-slate-200 p-2 text-xs dark:border-slate-700">
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img src={storageUrl(u.avatar_path)} alt="" className="h-8 w-8 rounded-xl object-cover" />
-                                    <div className="min-w-0 flex-1">
-                                        <p className="truncate font-bold">{u.name}</p>
-                                        <p className="truncate text-[10px] text-slate-500">{u.email}</p>
+                            {(discovery.recommended_users || []).slice(0, 8).map((u) => {
+                                const href = profileHref({ id: u.id, name: u.name, currentUserId: user?.id })
+                                const openProfile = () => router.push(href)
+                                const isSelf = Number(u.id) === Number(user?.id)
+                                const friendshipStatus = u.friendship_status || 'none'
+                                const actionLabel =
+                                    friendshipStatus === 'outgoing_pending'
+                                        ? 'Enviada'
+                                        : friendshipStatus === 'incoming_pending'
+                                          ? 'Por aceptar'
+                                          : null
+                                return (
+                                    <div
+                                        key={u.id}
+                                        role="button"
+                                        tabIndex={0}
+                                        onClick={openProfile}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' || e.key === ' ') {
+                                                e.preventDefault()
+                                                openProfile()
+                                            }
+                                        }}
+                                        className="flex cursor-pointer items-center gap-2 rounded-2xl border border-slate-200 p-2 text-xs transition hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800/50"
+                                    >
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img src={storageUrl(u.avatar_path)} alt="" className="h-8 w-8 shrink-0 rounded-xl object-cover" />
+                                        <div className="min-w-0 flex-1">
+                                            <p className="truncate font-bold">{u.name}</p>
+                                            <p className="truncate text-[10px] text-slate-500">{u.email}</p>
+                                        </div>
+                                        {!isSelf ? (
+                                            friendshipStatus === 'none' ? (
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        void sendFriendRequest(u.id)
+                                                    }}
+                                                    className="shrink-0 rounded-lg bg-[var(--app-accent)] px-2 py-1 text-[10px] font-bold text-white"
+                                                >
+                                                    Seguir
+                                                </button>
+                                            ) : (
+                                                <span
+                                                    role="presentation"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    className="shrink-0 cursor-default rounded-lg border border-slate-200 bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                                                >
+                                                    {actionLabel}
+                                                </span>
+                                            )
+                                        ) : null}
                                     </div>
-                                    <button type="button" onClick={() => follow(u.id)} className="rounded-lg bg-[var(--app-accent)] px-2 py-1 text-[10px] font-bold text-white">
-                                        Seguir
-                                    </button>
-                                </div>
-                            ))}
+                                )
+                            })}
                             {(discovery.recommended_users || []).length === 0 ? <p className="text-xs text-slate-500">Aún no hay usuarios recomendados.</p> : null}
                         </div>
                     </section>
