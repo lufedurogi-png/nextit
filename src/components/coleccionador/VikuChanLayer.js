@@ -26,6 +26,12 @@ const STROLL_MS = 95
 const SPRITE_HALF_W = 38
 const MIN_ANCHOR_W_FOR_STROLL = 108
 
+/** Toque a Viku: un toque suelto → enojada de sorpresa (09); toques seguidos → lo toma con cariño (17). */
+const VIKU_TOUCH_ANNOYED = 9
+const VIKU_TOUCH_RAPID_HEART = 17
+const TOUCH_REACT_MS = 1200
+const TOUCH_RAPID_WINDOW_MS = 880
+
 function isPathAllowed(pathname) {
     if (!pathname) return false
     if (pathname === '/' || pathname === '/login' || pathname === '/register') return false
@@ -70,8 +76,12 @@ export default function VikuChanLayer({ mainRef, userId, active }) {
     const [viewportPos, setViewportPos] = useState({ x: 120, y: 200 })
     const [displaySprite, setDisplaySprite] = useState(VIKU_PATROL_IDLE_INDICES[0])
     const [facingRight, setFacingRight] = useState(false)
+    const [touchPopSprite, setTouchPopSprite] = useState(null)
 
     const interruptUntilRef = useRef(0)
+    const touchPopUntilRef = useRef(0)
+    const lastVikuTapAtRef = useRef(0)
+    const touchClearTimerRef = useRef(null)
     const phaseRef = useRef('patrol')
     const patrolCursorRef = useRef(0)
     const anchorElRef = useRef(null)
@@ -181,6 +191,7 @@ export default function VikuChanLayer({ mainRef, userId, active }) {
     const hopAnchor = useCallback(() => {
         if (!allowed) return
         if (Date.now() < interruptUntilRef.current) return
+        if (Date.now() < touchPopUntilRef.current) return
         setDisplaySprite(VIKU_TELEPORT_SPRITE)
         phaseRef.current = 'teleport'
         isWalkingRef.current = false
@@ -193,10 +204,34 @@ export default function VikuChanLayer({ mainRef, userId, active }) {
     const lastActRef = useRef(Date.now())
     const [sleeping, setSleeping] = useState(false)
 
+    const onVikuPointerDown = useCallback((e) => {
+        e.stopPropagation()
+        lastActRef.current = Date.now()
+        setSleeping(false)
+        isWalkingRef.current = false
+
+        const now = Date.now()
+        const prev = lastVikuTapAtRef.current
+        lastVikuTapAtRef.current = now
+        const rapid = prev > 0 && now - prev < TOUCH_RAPID_WINDOW_MS
+        const spriteId = rapid ? VIKU_TOUCH_RAPID_HEART : VIKU_TOUCH_ANNOYED
+
+        touchPopUntilRef.current = now + TOUCH_REACT_MS
+        setTouchPopSprite(spriteId)
+
+        if (touchClearTimerRef.current) window.clearTimeout(touchClearTimerRef.current)
+        touchClearTimerRef.current = window.setTimeout(() => {
+            touchPopUntilRef.current = 0
+            setTouchPopSprite(null)
+            touchClearTimerRef.current = null
+        }, TOUCH_REACT_MS)
+    }, [])
+
     useEffect(() => {
         if (!allowed) return undefined
         const idleTimer = window.setInterval(() => {
             if (Date.now() < interruptUntilRef.current) return
+            if (Date.now() < touchPopUntilRef.current) return
             if (Date.now() - lastActRef.current > IDLE_MS) {
                 setSleeping(true)
                 isWalkingRef.current = false
@@ -211,7 +246,7 @@ export default function VikuChanLayer({ mainRef, userId, active }) {
         const onAct = () => {
             lastActRef.current = Date.now()
             setSleeping(false)
-            if (Date.now() >= interruptUntilRef.current) {
+            if (Date.now() >= interruptUntilRef.current && Date.now() >= touchPopUntilRef.current) {
                 setDisplaySprite(VIKU_PATROL_IDLE_INDICES[patrolCursorRef.current] || 8)
             }
         }
@@ -248,6 +283,12 @@ export default function VikuChanLayer({ mainRef, userId, active }) {
             const type = e.detail?.type
             const sprite = VIKU_INTERRUPT_SPRITES[type]
             if (!sprite) return
+            if (touchClearTimerRef.current) {
+                window.clearTimeout(touchClearTimerRef.current)
+                touchClearTimerRef.current = null
+            }
+            touchPopUntilRef.current = 0
+            setTouchPopSprite(null)
             interruptUntilRef.current = Date.now() + MICRO_MS
             isWalkingRef.current = false
             setDisplaySprite(sprite)
@@ -266,6 +307,12 @@ export default function VikuChanLayer({ mainRef, userId, active }) {
         if (!allowed) {
             anchorElRef.current = null
             if (hopTimerRef.current) window.clearTimeout(hopTimerRef.current)
+            if (touchClearTimerRef.current) {
+                window.clearTimeout(touchClearTimerRef.current)
+                touchClearTimerRef.current = null
+            }
+            touchPopUntilRef.current = 0
+            setTouchPopSprite(null)
             return undefined
         }
         moveToRandomAnchor()
@@ -274,7 +321,7 @@ export default function VikuChanLayer({ mainRef, userId, active }) {
             const ms = ANCHOR_MS_MIN + Math.random() * (ANCHOR_MS_MAX - ANCHOR_MS_MIN)
             hopTimerRef.current = window.setTimeout(() => {
                 if (cancelled) return
-                if (Date.now() < interruptUntilRef.current) {
+                if (Date.now() < interruptUntilRef.current || Date.now() < touchPopUntilRef.current) {
                     loop()
                     return
                 }
@@ -297,6 +344,7 @@ export default function VikuChanLayer({ mainRef, userId, active }) {
         }
         frameTimerRef.current = window.setInterval(() => {
             if (Date.now() < interruptUntilRef.current || sleeping) return
+            if (Date.now() < touchPopUntilRef.current) return
             if (phaseRef.current === 'teleport') return
             if (isWalkingRef.current) return
             const next = (patrolCursorRef.current + 1) % VIKU_PATROL_IDLE_INDICES.length
@@ -316,6 +364,7 @@ export default function VikuChanLayer({ mainRef, userId, active }) {
         }
         strollTimerRef.current = window.setInterval(() => {
             if (Date.now() < interruptUntilRef.current) return
+            if (Date.now() < touchPopUntilRef.current) return
             if (phaseRef.current === 'teleport') return
 
             const el = anchorElRef.current
@@ -381,22 +430,42 @@ export default function VikuChanLayer({ mainRef, userId, active }) {
 
     if (!allowed) return null
 
-    const sprite = reducedMotion && !sleeping ? 39 : displaySprite
+    const now = Date.now()
+    let sprite = displaySprite
+    if (sleeping && !reducedMotion) sprite = VIKU_SLEEP_SPRITE
+    else if (now < interruptUntilRef.current) sprite = displaySprite
+    else if (touchPopSprite != null && now < touchPopUntilRef.current) sprite = touchPopSprite
+    else if (reducedMotion && !sleeping) sprite = 39
+
     const faceScale = facingRight ? -1 : 1
 
     const layer = (
-        <div className="pointer-events-none fixed inset-0 z-[100] overflow-visible" aria-hidden>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-                src={vikuSpriteUrl(sprite)}
-                alt=""
-                className="pointer-events-none fixed z-[101] h-auto w-[72px] max-w-[22vw] select-none object-contain drop-shadow-[0_4px_8px_rgba(0,0,0,0.45)] motion-safe:transition-[opacity,transform] motion-safe:duration-[180ms]"
+        <div className="pointer-events-none fixed inset-0 z-[100] overflow-visible">
+            <div
+                className="pointer-events-none fixed z-[101]"
                 style={{
                     left: viewportPos.x,
                     top: viewportPos.y,
-                    transform: `translate(-50%, calc(-100% - 4px)) scaleX(${faceScale})`,
+                    transform: 'translate(-50%, calc(-100% - 4px))',
                 }}
-            />
+            >
+                <button
+                    type="button"
+                    aria-label="Viku chan"
+                    onPointerDown={onVikuPointerDown}
+                    className="pointer-events-auto flex cursor-pointer touch-manipulation items-end justify-center rounded-2xl border-0 bg-transparent p-0 outline-none ring-offset-2 focus-visible:ring-2 focus-visible:ring-indigo-400/80"
+                    style={{ minWidth: '80px', minHeight: '96px' }}
+                >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                        src={vikuSpriteUrl(sprite)}
+                        alt=""
+                        draggable={false}
+                        className="pointer-events-none h-auto w-[72px] max-w-[22vw] select-none object-contain drop-shadow-[0_4px_8px_rgba(0,0,0,0.45)] motion-safe:transition-[opacity,transform] motion-safe:duration-[180ms]"
+                        style={{ transform: `scaleX(${faceScale})` }}
+                    />
+                </button>
+            </div>
         </div>
     )
 
