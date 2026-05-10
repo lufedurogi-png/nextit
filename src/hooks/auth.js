@@ -13,6 +13,7 @@ export const useAuth = ({ middleware, redirectIfAuthenticated } = {}) => {
             throw new Error('No token')
         }
 
+        // Tema desde caché solo para evitar parpadeo mientras llega /auth/me (no devolver usuario en caché: quedaría desactualizado).
         const cachedUser = localStorage.getItem('auth_user')
         if (cachedUser) {
             try {
@@ -22,9 +23,8 @@ export const useAuth = ({ middleware, redirectIfAuthenticated } = {}) => {
                     applyUiTheme(tid)
                     persistUiThemeSideEffects(tid)
                 }
-                return u
-            } catch (e) {
-                // continuar con API
+            } catch {
+                // ignorar caché corrupto
             }
         }
 

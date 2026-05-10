@@ -7,6 +7,7 @@ import axios from '@/lib/axios'
 import { storageUrl } from '@/lib/storageUrl'
 import { profileHref } from '@/lib/profileUrl'
 import { buildGroupPostShareUrl, shareNativeOrClipboard } from '@/lib/sharePost'
+import { emitVikuChanSignal } from '@/lib/vikuChanSignals'
 import ReactionLikeIcon from '@/components/coleccionador/ReactionLikeIcon'
 import ShareLinkIcon from '@/components/coleccionador/ShareLinkIcon'
 
@@ -388,6 +389,7 @@ export default function GroupPostCard({
             })
             if (data?.id) {
                 setLocalComments((prev) => addCommentToLocalTree(prev, replyParentId, data))
+                emitVikuChanSignal('compose')
             }
             setCommentText('')
             clearCommentFileEntries()
@@ -438,6 +440,7 @@ export default function GroupPostCard({
             })
             if (data?.id) {
                 setLocalComments((prev) => addCommentToLocalTree(prev, parentId, data))
+                emitVikuChanSignal('compose')
             }
             setThreadText('')
             clearThreadFileEntries()
@@ -470,6 +473,7 @@ export default function GroupPostCard({
             const { data } = await axios.post(`/groups/${targetGroupId}/posts/${post.id}/react`, { reaction })
             if (typeof data?.likes_count === 'number') setLikesCount(data.likes_count)
             if (typeof data?.dislikes_count === 'number') setDislikesCount(data.dislikes_count)
+            if (reaction === 'like') emitVikuChanSignal('like')
         } catch {
             // ignorar
         }
@@ -478,9 +482,11 @@ export default function GroupPostCard({
     const handleSharePost = useCallback(() => {
         if (typeof onSharePost === 'function') {
             onSharePost()
+            emitVikuChanSignal('share')
             return
         }
         void shareNativeOrClipboard(buildGroupPostShareUrl(post.id))
+        emitVikuChanSignal('share')
     }, [onSharePost, post.id])
 
     const reactComment = async (commentId, reaction) => {
@@ -493,6 +499,7 @@ export default function GroupPostCard({
                     [commentId]: { likes: data.likes_count, dislikes: data.dislikes_count },
                 }))
             }
+            if (reaction === 'like') emitVikuChanSignal('like')
         } catch {
             // ignorar
         }

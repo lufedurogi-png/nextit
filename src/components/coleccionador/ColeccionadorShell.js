@@ -8,8 +8,11 @@ import { useAuth } from '@/hooks/auth'
 import { useUiThemePreference } from '@/hooks/useUiThemePreference'
 import { storageUrl } from '@/lib/storageUrl'
 import { getUiThemeById } from '@/lib/uiThemes'
+import { isProSubscriptionActive } from '@/lib/proSubscription'
+import { emitVikuChanSignal } from '@/lib/vikuChanSignals'
 import axios from '@/lib/axios'
 import AppearanceThemePanel from '@/components/coleccionador/AppearanceThemePanel'
+import VikuChanLayer from '@/components/coleccionador/VikuChanLayer'
 
 function Icon({ children, className }) {
     return (
@@ -128,13 +131,19 @@ export default function ColeccionadorShell({ children }) {
     const pathname = usePathname()
     const router = useRouter()
     const { user, logout, mutate: mutateUser } = useAuth({})
+    const mainContentRef = useRef(null)
     const { uiTheme, savingThemeId, selectUiTheme } = useUiThemePreference(mutateUser, user)
     const [notifications, setNotifications] = useState([])
     const [showNotif, setShowNotif] = useState(false)
     const [accountMenuOpen, setAccountMenuOpen] = useState(false)
     const [appearanceModalOpen, setAppearanceModalOpen] = useState(false)
+    const [vikuToggleSaving, setVikuToggleSaving] = useState(false)
     const accountMenuPanelRef = useRef(null)
     const unread = useMemo(() => notifications.filter((n) => !n.read_at).length, [notifications])
+    const prevUnreadNotifRef = useRef(null)
+
+    const proActive = useMemo(() => isProSubscriptionActive(user), [user])
+    const vikuLayerActive = proActive && Number(user?.viku_chan_mode) === 1
 
     /** Al abrir el desplegable de notificaciones, marcar todas como leídas en API y en estado local (el contador vuelve a 0). */
     useEffect(() => {
@@ -159,7 +168,13 @@ export default function ColeccionadorShell({ children }) {
     const loadNotifications = useCallback(async () => {
         try {
             const { data } = await axios.get('/notifications')
-            setNotifications(Array.isArray(data) ? data : [])
+            const arr = Array.isArray(data) ? data : []
+            const unreadNow = arr.filter((n) => !n.read_at).length
+            if (prevUnreadNotifRef.current !== null && unreadNow > prevUnreadNotifRef.current) {
+                emitVikuChanSignal('notification')
+            }
+            prevUnreadNotifRef.current = unreadNow
+            setNotifications(arr)
         } catch {
             setNotifications([])
         }
@@ -402,7 +417,10 @@ export default function ColeccionadorShell({ children }) {
                 ) : null}
             </header>
 
-            <main className="relative z-0 pb-24 md:ml-72 md:pt-16 xl:mr-[22rem]">{children}</main>
+            <main ref={mainContentRef} className="relative z-0 pb-24 md:ml-72 md:pt-16 xl:mr-[22rem]">
+                {children}
+                <VikuChanLayer mainRef={mainContentRef} userId={user?.id} active={vikuLayerActive} />
+            </main>
 
             <aside
                 className="hidden md:flex md:fixed md:inset-y-0 md:left-0 md:top-16 md:z-[60] md:w-72 md:flex-col md:border-r md:border-slate-200/80 md:bg-white/85 md:backdrop-blur md:px-3 md:py-4 md:dark:border-slate-600/50 md:dark:bg-slate-800/95"
@@ -446,7 +464,7 @@ export default function ColeccionadorShell({ children }) {
                 </nav>
             </aside>
 
-            <aside className="hidden xl:fixed xl:inset-y-0 xl:right-0 xl:top-16 xl:z-[55] xl:block xl:w-[22rem] xl:border-l xl:border-slate-200/80 xl:bg-white/80 xl:px-4 xl:py-4 xl:backdrop-blur xl:dark:border-slate-600/50 xl:dark:bg-slate-800/95">
+            <aside className="viku-exclude-rail hidden xl:fixed xl:inset-y-0 xl:right-0 xl:top-16 xl:z-[55] xl:block xl:w-[22rem] xl:border-l xl:border-slate-200/80 xl:bg-white/80 xl:px-4 xl:py-4 xl:backdrop-blur xl:dark:border-slate-600/50 xl:dark:bg-slate-800/95">
                 <div className="space-y-3">
                     <section className="rounded-2xl border border-slate-200 bg-white/90 p-3 dark:border-slate-600/50 dark:bg-slate-900/75">
                         <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">Actividad</p>
@@ -519,6 +537,39 @@ export default function ColeccionadorShell({ children }) {
                                       Cambiar
                                   </button>
                               </div>
+                              {proActive ? (
+                                  <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 dark:border-slate-600 dark:bg-slate-800/80">
+                                      <p className="min-w-0 text-sm font-semibold text-slate-700 dark:text-slate-200">Modo Viku chan</p>
+                                      <button
+                                          type="button"
+                                          role="switch"
+                                          aria-checked={Number(user?.viku_chan_mode) === 1}
+                                          disabled={vikuToggleSaving}
+                                          onClick={async () => {
+                                              const next = Number(user?.viku_chan_mode) === 1 ? 0 : 1
+                                              setVikuToggleSaving(true)
+                                              try {
+                                                  await axios.patch('/profile', { viku_chan_mode: next })
+                                                  await mutateUser()
+                                              } catch {
+                                                  // silencioso; el usuario puede reintentar
+                                              } finally {
+                                                  setVikuToggleSaving(false)
+                                              }
+                                          }}
+                                          className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors ${
+                                              Number(user?.viku_chan_mode) === 1 ? 'bg-emerald-600' : 'bg-slate-300 dark:bg-slate-600'
+                                          } ${vikuToggleSaving ? 'opacity-60' : ''}`}
+                                          aria-label="Activar o desactivar Modo Viku chan"
+                                      >
+                                          <span
+                                              className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+                                                  Number(user?.viku_chan_mode) === 1 ? 'translate-x-6' : 'translate-x-1'
+                                              }`}
+                                          />
+                                      </button>
+                                  </div>
+                              ) : null}
                               <Link
                                   href="/perfil"
                                   onClick={closeAccountMenu}

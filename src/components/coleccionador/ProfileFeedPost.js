@@ -7,6 +7,7 @@ import axios from '@/lib/axios'
 import { storageUrl } from '@/lib/storageUrl'
 import { profileHref } from '@/lib/profileUrl'
 import { buildFeedPostShareUrl, shareNativeOrClipboard } from '@/lib/sharePost'
+import { emitVikuChanSignal } from '@/lib/vikuChanSignals'
 import ReactionLikeIcon from '@/components/coleccionador/ReactionLikeIcon'
 import ShareLinkIcon from '@/components/coleccionador/ShareLinkIcon'
 
@@ -765,6 +766,7 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
             const { data } = await axios.post(`/feed/${post.id}/react`, { reaction })
             if (typeof data?.likes_count === 'number') setLikesCount(data.likes_count)
             if (typeof data?.dislikes_count === 'number') setDislikesCount(data.dislikes_count)
+            if (reaction === 'like') emitVikuChanSignal('like')
         } catch {
             // ignorar
         }
@@ -773,9 +775,11 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
     const handleSharePost = useCallback(() => {
         if (typeof onSharePost === 'function') {
             onSharePost()
+            emitVikuChanSignal('share')
             return
         }
         void shareNativeOrClipboard(buildFeedPostShareUrl(localPost.id))
+        emitVikuChanSignal('share')
     }, [onSharePost, localPost.id])
 
     const reactComment = async (commentId, reaction) => {
@@ -787,6 +791,7 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
                     [commentId]: { likes: data.likes_count, dislikes: data.dislikes_count },
                 }))
             }
+            if (reaction === 'like') emitVikuChanSignal('like')
         } catch {
             // ignorar
         }
@@ -802,6 +807,7 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
             const { data } = await axios.post(`/feed/${post.id}/comments`, fd)
             if (data?.id) {
                 setLocalComments((prev) => addCommentToLocalTree(prev, null, data))
+                emitVikuChanSignal('compose')
             }
             setCommentText('')
             clearCommentFileEntries()
@@ -827,6 +833,7 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
             const { data } = await axios.post(`/feed/${post.id}/comments`, fd)
             if (data?.id) {
                 setLocalComments((prev) => addCommentToLocalTree(prev, parentId, data))
+                emitVikuChanSignal('compose')
             }
             setThreadText('')
             clearThreadFileEntries()

@@ -10,6 +10,7 @@ import PageFade from '@/components/coleccionador/PageFade'
 import { storageUrl } from '@/lib/storageUrl'
 import { listingAllImages } from '@/lib/tiendaListingUtils'
 import { profileHref } from '@/lib/profileUrl'
+import { emitVikuChanSignal } from '@/lib/vikuChanSignals'
 
 function peerFromChat(chat, myId) {
     const parts = chat?.participants || []
@@ -232,6 +233,7 @@ export default function MensajesInner() {
                 attachments = uploaded.length ? uploaded : null
             }
             await axios.post(`/chats/${activeChat}/messages`, { body: body.trim() || null, attachments })
+            emitVikuChanSignal('compose')
             setBody('')
             setAttachmentPreviews((prev) => {
                 prev.forEach((p) => p.url && URL.revokeObjectURL(p.url))

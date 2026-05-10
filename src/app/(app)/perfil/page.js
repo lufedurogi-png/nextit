@@ -10,6 +10,7 @@ import ProfileFeedPost from '@/components/coleccionador/ProfileFeedPost'
 import axios from '@/lib/axios'
 import { storageUrl } from '@/lib/storageUrl'
 import { profileHref } from '@/lib/profileUrl'
+import { emitVikuChanSignal } from '@/lib/vikuChanSignals'
 
 export default function PerfilPage() {
     const { user, mutate: mutateUser } = useAuth({})
@@ -223,6 +224,7 @@ export default function PerfilPage() {
 
             if (createdPost?.id) {
                 setPosts((prev) => [createdPost, ...prev])
+                emitVikuChanSignal('compose')
             } else {
                 await loadPosts()
             }
