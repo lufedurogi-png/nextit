@@ -62,7 +62,7 @@ const Favoritos = () => {
 
     return (
         <div className={`min-h-screen transition-colors duration-300 ${
-            darkMode ? 'bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900'
+            darkMode ? 'bg-tienda-canvas text-gray-100' : 'bg-gray-50 text-gray-900'
         }`}>
             <TiendaNavHeader darkMode={darkMode} setDarkMode={setDarkMode} />
 
@@ -85,7 +85,7 @@ const Favoritos = () => {
                                 <div
                                     key={i}
                                     className={`rounded-lg border overflow-hidden animate-pulse ${
-                                        darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+                                        darkMode ? 'bg-tienda-elevated border-gray-700' : 'bg-white border-gray-200'
                                     }`}
                                 >
                                     <div className="h-48 bg-gray-200 dark:bg-gray-700" />
@@ -102,7 +102,7 @@ const Favoritos = () => {
                         </div>
                     ) : claves.length === 0 ? (
                         <div className={`rounded-xl p-8 border-2 ${
-                            darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+                            darkMode ? 'bg-tienda-elevated border-gray-700' : 'bg-white border-gray-200'
                         }`}>
                             <p className={`text-center text-lg ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                                 No tienes productos en favoritos.
@@ -130,7 +130,7 @@ const Favoritos = () => {
                                     <div
                                         key={clave}
                                         className={`rounded-lg border overflow-hidden transition-all ${
-                                            darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+                                            darkMode ? 'bg-tienda-elevated border-gray-700' : 'bg-white border-gray-200'
                                         }`}
                                     >
                                         <Link href={`/tienda/producto/${encodeURIComponent(clave)}`} className="block">
@@ -294,7 +294,7 @@ const Favoritos = () => {
                         <Link
                             href="/"
                             className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium border transition-colors ${
-                                darkMode ? 'bg-gray-800 border-gray-700 hover:text-[#FF8000] hover:border-[#FF8000]' : 'bg-white border-gray-200 hover:text-[#FF8000] hover:border-[#FF8000]'
+                                darkMode ? 'bg-tienda-elevated border-gray-700 hover:text-[#FF8000] hover:border-[#FF8000]' : 'bg-white border-gray-200 hover:text-[#FF8000] hover:border-[#FF8000]'
                             }`}
                         >
                             ← Volver a la tienda
@@ -305,7 +305,7 @@ const Favoritos = () => {
 
             {/* Footer */}
             <footer className={`border-t transition-colors duration-300 ${
-                darkMode ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200'
+                darkMode ? 'bg-tienda-canvas border-gray-800' : 'bg-white border-gray-200'
             }`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">

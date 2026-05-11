@@ -140,7 +140,7 @@ const Page = () => {
                 } ${
                     isExpanded ? 'opacity-0 translate-x-full lg:translate-x-0 lg:opacity-0' : 'opacity-100 translate-x-0'
                 } ${
-                    darkMode ? 'bg-gray-900' : 'bg-gray-50'
+                    darkMode ? 'bg-tienda-canvas' : 'bg-gray-50'
                 }`}>
                     <div className="mx-auto w-full max-w-md shrink-0 self-start lg:mx-auto lg:w-full lg:max-w-[720px]">
                         <div className="w-full">
@@ -166,7 +166,7 @@ const Page = () => {
                                         value={name}
                                         className={`block w-full px-4 py-3 pl-12 rounded-lg text-sm transition-all duration-200 ${
                                             darkMode 
-                                                ? (name.trim() ? 'bg-[#E5EBFD] border-2 border-gray-600 text-gray-900 placeholder-gray-500 focus:border-[#FF8000] focus:ring-2 focus:ring-[#FF8000]/20' : 'bg-gray-800 border-2 border-gray-700 text-white placeholder-gray-400 focus:border-[#FF8000] focus:ring-2 focus:ring-[#FF8000]/20')
+                                                ? (name.trim() ? 'bg-[#E5EBFD] border-2 border-gray-600 text-gray-900 placeholder-gray-500 focus:border-[#FF8000] focus:ring-2 focus:ring-[#FF8000]/20' : 'bg-tienda-elevated border-2 border-gray-700 text-white placeholder-gray-400 focus:border-[#FF8000] focus:ring-2 focus:ring-[#FF8000]/20')
                                                 : (name.trim() ? 'bg-[#E5EBFD] border-2 border-gray-300 text-gray-900 placeholder-gray-500 focus:border-[#FF8000] focus:ring-2 focus:ring-[#FF8000]/20' : 'bg-white border-2 border-gray-300 text-gray-900 placeholder-gray-500 focus:border-[#FF8000] focus:ring-2 focus:ring-[#FF8000]/20')
                                         }`}
                                         onChange={event => setName(event.target.value)}
@@ -194,7 +194,7 @@ const Page = () => {
                                         value={email}
                                         className={`block w-full px-4 py-3 pl-12 rounded-lg text-sm transition-all duration-200 ${
                                             darkMode 
-                                                ? (email.trim() ? 'bg-[#E5EBFD] border-2 border-gray-600 text-gray-900 placeholder-gray-500 focus:border-[#FF8000] focus:ring-2 focus:ring-[#FF8000]/20' : 'bg-gray-800 border-2 border-gray-700 text-white placeholder-gray-400 focus:border-[#FF8000] focus:ring-2 focus:ring-[#FF8000]/20')
+                                                ? (email.trim() ? 'bg-[#E5EBFD] border-2 border-gray-600 text-gray-900 placeholder-gray-500 focus:border-[#FF8000] focus:ring-2 focus:ring-[#FF8000]/20' : 'bg-tienda-elevated border-2 border-gray-700 text-white placeholder-gray-400 focus:border-[#FF8000] focus:ring-2 focus:ring-[#FF8000]/20')
                                                 : (email.trim() ? 'bg-[#E5EBFD] border-2 border-gray-300 text-gray-900 placeholder-gray-500 focus:border-[#FF8000] focus:ring-2 focus:ring-[#FF8000]/20' : 'bg-white border-2 border-gray-300 text-gray-900 placeholder-gray-500 focus:border-[#FF8000] focus:ring-2 focus:ring-[#FF8000]/20')
                                         }`}
                                         onChange={event => setEmail(event.target.value)}
@@ -221,7 +221,7 @@ const Page = () => {
                                         value={password}
                                         className={`block w-full px-4 py-3 pl-12 pr-12 rounded-lg text-sm transition-all duration-200 ${
                                             darkMode 
-                                                ? (password.trim() ? 'bg-[#E5EBFD] border-2 border-gray-600 text-gray-900 placeholder-gray-500 focus:border-[#FF8000] focus:ring-2 focus:ring-[#FF8000]/20' : 'bg-gray-800 border-2 border-gray-700 text-white placeholder-gray-400 focus:border-[#FF8000] focus:ring-2 focus:ring-[#FF8000]/20')
+                                                ? (password.trim() ? 'bg-[#E5EBFD] border-2 border-gray-600 text-gray-900 placeholder-gray-500 focus:border-[#FF8000] focus:ring-2 focus:ring-[#FF8000]/20' : 'bg-tienda-elevated border-2 border-gray-700 text-white placeholder-gray-400 focus:border-[#FF8000] focus:ring-2 focus:ring-[#FF8000]/20')
                                                 : (password.trim() ? 'bg-[#E5EBFD] border-2 border-gray-300 text-gray-900 placeholder-gray-500 focus:border-[#FF8000] focus:ring-2 focus:ring-[#FF8000]/20' : 'bg-white border-2 border-gray-300 text-gray-900 placeholder-gray-500 focus:border-[#FF8000] focus:ring-2 focus:ring-[#FF8000]/20')
                                         }`}
                                         onChange={event => setPassword(event.target.value)}
@@ -261,7 +261,7 @@ const Page = () => {
                                             <div
                                                 className={`absolute left-full top-1/2 z-50 w-56 max-w-[14rem] -translate-y-1/2 ml-1.5 rounded-xl border-2 shadow-xl transition-all duration-200 ${
                                                     darkMode
-                                                        ? 'border-gray-600 bg-gray-800'
+                                                        ? 'border-gray-600 bg-tienda-elevated'
                                                         : 'border-gray-200 bg-white'
                                                 }`}
                                                 role="dialog"
@@ -318,7 +318,7 @@ const Page = () => {
                                         value={passwordConfirmation}
                                         className={`block w-full px-4 py-3 pl-12 pr-12 rounded-lg text-sm transition-all duration-200 ${
                                             darkMode 
-                                                ? (passwordConfirmation.trim() ? 'bg-[#E5EBFD] border-2 border-gray-600 text-gray-900 placeholder-gray-500 focus:border-[#FF8000] focus:ring-2 focus:ring-[#FF8000]/20' : 'bg-gray-800 border-2 border-gray-700 text-white placeholder-gray-400 focus:border-[#FF8000] focus:ring-2 focus:ring-[#FF8000]/20')
+                                                ? (passwordConfirmation.trim() ? 'bg-[#E5EBFD] border-2 border-gray-600 text-gray-900 placeholder-gray-500 focus:border-[#FF8000] focus:ring-2 focus:ring-[#FF8000]/20' : 'bg-tienda-elevated border-2 border-gray-700 text-white placeholder-gray-400 focus:border-[#FF8000] focus:ring-2 focus:ring-[#FF8000]/20')
                                                 : (passwordConfirmation.trim() ? 'bg-[#E5EBFD] border-2 border-gray-300 text-gray-900 placeholder-gray-500 focus:border-[#FF8000] focus:ring-2 focus:ring-[#FF8000]/20' : 'bg-white border-2 border-gray-300 text-gray-900 placeholder-gray-500 focus:border-[#FF8000] focus:ring-2 focus:ring-[#FF8000]/20')
                                         }`}
                                         onChange={event => setPasswordConfirmation(event.target.value)}
@@ -357,7 +357,7 @@ const Page = () => {
                                             <div
                                                 className={`absolute left-full top-1/2 z-50 w-56 max-w-[14rem] -translate-y-1/2 ml-1.5 rounded-xl border-2 shadow-xl transition-all duration-200 ${
                                                     darkMode
-                                                        ? 'border-gray-600 bg-gray-800'
+                                                        ? 'border-gray-600 bg-tienda-elevated'
                                                         : 'border-gray-200 bg-white'
                                                 }`}
                                                 role="dialog"
@@ -411,7 +411,7 @@ const Page = () => {
                                             type="checkbox"
                                             name="remember"
                                             className={`rounded border-gray-300 text-[#FF8000] shadow-sm focus:border-[#FF8000] focus:ring focus:ring-[#FF8000] focus:ring-opacity-50 ${
-                                                darkMode ? 'border-gray-600 bg-gray-800' : 'bg-white'
+                                                darkMode ? 'border-gray-600 bg-tienda-elevated' : 'bg-white'
                                             }`}
                                             checked={remember}
                                             onChange={(event) => setRemember(event.target.checked)}
@@ -423,7 +423,7 @@ const Page = () => {
                                             id="privacy_accept"
                                             type="checkbox"
                                             className={`mt-0.5 shrink-0 rounded border-gray-300 text-[#FF8000] shadow-sm focus:border-[#FF8000] focus:ring focus:ring-[#FF8000] focus:ring-opacity-50 ${
-                                                darkMode ? 'border-gray-600 bg-gray-800' : 'bg-white'
+                                                darkMode ? 'border-gray-600 bg-tienda-elevated' : 'bg-white'
                                             }`}
                                             checked={privacyAccepted}
                                             onChange={(e) => {

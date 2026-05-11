@@ -4,7 +4,7 @@ export default function GlobalError({ error, reset }) {
     return (
         <html>
             <body>
-                <div className="min-h-screen flex flex-col items-center justify-center bg-gray-900 text-white p-6">
+                <div className="min-h-screen flex flex-col items-center justify-center bg-tienda-canvas text-white p-6">
                     <h2 className="text-xl font-semibold mb-4">Algo salió mal</h2>
                     <p className="text-gray-400 mb-6 text-center max-w-md">{error?.message || 'Ha ocurrido un error inesperado.'}</p>
                     <button

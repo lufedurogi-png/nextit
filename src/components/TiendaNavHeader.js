@@ -192,7 +192,7 @@ export default function TiendaNavHeader({ darkMode, setDarkMode, onToggleLeftSid
                                 {userDropdownOpen && (
                                     <>
                                         <div className="fixed inset-0 z-10" onClick={() => setUserDropdownOpen(false)} aria-hidden />
-                                        <div className={`absolute right-0 mt-2 w-48 rounded-lg shadow-lg border z-20 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+                                        <div className={`absolute right-0 mt-2 w-48 rounded-lg shadow-lg border z-20 ${darkMode ? 'bg-tienda-elevated border-gray-700' : 'bg-white border-gray-200'}`}>
                                             <div className="py-1">
                                                 <Link
                                                     href="/dashboard"
@@ -245,7 +245,7 @@ export default function TiendaNavHeader({ darkMode, setDarkMode, onToggleLeftSid
                 <div className="md:hidden">
                     <div
                         className={`-mx-4 px-4 py-2 sm:-mx-6 sm:px-6 ${
-                            darkMode ? 'bg-gray-900/95 backdrop-blur-md' : 'bg-white/95 backdrop-blur-md'
+                            darkMode ? 'bg-tienda-canvas/95 backdrop-blur-md' : 'bg-white/95 backdrop-blur-md'
                         }`}
                     >
                         <div className="flex items-center gap-1 min-w-0">
@@ -253,7 +253,7 @@ export default function TiendaNavHeader({ darkMode, setDarkMode, onToggleLeftSid
                                 <button
                                     type="button"
                                     onClick={onToggleLeftSidebar}
-                                    className={`shrink-0 rounded-xl p-2 transition-colors ${darkMode ? 'hover:bg-gray-800' : 'hover:bg-gray-100'}`}
+                                    className={`shrink-0 rounded-xl p-2 transition-colors ${darkMode ? 'hover:bg-tienda-elevated' : 'hover:bg-gray-100'}`}
                                     aria-label="Abrir o cerrar panel lateral"
                                 >
                                     <IconoNavegacion darkMode={darkMode} />
@@ -261,7 +261,7 @@ export default function TiendaNavHeader({ darkMode, setDarkMode, onToggleLeftSid
                             ) : (
                                 <span className="w-11 shrink-0" aria-hidden />
                             )}
-                            <div className={`flex shrink-0 items-center gap-1 rounded-lg px-1 py-0.5 ${darkMode ? 'bg-gray-800/50' : 'bg-gray-100/80'}`}>
+                            <div className={`flex shrink-0 items-center gap-1 rounded-lg px-1 py-0.5 ${darkMode ? 'bg-tienda-elevated/50' : 'bg-gray-100/80'}`}>
                                 <Image
                                     src="/Imagenes/icon_modo.webp"
                                     alt=""
@@ -297,7 +297,7 @@ export default function TiendaNavHeader({ darkMode, setDarkMode, onToggleLeftSid
                                 <button
                                     type="button"
                                     onClick={() => logout()}
-                                    className={`shrink-0 rounded-xl p-2 transition-colors ${darkMode ? 'hover:bg-gray-800' : 'hover:bg-gray-100'}`}
+                                    className={`shrink-0 rounded-xl p-2 transition-colors ${darkMode ? 'hover:bg-tienda-elevated' : 'hover:bg-gray-100'}`}
                                     aria-label="Salir"
                                 >
                                     <Image

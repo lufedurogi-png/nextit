@@ -157,7 +157,7 @@ const Login = () => {
                 <div className={`flex-1 flex items-center justify-center p-6 sm:p-8 lg:p-10 transition-all duration-700 ease-in-out min-w-0 order-2 w-full ${
                     isExpanded ? 'opacity-0 translate-x-full lg:translate-x-0 lg:opacity-0' : 'opacity-100 translate-x-0'
                 } ${
-                    darkMode ? 'bg-gray-900' : 'bg-gray-50'
+                    darkMode ? 'bg-tienda-canvas' : 'bg-gray-50'
                 }`}>
                     <div className="w-full max-w-sm">
                         <h2 className={`text-2xl sm:text-3xl font-bold mb-6 ${
@@ -181,7 +181,7 @@ const Login = () => {
                                         value={email}
                                         className={`block w-full px-4 py-3 pl-11 rounded-lg text-sm transition-all duration-200 ${
                                             darkMode 
-                                                ? (email.trim() ? 'bg-[#E5EBFD] border-2 border-gray-600 text-gray-900 placeholder-gray-500 focus:border-[#FF8000] focus:ring-2 focus:ring-[#FF8000]/20' : 'bg-gray-800 border-2 border-gray-700 text-white placeholder-gray-400 focus:border-[#FF8000] focus:ring-2 focus:ring-[#FF8000]/20')
+                                                ? (email.trim() ? 'bg-[#E5EBFD] border-2 border-gray-600 text-gray-900 placeholder-gray-500 focus:border-[#FF8000] focus:ring-2 focus:ring-[#FF8000]/20' : 'bg-tienda-elevated border-2 border-gray-700 text-white placeholder-gray-400 focus:border-[#FF8000] focus:ring-2 focus:ring-[#FF8000]/20')
                                                 : (email.trim() ? 'bg-[#E5EBFD] border-2 border-gray-300 text-gray-900 placeholder-gray-500 focus:border-[#FF8000] focus:ring-2 focus:ring-[#FF8000]/20' : 'bg-white border-2 border-gray-300 text-gray-900 placeholder-gray-500 focus:border-[#FF8000] focus:ring-2 focus:ring-[#FF8000]/20')
                                         }`}
                                         onChange={event => setEmail(event.target.value)}
@@ -209,7 +209,7 @@ const Login = () => {
                                         value={password}
                                         className={`block w-full px-4 py-3 pl-11 pr-12 rounded-lg text-sm transition-all duration-200 ${
                                             darkMode 
-                                                ? (password.trim() ? 'bg-[#E5EBFD] border-2 border-gray-600 text-gray-900 placeholder-gray-500 focus:border-[#FF8000] focus:ring-2 focus:ring-[#FF8000]/20' : 'bg-gray-800 border-2 border-gray-700 text-white placeholder-gray-400 focus:border-[#FF8000] focus:ring-2 focus:ring-[#FF8000]/20')
+                                                ? (password.trim() ? 'bg-[#E5EBFD] border-2 border-gray-600 text-gray-900 placeholder-gray-500 focus:border-[#FF8000] focus:ring-2 focus:ring-[#FF8000]/20' : 'bg-tienda-elevated border-2 border-gray-700 text-white placeholder-gray-400 focus:border-[#FF8000] focus:ring-2 focus:ring-[#FF8000]/20')
                                                 : (password.trim() ? 'bg-[#E8EDFF] border-2 border-gray-300 text-gray-900 placeholder-gray-500 focus:border-[#FF8000] focus:ring-2 focus:ring-[#FF8000]/20' : 'bg-white border-2 border-gray-300 text-gray-900 placeholder-gray-500 focus:border-[#FF8000] focus:ring-2 focus:ring-[#FF8000]/20')
                                         }`}
                                         onChange={event => setPassword(event.target.value)}
@@ -252,7 +252,7 @@ const Login = () => {
                                         type="checkbox"
                                         name="remember"
                                         className={`rounded border-gray-300 text-[#FF8000] shadow-sm focus:border-[#FF8000] focus:ring focus:ring-[#FF8000] focus:ring-opacity-50 w-4 h-4 ${
-                                            darkMode ? 'bg-gray-800 border-gray-600' : 'bg-white'
+                                            darkMode ? 'bg-tienda-elevated border-gray-600' : 'bg-white'
                                         }`}
                                         onChange={event => setShouldRemember(event.target.checked)}
                                     />

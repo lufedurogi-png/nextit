@@ -347,7 +347,7 @@ export default function CarritoClient() {
         })()
     }, [mounted, isLogged, router, searchParams])
 
-    const bg = darkMode ? 'bg-gray-900' : 'bg-gray-50'
+    const bg = darkMode ? 'bg-tienda-canvas' : 'bg-gray-50'
     const textMuted = darkMode ? 'text-gray-400' : 'text-gray-600'
     const isEmpty = !cartItems?.length
     const showSkeleton = !mounted || (isLogged && isLoading && !cartItems?.length)
@@ -370,7 +370,7 @@ export default function CarritoClient() {
                             <div
                                 key={i}
                                 className={`flex flex-col sm:flex-row gap-4 p-4 rounded-lg border animate-pulse ${
-                                    darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+                                    darkMode ? 'bg-tienda-elevated border-gray-700' : 'bg-white border-gray-200'
                                 }`}
                             >
                                 <div className="w-full sm:w-32 h-32 sm:h-24 rounded bg-gray-200 dark:bg-gray-700 shrink-0" />
@@ -383,7 +383,7 @@ export default function CarritoClient() {
                         ))}
                     </div>
                 ) : isEmpty ? (
-                    <div className={`rounded-lg border p-8 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+                    <div className={`rounded-lg border p-8 ${darkMode ? 'bg-tienda-elevated border-gray-700' : 'bg-white border-gray-200'}`}>
                         <p className={darkMode ? 'text-gray-300' : 'text-gray-700'}>Tu carrito está vacío.</p>
                         <Link href="/" className="inline-block mt-4 text-[#FF8000] hover:underline font-medium">
                             Ir a la tienda
@@ -401,7 +401,7 @@ export default function CarritoClient() {
                                 <div
                                     key={item.clave}
                                     className={`flex flex-col sm:flex-row gap-4 p-4 rounded-lg border ${
-                                        darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+                                        darkMode ? 'bg-tienda-elevated border-gray-700' : 'bg-white border-gray-200'
                                     }`}
                                 >
                                     <div className="relative w-full sm:w-32 h-32 sm:h-24 shrink-0 rounded overflow-hidden bg-gray-100">
@@ -527,7 +527,7 @@ export default function CarritoClient() {
                         </div>
 
                         <div className={`flex flex-wrap items-center justify-between gap-4 p-6 rounded-lg border ${
-                            darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+                            darkMode ? 'bg-tienda-elevated border-gray-700' : 'bg-white border-gray-200'
                         }`}>
                             <p className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
                                 Total: {formatPrecio(displayTotal)}
@@ -553,7 +553,7 @@ export default function CarritoClient() {
                     <Link
                         href="/"
                         className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium border transition-colors ${
-                            darkMode ? 'bg-gray-800 border-gray-700 hover:text-[#FF8000] hover:border-[#FF8000]' : 'bg-white border-gray-200 hover:text-[#FF8000] hover:border-[#FF8000]'
+                            darkMode ? 'bg-tienda-elevated border-gray-700 hover:text-[#FF8000] hover:border-[#FF8000]' : 'bg-white border-gray-200 hover:text-[#FF8000] hover:border-[#FF8000]'
                         }`}
                     >
                         ← Volver a la tienda

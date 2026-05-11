@@ -18,7 +18,7 @@ export default function LoginRequiredModal({ open, onClose, returnUrl = '/tienda
             />
             <div
                 className={`fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md rounded-xl shadow-xl z-50 p-6 ${
-                    darkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
+                    darkMode ? 'bg-tienda-elevated border border-gray-700' : 'bg-white border border-gray-200'
                 }`}
                 role="dialog"
                 aria-modal="true"

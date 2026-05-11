@@ -409,7 +409,7 @@ export default function CotizacionesClient() {
     // clearItems/refresh solo se usan dentro del async; no en deps (evita re-ejecuciones).
     }, [mounted, isLogged, router, searchParams])
 
-    const bg = darkMode ? 'bg-gray-900' : 'bg-gray-50'
+    const bg = darkMode ? 'bg-tienda-canvas' : 'bg-gray-50'
     const textMuted = darkMode ? 'text-gray-400' : 'text-gray-600'
 
     return (
@@ -443,7 +443,7 @@ export default function CotizacionesClient() {
                 )}
 
                 {isEmpty ? (
-                    <div className={`rounded-lg border p-8 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+                    <div className={`rounded-lg border p-8 ${darkMode ? 'bg-tienda-elevated border-gray-700' : 'bg-white border-gray-200'}`}>
                         <p className={darkMode ? 'text-gray-300' : 'text-gray-700'}>No tienes productos en la cotización.</p>
                         <p className={`mt-2 text-sm ${textMuted}`}>Activa el modo cotización en el menú Cotizaciones y selecciona productos en la tienda.</p>
                         <Link href="/" className="inline-block mt-4 text-[#FF8000] hover:underline font-medium">
@@ -455,7 +455,7 @@ export default function CotizacionesClient() {
                         {/* Resumen y botón Ver productos */}
                         <div
                             className={`mb-6 p-4 rounded-lg border ${
-                                darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+                                darkMode ? 'bg-tienda-elevated border-gray-700' : 'bg-white border-gray-200'
                             }`}
                         >
                             <div className="flex flex-wrap items-center justify-between gap-4">
@@ -489,7 +489,7 @@ export default function CotizacionesClient() {
                                     <div
                                         key={item.clave}
                                         className={`flex flex-col sm:flex-row gap-4 p-4 rounded-lg border ${
-                                            darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+                                            darkMode ? 'bg-tienda-elevated border-gray-700' : 'bg-white border-gray-200'
                                         }`}
                                     >
                                         <div className="relative w-full sm:w-32 h-32 sm:h-24 shrink-0 rounded overflow-hidden bg-gray-100">
@@ -642,7 +642,7 @@ export default function CotizacionesClient() {
                         )}
 
                         <div className={`flex flex-wrap items-center justify-between gap-4 p-6 rounded-lg border ${
-                            darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+                            darkMode ? 'bg-tienda-elevated border-gray-700' : 'bg-white border-gray-200'
                         }`}>
                             <p className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
                                 Total: {formatPrecio(total)}
@@ -689,7 +689,7 @@ export default function CotizacionesClient() {
                     <Link
                         href="/"
                         className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium border transition-colors ${
-                            darkMode ? 'bg-gray-800 border-gray-700 hover:text-[#FF8000] hover:border-[#FF8000]' : 'bg-white border-gray-200 hover:text-[#FF8000] hover:border-[#FF8000]'
+                            darkMode ? 'bg-tienda-elevated border-gray-700 hover:text-[#FF8000] hover:border-[#FF8000]' : 'bg-white border-gray-200 hover:text-[#FF8000] hover:border-[#FF8000]'
                         }`}
                     >
                         ← Volver a la tienda
@@ -723,7 +723,7 @@ export default function CotizacionesClient() {
                 >
                     <div
                         className={`pointer-events-auto w-full max-w-md rounded-xl border-2 shadow-2xl p-6 ${
-                            darkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'
+                            darkMode ? 'bg-tienda-elevated border-gray-600' : 'bg-white border-gray-300'
                         }`}
                         onClick={(e) => e.stopPropagation()}
                         role="dialog"
@@ -751,7 +751,7 @@ export default function CotizacionesClient() {
                             disabled={guardando}
                             className={`w-full rounded-lg border px-3 py-2.5 text-sm mb-4 ${
                                 darkMode
-                                    ? 'bg-gray-900 border-gray-600 text-white placeholder-gray-500 focus:border-[#FF8000] focus:ring-1 focus:ring-[#FF8000]'
+                                    ? 'bg-tienda-canvas border-gray-600 text-white placeholder-gray-500 focus:border-[#FF8000] focus:ring-1 focus:ring-[#FF8000]'
                                     : 'bg-white border-gray-300 text-gray-900 focus:border-[#FF8000] focus:ring-1 focus:ring-[#FF8000]'
                             }`}
                             placeholder="tu@correo.com"
@@ -761,7 +761,7 @@ export default function CotizacionesClient() {
                                 id="cotiz-inv-privacy"
                                 type="checkbox"
                                 className={`mt-1 shrink-0 rounded border-gray-300 text-[#FF8000] focus:ring-[#FF8000] ${
-                                    darkMode ? 'border-gray-600 bg-gray-900' : ''
+                                    darkMode ? 'border-gray-600 bg-tienda-canvas' : ''
                                 }`}
                                 checked={privacyAcceptedInvitado}
                                 onChange={(e) => {

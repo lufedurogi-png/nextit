@@ -74,10 +74,10 @@ export default function ProductoDetalleClient({ clave, initialProducto = null, e
     if (errorCatalog) {
         return (
             <div className={`min-h-screen flex items-center justify-center ${
-                darkMode ? 'bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900'
+                darkMode ? 'bg-tienda-canvas text-gray-100' : 'bg-gray-50 text-gray-900'
             }`}>
                 <div className={`max-w-md mx-auto p-6 rounded-lg border ${
-                    darkMode ? 'bg-gray-800 border-amber-900/50' : 'bg-amber-50 border-amber-200'
+                    darkMode ? 'bg-tienda-elevated border-amber-900/50' : 'bg-amber-50 border-amber-200'
                 }`}>
                     <h1 className={`text-xl font-bold mb-2 ${
                         darkMode ? 'text-amber-400' : 'text-amber-800'
@@ -98,7 +98,7 @@ export default function ProductoDetalleClient({ clave, initialProducto = null, e
     if (!producto) {
         return (
             <div className={`min-h-screen flex items-center justify-center ${
-                darkMode ? 'bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900'
+                darkMode ? 'bg-tienda-canvas text-gray-100' : 'bg-gray-50 text-gray-900'
             }`}>
                 <div className="text-center">
                     <h1 className="text-2xl font-bold mb-4">Producto no encontrado</h1>
@@ -119,8 +119,8 @@ export default function ProductoDetalleClient({ clave, initialProducto = null, e
     const enStock = totalUnidades > 0
     const breadcrumbTitulo = titulo.length > 45 ? titulo.slice(0, 45) + '…' : titulo
 
-    const bg = darkMode ? 'bg-gray-900' : 'bg-gray-50'
-    const cardBg = darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+    const bg = darkMode ? 'bg-tienda-canvas' : 'bg-gray-50'
+    const cardBg = darkMode ? 'bg-tienda-elevated border-gray-700' : 'bg-white border-gray-200'
     const text = darkMode ? 'text-gray-100' : 'text-gray-900'
     const textMuted = darkMode ? 'text-gray-400' : 'text-gray-600'
     const linkHover = 'hover:text-[#FF8000] transition-colors'
@@ -386,7 +386,7 @@ export default function ProductoDetalleClient({ clave, initialProducto = null, e
                                             {stockErrorModal && (
                                                 <>
                                                     <div className="fixed inset-0 bg-black/50 z-[100]" onClick={() => setStockErrorModal(null)} aria-hidden />
-                                                    <div className={`fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[101] w-full max-w-sm rounded-xl border-2 shadow-xl p-4 ${darkMode ? 'bg-gray-800 border-red-900/50' : 'bg-white border-red-200'}`} onClick={(e) => e.stopPropagation()}>
+                                                    <div className={`fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[101] w-full max-w-sm rounded-xl border-2 shadow-xl p-4 ${darkMode ? 'bg-tienda-elevated border-red-900/50' : 'bg-white border-red-200'}`} onClick={(e) => e.stopPropagation()}>
                                                         <p className={`text-sm font-medium ${darkMode ? 'text-red-300' : 'text-red-700'}`}>{stockErrorModal}</p>
                                                         <button type="button" onClick={() => setStockErrorModal(null)} className={`mt-3 w-full py-2 rounded-lg text-sm font-medium ${darkMode ? 'bg-gray-600 hover:bg-gray-500 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-800'}`}>
                                                             Cerrar
@@ -481,7 +481,7 @@ export default function ProductoDetalleClient({ clave, initialProducto = null, e
                                 return palabra.charAt(0).toUpperCase() + palabra.slice(1).toLowerCase()
                             }).join(' ')
                         }
-                        const resaltadoTitulo = `text-lg sm:text-xl border-l-4 border-[#FF8000] pl-3 sm:pl-5 font-bold ${darkMode ? 'text-[#FFB366] bg-gray-800/60' : 'text-[#CC6600] bg-amber-50'}`
+                        const resaltadoTitulo = `text-lg sm:text-xl border-l-4 border-[#FF8000] pl-3 sm:pl-5 font-bold ${darkMode ? 'text-[#FFB366] bg-tienda-elevated/60' : 'text-[#CC6600] bg-amber-50'}`
                         const tablaInfoGeneral = (
                             <div className="overflow-x-auto">
                                 <table className="w-full text-sm">
@@ -496,7 +496,7 @@ export default function ProductoDetalleClient({ clave, initialProducto = null, e
                                             <tr
                                                 key={k}
                                                 className={`border-b last:border-b-0 ${
-                                                    darkMode ? `text-gray-300 border-gray-700 ${i % 2 === 1 ? 'bg-gray-800/30' : ''}` : `text-gray-800 border-gray-200 ${i % 2 === 1 ? 'bg-gray-50/80' : ''}`
+                                                    darkMode ? `text-gray-300 border-gray-700 ${i % 2 === 1 ? 'bg-tienda-elevated/30' : ''}` : `text-gray-800 border-gray-200 ${i % 2 === 1 ? 'bg-gray-50/80' : ''}`
                                                 }`}
                                             >
                                                 <td className="px-4 sm:px-6 py-3 font-medium whitespace-nowrap align-top" style={{ width: '40%' }}>{formatLabel(k)}</td>
@@ -525,7 +525,7 @@ export default function ProductoDetalleClient({ clave, initialProducto = null, e
                                                 {especs.map((spec, i) => (
                                                     <tr
                                                         key={`${spec.nombre}-${i}`}
-                                                        className={`border-b last:border-b-0 ${darkMode ? `text-gray-300 border-gray-700 ${i % 2 === 1 ? 'bg-gray-800/30' : ''}` : `text-gray-800 border-gray-200 ${i % 2 === 1 ? 'bg-gray-50/80' : ''}`}`}
+                                                        className={`border-b last:border-b-0 ${darkMode ? `text-gray-300 border-gray-700 ${i % 2 === 1 ? 'bg-tienda-elevated/30' : ''}` : `text-gray-800 border-gray-200 ${i % 2 === 1 ? 'bg-gray-50/80' : ''}`}`}
                                                     >
                                                         <td className="px-4 sm:px-6 py-3 font-medium whitespace-nowrap align-top" style={{ width: '40%' }}>{formatLabel(spec.nombre)}</td>
                                                         <td className="px-4 sm:px-6 py-3 break-words">{String(spec.valor || '')}</td>
@@ -540,8 +540,8 @@ export default function ProductoDetalleClient({ clave, initialProducto = null, e
                         const tieneGeneral = entradasGenerales.length > 0
                         const tieneEspecificaciones = especificaciones.length > 0 || dimensiones.length > 0
                         const btnBase = 'w-full flex items-center justify-between gap-2 text-left px-4 sm:px-6 py-3 border-b transition-colors'
-                        const btnClassNeutral = darkMode ? 'text-white border-gray-700 hover:bg-gray-800/50' : 'text-gray-900 border-gray-200 hover:bg-gray-50'
-                        const btnClassDesplegado = `border-l-4 border-[#FF8000] pl-3 sm:pl-5 font-bold ${darkMode ? 'text-[#FFB366] bg-gray-800/60 border-gray-700' : 'text-[#CC6600] bg-amber-50 border-amber-200'}`
+                        const btnClassNeutral = darkMode ? 'text-white border-gray-700 hover:bg-tienda-elevated/50' : 'text-gray-900 border-gray-200 hover:bg-gray-50'
+                        const btnClassDesplegado = `border-l-4 border-[#FF8000] pl-3 sm:pl-5 font-bold ${darkMode ? 'text-[#FFB366] bg-tienda-elevated/60 border-gray-700' : 'text-[#CC6600] bg-amber-50 border-amber-200'}`
                         const btnClass = (open) => `${btnBase} ${open ? btnClassDesplegado : btnClassNeutral}`
                         const chevron = (open) => (
                             <span className="shrink-0 transition-transform duration-200" style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}>
@@ -594,7 +594,7 @@ export default function ProductoDetalleClient({ clave, initialProducto = null, e
                                                 key={`${p.clave}-${i}`}
                                                 href={`/tienda/producto/${encodeURIComponent(p.clave)}`}
                                                 className={`flex-shrink-0 w-[140px] sm:w-[160px] rounded-lg border overflow-hidden transition-all hover:shadow-lg hover:scale-[1.02] ${
-                                                    darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+                                                    darkMode ? 'bg-tienda-elevated border-gray-700' : 'bg-white border-gray-200'
                                                 }`}
                                             >
                                                 <div className="relative w-full aspect-square bg-gray-100 dark:bg-gray-700">

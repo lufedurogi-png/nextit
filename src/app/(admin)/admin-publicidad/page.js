@@ -120,7 +120,7 @@ export default function AdminPublicidad() {
                 </div>
             </div>
 
-            <div className={`rounded-xl overflow-hidden border shadow-xl ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+            <div className={`rounded-xl overflow-hidden border shadow-xl ${darkMode ? 'bg-tienda-elevated border-gray-700' : 'bg-white border-gray-200'}`}>
                 <div className={`px-5 py-4 ${darkMode ? 'bg-emerald-600/25 border-b border-emerald-500/30' : 'bg-emerald-50 border-b border-emerald-200'}`}>
                     <div className="flex items-center gap-3">
                         <span className={`flex h-9 w-9 items-center justify-center rounded-lg ${darkMode ? 'bg-emerald-500/30 text-emerald-300' : 'bg-emerald-100 text-emerald-600'}`}>
@@ -184,7 +184,7 @@ export default function AdminPublicidad() {
                 </div>
             </div>
 
-            <div className={`rounded-xl overflow-hidden border shadow-xl ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+            <div className={`rounded-xl overflow-hidden border shadow-xl ${darkMode ? 'bg-tienda-elevated border-gray-700' : 'bg-white border-gray-200'}`}>
                 <div className={`px-5 py-4 ${darkMode ? 'bg-gray-700/50 border-b border-gray-600' : 'bg-gray-50 border-b border-gray-200'}`}>
                     <div className="flex items-center justify-between">
                         <h2 className={`text-lg font-bold ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>Imágenes actuales</h2>
@@ -209,7 +209,7 @@ export default function AdminPublicidad() {
                                     key={img.id}
                                     className={`rounded-lg overflow-hidden border ${darkMode ? 'bg-gray-700/50 border-gray-600' : 'bg-gray-50 border-gray-200'}`}
                                 >
-                                    <div className="relative aspect-video bg-gray-900">
+                                    <div className="relative aspect-video bg-tienda-canvas">
                                         <img
                                             src={resolvePublicidadUrl(img.url)}
                                             alt={img.titulo || `Publicidad ${img.orden}`}

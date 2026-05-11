@@ -9,13 +9,13 @@ export default function AdminUsuariosLoading() {
                 </div>
             </div>
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                <div className="rounded-xl border border-gray-700 bg-gray-800 p-6 space-y-5">
+                <div className="rounded-xl border border-gray-700 bg-tienda-elevated p-6 space-y-5">
                     <div className="h-6 w-32 rounded bg-gray-700" />
                     <div className="h-10 w-full rounded bg-gray-700/60" />
                     <div className="h-10 w-full rounded bg-gray-700/60" />
                     <div className="h-10 w-3/4 rounded bg-gray-700/60" />
                 </div>
-                <div className="rounded-xl border border-gray-700 bg-gray-800 p-6">
+                <div className="rounded-xl border border-gray-700 bg-tienda-elevated p-6">
                     <div className="h-6 w-40 rounded bg-gray-700 mb-4" />
                     <div className="h-48 rounded-lg bg-gray-700/30" />
                 </div>

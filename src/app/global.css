@@ -17,6 +17,11 @@ body {
     .font-vt323 {
         font-family: var(--font-vt323), monospace;
     }
+
+    /* Unifica scrollbars / pickers nativos con modo oscuro (misma preferencia que la paleta tienda). */
+    html.dark {
+        color-scheme: dark;
+    }
 }
 
 /* Selects nativos del panel admin: lista desplegable legible en claro/oscuro (evita texto claro sobre fondo claro). */
@@ -26,7 +31,7 @@ body {
     }
     .admin-native-select-dark option,
     .admin-native-select-dark optgroup {
-        background-color: rgb(31 41 55);
+        background-color: rgb(38 38 38);
         color: rgb(243 244 246);
     }
     .admin-native-select-light {

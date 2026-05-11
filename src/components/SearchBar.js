@@ -5,7 +5,7 @@
  * Usado en header de tienda, subcategoría y producto.
  */
 export default function SearchBar({ darkMode = true, className = '' }) {
-    const inputBg = darkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-100 border-gray-300'
+    const inputBg = darkMode ? 'bg-tienda-elevated border-gray-700' : 'bg-gray-100 border-gray-300'
     const inputText = darkMode ? 'text-white placeholder-gray-400' : 'text-gray-900 placeholder-gray-500'
     const focusRing = 'focus:outline-none focus:border-[#FF8000] focus:ring-1 focus:ring-[#FF8000]'
 

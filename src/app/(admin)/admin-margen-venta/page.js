@@ -210,7 +210,7 @@ export default function AdminMargenVentaPage() {
         }
     }
 
-    const cardShell = darkMode ? 'rounded-xl overflow-hidden border-2 shadow-xl bg-gray-800 border-emerald-900/40' : 'rounded-xl overflow-hidden border-2 shadow-xl bg-white border-emerald-200/80'
+    const cardShell = darkMode ? 'rounded-xl overflow-hidden border-2 shadow-xl bg-tienda-elevated border-emerald-900/40' : 'rounded-xl overflow-hidden border-2 shadow-xl bg-white border-emerald-200/80'
     const cardHeader = darkMode ? 'bg-emerald-600/30 border-b-2 border-emerald-500/40' : 'bg-emerald-100 border-b-2 border-emerald-300'
 
     return (

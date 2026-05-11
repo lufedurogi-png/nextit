@@ -157,7 +157,7 @@ export default function ChatVentasCliente({ darkMode }) {
             <div
                 ref={scrollRef}
                 className={`flex-1 overflow-y-auto rounded-2xl border-2 p-4 space-y-4 mb-4 ${
-                    darkMode ? 'border-gray-600 bg-gray-800/40' : 'border-gray-200 bg-gray-50'
+                    darkMode ? 'border-gray-600 bg-tienda-elevated/40' : 'border-gray-200 bg-gray-50'
                 }`}
             >
                 {loading ? (
@@ -279,7 +279,7 @@ export default function ChatVentasCliente({ darkMode }) {
                     {errorEnvio}
                 </p>
             )}
-            <form onSubmit={handleEnviar} className={`flex gap-2 items-center rounded-2xl border-2 overflow-hidden focus-within:ring-2 focus-within:ring-[#FF8000]/50 focus-within:border-[#FF8000] transition-all ${darkMode ? 'border-gray-600 bg-gray-800/50' : 'border-gray-200 bg-white'}`}>
+            <form onSubmit={handleEnviar} className={`flex gap-2 items-center rounded-2xl border-2 overflow-hidden focus-within:ring-2 focus-within:ring-[#FF8000]/50 focus-within:border-[#FF8000] transition-all ${darkMode ? 'border-gray-600 bg-tienda-elevated/50' : 'border-gray-200 bg-white'}`}>
                 <input
                     type="text"
                     value={nuevoTexto}

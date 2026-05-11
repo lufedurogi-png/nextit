@@ -68,7 +68,7 @@ export default function AdminLogin() {
 
                 <div className={`flex-1 flex items-center justify-center p-6 sm:p-8 lg:p-10 transition-all duration-700 ease-in-out min-w-0 order-2 w-full ${
                     isExpanded ? 'opacity-0 translate-x-full lg:translate-x-0 lg:opacity-0' : 'opacity-100 translate-x-0'
-                } ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+                } ${darkMode ? 'bg-tienda-canvas' : 'bg-gray-50'}`}>
                     <div className="w-full max-w-sm">
                         <h2 className={`text-2xl sm:text-3xl font-bold mb-6 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
                             Iniciar sesión
@@ -84,7 +84,7 @@ export default function AdminLogin() {
                                         value={email}
                                         className={`block w-full px-4 py-3 pl-11 rounded-lg text-sm border-2 transition-colors focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 ${
                                             darkMode
-                                                ? (email.trim() ? 'bg-[#E5EBFD] border-gray-600 text-gray-900' : 'bg-gray-800 border-gray-700 text-white')
+                                                ? (email.trim() ? 'bg-[#E5EBFD] border-gray-600 text-gray-900' : 'bg-tienda-elevated border-gray-700 text-white')
                                                 : (email.trim() ? 'bg-[#E5EBFD] border-gray-300 text-gray-900' : 'bg-white border-gray-300 text-gray-900')
                                         }`}
                                         onChange={(e) => setEmail(e.target.value)}
@@ -109,7 +109,7 @@ export default function AdminLogin() {
                                         value={password}
                                         className={`block w-full px-4 py-3 pl-11 pr-12 rounded-lg text-sm border-2 transition-colors focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 ${
                                             darkMode
-                                                ? (password.trim() ? 'bg-[#E5EBFD] border-gray-600 text-gray-900' : 'bg-gray-800 border-gray-700 text-white')
+                                                ? (password.trim() ? 'bg-[#E5EBFD] border-gray-600 text-gray-900' : 'bg-tienda-elevated border-gray-700 text-white')
                                                 : (password.trim() ? 'bg-[#E5EBFD] border-gray-300 text-gray-900' : 'bg-white border-gray-300 text-gray-900')
                                         }`}
                                         onChange={(e) => setPassword(e.target.value)}

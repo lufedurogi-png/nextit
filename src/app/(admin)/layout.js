@@ -101,7 +101,7 @@ export default function AdminLayout({ children }) {
 
     // Mostrar "Cargando..." solo después de montar para evitar hydration mismatch (server no tiene user/localStorage)
     if (mounted && !user && typeof window !== 'undefined' && localStorage.getItem('auth_token')) {
-        return <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">Cargando...</div>
+        return <div className="min-h-screen flex items-center justify-center bg-tienda-canvas text-white">Cargando...</div>
     }
 
     const mobilePill = `inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors ${
@@ -109,7 +109,7 @@ export default function AdminLayout({ children }) {
     }`
 
     return (
-        <div className={`min-h-screen flex transition-colors ${darkMode ? 'bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900'}`}>
+        <div className={`min-h-screen flex transition-colors ${darkMode ? 'bg-tienda-canvas text-gray-100' : 'bg-gray-50 text-gray-900'}`}>
             {!mobileSidebarOpen && (
                 <div className="fixed left-0 top-0 bottom-0 z-[36] w-9 md:hidden" aria-hidden {...edgeStripProps} />
             )}
@@ -125,7 +125,7 @@ export default function AdminLayout({ children }) {
             <aside
                 className={`fixed left-0 top-0 z-40 h-screen transition-all duration-300 flex flex-col ${
                 sidebarOpen ? 'w-64' : 'w-20'
-            } ${darkMode ? 'bg-gray-800 border-r border-gray-700' : 'bg-white border-r border-gray-200'} ${
+            } ${darkMode ? 'bg-tienda-elevated border-r border-gray-700' : 'bg-white border-r border-gray-200'} ${
                 mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'
             } md:translate-x-0`}
                 {...drawerTouchProps}
@@ -222,7 +222,7 @@ export default function AdminLayout({ children }) {
             <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ml-0 ${sidebarOpen ? 'md:ml-64' : 'md:ml-20'}`}>
                 {/* Barra superior tipo Laravel */}
                 <header className={`sticky top-0 z-30 flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-0 min-h-14 px-3 md:px-6 py-2 md:py-0 border-b shrink-0 ${
-                    darkMode ? 'bg-gray-800/95 border-gray-700 backdrop-blur' : 'bg-white/95 border-gray-200 backdrop-blur'
+                    darkMode ? 'bg-tienda-elevated/95 border-gray-700 backdrop-blur' : 'bg-white/95 border-gray-200 backdrop-blur'
                 }`}>
                     <button
                         type="button"
@@ -283,7 +283,7 @@ export default function AdminLayout({ children }) {
                         </button>
                         {adminMenuOpen && (
                             <div className={`absolute right-0 top-full mt-1 min-w-[180px] rounded-lg border shadow-lg overflow-hidden ${
-                                darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+                                darkMode ? 'bg-tienda-elevated border-gray-700' : 'bg-white border-gray-200'
                             }`}>
                                 <button
                                     type="button"

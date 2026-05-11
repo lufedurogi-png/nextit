@@ -17,8 +17,8 @@ function ProgressBar({ value }) {
 
 function TerminalBox({ title, content, darkMode }) {
     return (
-        <div className={`rounded-xl border ${darkMode ? 'border-gray-700 bg-gray-900/80' : 'border-gray-300 bg-gray-50'} overflow-hidden`}>
-            <div className={`px-4 py-2 border-b text-sm font-semibold ${darkMode ? 'border-gray-700 text-emerald-300 bg-gray-800/70' : 'border-gray-300 text-emerald-700 bg-emerald-50'}`}>
+        <div className={`rounded-xl border ${darkMode ? 'border-gray-700 bg-tienda-canvas/80' : 'border-gray-300 bg-gray-50'} overflow-hidden`}>
+            <div className={`px-4 py-2 border-b text-sm font-semibold ${darkMode ? 'border-gray-700 text-emerald-300 bg-tienda-elevated/70' : 'border-gray-300 text-emerald-700 bg-emerald-50'}`}>
                 {title}
             </div>
             <div className={`p-4 h-72 overflow-auto font-mono text-xs whitespace-pre-wrap ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
@@ -81,7 +81,7 @@ export default function AdminRespaldoPage() {
     )
 
     const getInputClass = (hasValue) => darkMode
-        ? `rounded-lg border px-3 py-2 text-sm transition-colors ${hasValue ? 'bg-[#E5EBFD] border-gray-600 text-gray-900' : 'bg-gray-900 border-gray-600 text-white'}`
+        ? `rounded-lg border px-3 py-2 text-sm transition-colors ${hasValue ? 'bg-[#E5EBFD] border-gray-600 text-gray-900' : 'bg-tienda-canvas border-gray-600 text-white'}`
         : `rounded-lg border px-3 py-2 text-sm transition-colors ${hasValue ? 'bg-[#E5EBFD] border-gray-300 text-gray-900' : 'bg-white border-gray-300 text-gray-900'}`
 
     const handleExport = async () => {
@@ -186,7 +186,7 @@ export default function AdminRespaldoPage() {
                 />
             </div>
 
-            <div className={`rounded-xl border p-5 ${darkMode ? 'border-gray-700 bg-gray-800/60' : 'border-gray-200 bg-white'}`}>
+            <div className={`rounded-xl border p-5 ${darkMode ? 'border-gray-700 bg-tienda-elevated/60' : 'border-gray-200 bg-white'}`}>
                 <h2 className={`text-lg font-bold mb-3 ${darkMode ? 'text-emerald-300' : 'text-emerald-700'}`}>
                     Generar copia de seguridad de la base de datos
                 </h2>
@@ -229,7 +229,7 @@ export default function AdminRespaldoPage() {
                 {exportError && <p className="text-sm text-red-500 mt-2">{exportError}</p>}
             </div>
 
-            <div className={`rounded-xl border p-5 ${darkMode ? 'border-gray-700 bg-gray-800/60' : 'border-gray-200 bg-white'}`}>
+            <div className={`rounded-xl border p-5 ${darkMode ? 'border-gray-700 bg-tienda-elevated/60' : 'border-gray-200 bg-white'}`}>
                 <h2 className={`text-lg font-bold mb-3 ${darkMode ? 'text-emerald-300' : 'text-emerald-700'}`}>
                     Subir y actualizar archivo de base de datos
                 </h2>

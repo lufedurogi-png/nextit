@@ -69,7 +69,7 @@ function ActividadTooltip({ active, payload, label }) {
     const row = payload[0]?.payload
     if (!row) return null
     return (
-        <div className="rounded-lg border border-gray-600 bg-gray-800 p-3 shadow-xl text-sm min-w-[200px]">
+        <div className="rounded-lg border border-gray-600 bg-tienda-elevated p-3 shadow-xl text-sm min-w-[200px]">
             <p className="font-semibold text-gray-200 mb-2">{label}</p>
             <div className="space-y-1.5">
                 <p className="text-emerald-400 font-medium">Registros: {row.registros}</p>
@@ -105,7 +105,7 @@ function EventosTooltip({ active, payload, label }) {
     const tipoLabel = TIPO_NAMES[p.tipo] || 'Usuario'
     const colorKey = tipoLabel.toLowerCase()
     return (
-        <div className="rounded-lg border border-gray-600 bg-gray-800 p-2 shadow-xl text-sm">
+        <div className="rounded-lg border border-gray-600 bg-tienda-elevated p-2 shadow-xl text-sm">
             <p className="text-gray-200">Día {p.dia} · {hora12(p.hora)}</p>
             <p style={{ color: TIPO_COLORS[colorKey] || '#9ca3af' }}>{tipoLabel} · {p.evento === 'registro' ? 'Registro' : 'Inicio de sesión'}</p>
         </div>
@@ -242,34 +242,34 @@ export default function AdminHome() {
                 )}
 
                 <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-4">
-                    <div className={`rounded-xl p-4 border ${darkMode ? 'border-emerald-500/40 bg-gray-800' : 'border-emerald-200 bg-emerald-50'}`}>
+                    <div className={`rounded-xl p-4 border ${darkMode ? 'border-emerald-500/40 bg-tienda-elevated' : 'border-emerald-200 bg-emerald-50'}`}>
                         <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Total de productos</p>
                         <p className="mt-2 text-2xl font-bold text-emerald-400">{loadingCatalogo ? '—' : formatNumber(totalProductos)}</p>
                     </div>
-                    <div className={`rounded-xl p-4 border ${darkMode ? 'border-emerald-500/30 bg-gray-800' : 'border-emerald-100 bg-white'}`}>
+                    <div className={`rounded-xl p-4 border ${darkMode ? 'border-emerald-500/30 bg-tienda-elevated' : 'border-emerald-100 bg-white'}`}>
                         <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Con stock</p>
                         <p className="mt-2 text-2xl font-bold text-emerald-300">{loadingCatalogo ? '—' : formatNumber(productosConStock)}</p>
                     </div>
-                    <div className={`rounded-xl p-4 border ${darkMode ? 'border-emerald-500/20 bg-gray-800' : 'border-emerald-100 bg-white'}`}>
+                    <div className={`rounded-xl p-4 border ${darkMode ? 'border-emerald-500/20 bg-tienda-elevated' : 'border-emerald-100 bg-white'}`}>
                         <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Con stock CD</p>
                         <p className="mt-2 text-2xl font-bold text-emerald-200">{loadingCatalogo ? '—' : formatNumber(productosConStockCd)}</p>
                     </div>
-                    <div className={`rounded-xl p-4 border ${darkMode ? 'border-yellow-500/40 bg-gray-800' : 'border-yellow-200 bg-yellow-50'}`}>
+                    <div className={`rounded-xl p-4 border ${darkMode ? 'border-yellow-500/40 bg-tienda-elevated' : 'border-yellow-200 bg-yellow-50'}`}>
                         <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">En oferta</p>
                         <p className="mt-2 text-2xl font-bold text-yellow-400">{loadingCatalogo ? '—' : formatNumber(productosEnOferta)}</p>
                     </div>
-                    <div className={`rounded-xl p-4 border ${darkMode ? 'border-gray-600 bg-gray-800' : 'border-gray-200 bg-white'}`}>
+                    <div className={`rounded-xl p-4 border ${darkMode ? 'border-gray-600 bg-tienda-elevated' : 'border-gray-200 bg-white'}`}>
                         <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Sin stock</p>
                         <p className="mt-2 text-2xl font-bold text-gray-200">{loadingCatalogo ? '—' : formatNumber(productosSinStock)}</p>
                     </div>
-                    <div className={`rounded-xl p-4 border ${darkMode ? 'border-gray-600 bg-gray-800' : 'border-gray-200 bg-white'}`}>
+                    <div className={`rounded-xl p-4 border ${darkMode ? 'border-gray-600 bg-tienda-elevated' : 'border-gray-200 bg-white'}`}>
                         <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Sin stock CD</p>
                         <p className="mt-2 text-2xl font-bold text-gray-200">{loadingCatalogo ? '—' : formatNumber(productosSinStockCd)}</p>
                     </div>
                 </div>
 
                 <div className="flex flex-col gap-6">
-                    <div className={`rounded-xl overflow-hidden shadow-lg border ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+                    <div className={`rounded-xl overflow-hidden shadow-lg border ${darkMode ? 'bg-tienda-elevated border-gray-700' : 'bg-white border-gray-200'}`}>
                         <div className={`px-5 py-3.5 rounded-t-xl ${darkMode ? 'bg-emerald-600/30 border-b border-emerald-500/40' : 'bg-emerald-50 border-b border-emerald-200'}`}>
                             <h3 className={`text-lg font-bold ${darkMode ? 'text-emerald-300' : 'text-emerald-800'}`}>Productos por categoría</h3>
                         </div>
@@ -303,7 +303,7 @@ export default function AdminHome() {
                         </div>
                     </div>
 
-                    <div className={`rounded-xl overflow-hidden shadow-lg border ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+                    <div className={`rounded-xl overflow-hidden shadow-lg border ${darkMode ? 'bg-tienda-elevated border-gray-700' : 'bg-white border-gray-200'}`}>
                         <div className={`px-5 py-3.5 rounded-t-xl ${darkMode ? 'bg-emerald-600/30 border-b border-emerald-500/40' : 'bg-emerald-50 border-b border-emerald-200'}`}>
                             <h3 className={`text-lg font-bold ${darkMode ? 'text-emerald-300' : 'text-emerald-800'}`}>Productos por marca</h3>
                         </div>
@@ -340,7 +340,7 @@ export default function AdminHome() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className={`rounded-xl overflow-hidden shadow-lg border ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+                <div className={`rounded-xl overflow-hidden shadow-lg border ${darkMode ? 'bg-tienda-elevated border-gray-700' : 'bg-white border-gray-200'}`}>
                     <div className={`px-5 py-3.5 rounded-t-xl ${darkMode ? 'bg-emerald-600/30 border-b border-emerald-500/40' : 'bg-emerald-50 border-b border-emerald-200'}`}>
                         <h2 className={`text-lg font-bold ${darkMode ? 'text-emerald-300' : 'text-emerald-800'}`}>Categorías más vistas en búsquedas</h2>
                     </div>
@@ -382,7 +382,7 @@ export default function AdminHome() {
                     </div>
                     </div>
                 </div>
-                <div className={`rounded-xl overflow-hidden shadow-lg border ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+                <div className={`rounded-xl overflow-hidden shadow-lg border ${darkMode ? 'bg-tienda-elevated border-gray-700' : 'bg-white border-gray-200'}`}>
                     <div className={`px-5 py-3.5 rounded-t-xl ${darkMode ? 'bg-emerald-600/30 border-b border-emerald-500/40' : 'bg-emerald-50 border-b border-emerald-200'}`}>
                         <h2 className={`text-lg font-bold ${darkMode ? 'text-emerald-300' : 'text-emerald-800'}`}>Actividad de usuarios</h2>
                     </div>
@@ -434,13 +434,13 @@ export default function AdminHome() {
                 </div>
             </div>
 
-            <div className={`mt-8 rounded-xl overflow-hidden shadow-lg border ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+            <div className={`mt-8 rounded-xl overflow-hidden shadow-lg border ${darkMode ? 'bg-tienda-elevated border-gray-700' : 'bg-white border-gray-200'}`}>
                 <div className={`px-5 py-3.5 ${darkMode ? 'bg-emerald-600/30 border-b border-emerald-500/40' : 'bg-emerald-50 border-b border-emerald-200'}`}>
                     <h2 className={`text-lg font-bold ${darkMode ? 'text-emerald-300' : 'text-emerald-800'}`}>Resumen y accesos</h2>
                     <p className={`text-sm mt-0.5 ${darkMode ? 'text-gray-400' : 'text-emerald-700/80'}`}>Métricas recientes e inicio rápido</p>
                 </div>
                 <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className={`rounded-xl p-5 border ${darkMode ? 'border-gray-700 bg-gray-800/50' : 'border-gray-200 bg-gray-50/50'}`}>
+                    <div className={`rounded-xl p-5 border ${darkMode ? 'border-gray-700 bg-tienda-elevated/50' : 'border-gray-200 bg-gray-50/50'}`}>
                         <div className="flex items-center gap-2 mb-4">
                             <span className={`flex h-9 w-9 items-center justify-center rounded-lg ${darkMode ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-100 text-emerald-600'}`}>
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
@@ -460,7 +460,7 @@ export default function AdminHome() {
                             )}
                         </div>
                     </div>
-                    <div className={`rounded-xl p-5 border ${darkMode ? 'border-gray-700 bg-gray-800/50' : 'border-gray-200 bg-gray-50/50'}`}>
+                    <div className={`rounded-xl p-5 border ${darkMode ? 'border-gray-700 bg-tienda-elevated/50' : 'border-gray-200 bg-gray-50/50'}`}>
                         <div className="flex items-center gap-2 mb-4">
                             <span className={`flex h-9 w-9 items-center justify-center rounded-lg ${darkMode ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-100 text-emerald-600'}`}>
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
@@ -505,7 +505,7 @@ export default function AdminHome() {
                             </Link>
                         </div>
                     </div>
-                    <div className={`rounded-xl p-5 border ${darkMode ? 'border-gray-700 bg-gray-800/50' : 'border-gray-200 bg-gray-50/50'}`}>
+                    <div className={`rounded-xl p-5 border ${darkMode ? 'border-gray-700 bg-tienda-elevated/50' : 'border-gray-200 bg-gray-50/50'}`}>
                         <div className="flex items-center gap-2 mb-4">
                             <span className={`flex h-9 w-9 items-center justify-center rounded-lg ${darkMode ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-100 text-emerald-600'}`}>
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>

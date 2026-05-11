@@ -92,7 +92,7 @@ const Page = () => {
                 {/* Lado derecho - Formulario */}
                 <div
                     className={`flex-1 flex items-center justify-center p-6 sm:p-8 lg:p-10 min-w-0 order-2 w-full ${
-                        darkMode ? 'bg-gray-900' : 'bg-gray-50'
+                        darkMode ? 'bg-tienda-canvas' : 'bg-gray-50'
                     }`}
                 >
                     <div className="w-full max-w-sm">
@@ -131,7 +131,7 @@ const Page = () => {
                                         value={email}
                                         className={`block w-full px-4 py-3 pl-11 rounded-lg text-sm transition-all duration-200 ${
                                             darkMode
-                                                ? 'bg-gray-800 border-2 border-gray-700 text-white placeholder-gray-400 focus:border-[#FF8000] focus:ring-2 focus:ring-[#FF8000]/20'
+                                                ? 'bg-tienda-elevated border-2 border-gray-700 text-white placeholder-gray-400 focus:border-[#FF8000] focus:ring-2 focus:ring-[#FF8000]/20'
                                                 : 'bg-white border-2 border-gray-300 text-gray-900 placeholder-gray-500 focus:border-[#FF8000] focus:ring-2 focus:ring-[#FF8000]/20'
                                         }`}
                                         onChange={(e) => setEmail(e.target.value)}

@@ -7,7 +7,7 @@ export default async function PageProducto({ params, searchParams }) {
 
     if (!clave) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-900 text-gray-100">
+            <div className="min-h-screen flex items-center justify-center bg-tienda-canvas text-gray-100">
                 <div className="text-center">
                     <h1 className="text-2xl font-bold mb-4">Producto no encontrado</h1>
                     <a href="/" className="text-[#FF8000] hover:underline">

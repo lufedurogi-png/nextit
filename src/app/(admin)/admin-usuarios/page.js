@@ -140,7 +140,7 @@ export default function AdminUsuarios() {
 
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
                 {/* Form crear usuario */}
-                <div className={`rounded-xl overflow-hidden border shadow-xl ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+                <div className={`rounded-xl overflow-hidden border shadow-xl ${darkMode ? 'bg-tienda-elevated border-gray-700' : 'bg-white border-gray-200'}`}>
                     <div className={`px-5 py-4 ${darkMode ? 'bg-emerald-600/25 border-b border-emerald-500/30' : 'bg-emerald-50 border-b border-emerald-200'}`}>
                         <div className="flex items-center gap-3">
                             <span className={`flex h-9 w-9 items-center justify-center rounded-lg ${darkMode ? 'bg-emerald-500/30 text-emerald-300' : 'bg-emerald-100 text-emerald-600'}`}>
@@ -188,7 +188,7 @@ export default function AdminUsuarios() {
                                         {showPasswordModal && (
                                             <>
                                                 <div className="fixed inset-0 z-40" aria-hidden onClick={() => setShowPasswordModal(false)} />
-                                                <div className={`absolute left-full top-1/2 z-50 w-56 -translate-y-1/2 ml-1.5 rounded-xl border-2 shadow-xl ${darkMode ? 'border-gray-600 bg-gray-800' : 'border-gray-200 bg-white'}`} role="dialog" aria-labelledby="password-requirements-title">
+                                                <div className={`absolute left-full top-1/2 z-50 w-56 -translate-y-1/2 ml-1.5 rounded-xl border-2 shadow-xl ${darkMode ? 'border-gray-600 bg-tienda-elevated' : 'border-gray-200 bg-white'}`} role="dialog" aria-labelledby="password-requirements-title">
                                                     <div className="p-3">
                                                         <p id="password-requirements-title" className={`text-xs font-semibold mb-2 ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Requisitos de la contraseña</p>
                                                         <ul className="space-y-1.5">
@@ -232,7 +232,7 @@ export default function AdminUsuarios() {
                                         {showConfirmModal && (
                                             <>
                                                 <div className="fixed inset-0 z-40" aria-hidden onClick={() => setShowConfirmModal(false)} />
-                                                <div className={`absolute right-full top-1/2 z-50 w-56 -translate-y-1/2 mr-1.5 rounded-xl border-2 shadow-xl ${darkMode ? 'border-gray-600 bg-gray-800' : 'border-gray-200 bg-white'}`} role="dialog" aria-labelledby="confirm-password-modal-title">
+                                                <div className={`absolute right-full top-1/2 z-50 w-56 -translate-y-1/2 mr-1.5 rounded-xl border-2 shadow-xl ${darkMode ? 'border-gray-600 bg-tienda-elevated' : 'border-gray-200 bg-white'}`} role="dialog" aria-labelledby="confirm-password-modal-title">
                                                     <div className="p-3">
                                                         <p id="confirm-password-modal-title" className={`text-xs font-semibold mb-2 ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Confirmar contraseña</p>
                                                         <div>
@@ -317,7 +317,7 @@ export default function AdminUsuarios() {
                 </div>
 
                 {/* Tabla usuarios */}
-                <div className={`rounded-xl overflow-hidden border shadow-xl ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+                <div className={`rounded-xl overflow-hidden border shadow-xl ${darkMode ? 'bg-tienda-elevated border-gray-700' : 'bg-white border-gray-200'}`}>
                     <div className={`px-5 py-4 ${darkMode ? 'bg-emerald-600/25 border-b border-emerald-500/30' : 'bg-emerald-50 border-b border-emerald-200'}`}>
                         <div className="flex flex-wrap items-center justify-between gap-3">
                             <div className="flex items-center gap-3">
@@ -360,7 +360,7 @@ export default function AdminUsuarios() {
                                     {usersPagina.map((u, i) => (
                                         <tr
                                             key={u.id}
-                                            className={`border-b transition-colors ${darkMode ? 'border-gray-700/80 hover:bg-gray-700/30' : 'border-gray-100 hover:bg-gray-50'} ${i % 2 === 1 ? (darkMode ? 'bg-gray-800/50' : 'bg-gray-50/50') : ''}`}
+                                            className={`border-b transition-colors ${darkMode ? 'border-gray-700/80 hover:bg-gray-700/30' : 'border-gray-100 hover:bg-gray-50'} ${i % 2 === 1 ? (darkMode ? 'bg-tienda-elevated/50' : 'bg-gray-50/50') : ''}`}
                                         >
                                             <td className={`py-3.5 px-4 font-medium ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>{u.name}</td>
                                             <td className={`py-3.5 px-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>{u.email}</td>

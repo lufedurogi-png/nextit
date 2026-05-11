@@ -39,7 +39,7 @@ export default function AdminChatView({
 
     if (!cliente) {
         return (
-            <div className={`flex-1 flex items-center justify-center rounded-xl border-2 ${darkMode ? 'border-gray-700 bg-gray-800/30' : 'border-gray-200 bg-gray-50'}`}>
+            <div className={`flex-1 flex items-center justify-center rounded-xl border-2 ${darkMode ? 'border-gray-700 bg-tienda-elevated/30' : 'border-gray-200 bg-gray-50'}`}>
                 <p className={darkMode ? 'text-gray-400' : 'text-gray-500'}>
                     Selecciona un cliente para ver el chat.
                 </p>
@@ -52,7 +52,7 @@ export default function AdminChatView({
             <div
                 ref={scrollRef}
                 className={`flex-1 min-h-0 overflow-y-auto overflow-x-hidden rounded-xl border-2 p-4 space-y-4 mb-4 ${
-                    darkMode ? 'border-gray-600 bg-gray-800/40' : 'border-gray-200 bg-gray-50'
+                    darkMode ? 'border-gray-600 bg-tienda-elevated/40' : 'border-gray-200 bg-gray-50'
                 }`}
             >
                 {loading ? (
@@ -146,7 +146,7 @@ export default function AdminChatView({
                     e.preventDefault()
                     onEnviar()
                 }}
-                className={`flex gap-2 items-center rounded-2xl border-2 overflow-hidden focus-within:ring-2 focus-within:ring-emerald-500/50 focus-within:border-emerald-500 transition-shadow ${darkMode ? 'border-gray-600 bg-gray-800/50' : 'border-gray-200 bg-white'}`}
+                className={`flex gap-2 items-center rounded-2xl border-2 overflow-hidden focus-within:ring-2 focus-within:ring-emerald-500/50 focus-within:border-emerald-500 transition-shadow ${darkMode ? 'border-gray-600 bg-tienda-elevated/50' : 'border-gray-200 bg-white'}`}
             >
                 <input
                     type="text"

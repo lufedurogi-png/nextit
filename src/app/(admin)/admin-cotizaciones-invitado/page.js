@@ -182,15 +182,15 @@ export default function AdminCotizacionesInvitadoPage() {
     )
 
     const filaModo = (i) =>
-        darkMode ? (i % 2 === 0 ? 'bg-gray-900/55' : 'bg-gray-800/40') : i % 2 === 0 ? 'bg-white' : 'bg-emerald-50/40'
+        darkMode ? (i % 2 === 0 ? 'bg-tienda-canvas/55' : 'bg-tienda-elevated/40') : i % 2 === 0 ? 'bg-white' : 'bg-emerald-50/40'
 
     /** Bordes visibles tipo cuadrícula (hoja de cálculo) */
     const gridTh = darkMode
-        ? 'border border-emerald-800/70 bg-gray-800/95 text-emerald-200'
+        ? 'border border-emerald-800/70 bg-tienda-elevated/95 text-emerald-200'
         : 'border border-emerald-300 bg-emerald-50 text-emerald-900'
     const gridTd = darkMode ? 'border border-gray-600/90' : 'border border-gray-300'
     const gridTdModalTh = darkMode
-        ? 'border border-emerald-800/70 bg-gray-800/95'
+        ? 'border border-emerald-800/70 bg-tienda-elevated/95'
         : 'border border-emerald-200 bg-emerald-50'
     const gridTdModal = darkMode ? 'border border-gray-600/90' : 'border border-gray-200'
 
@@ -240,7 +240,7 @@ export default function AdminCotizacionesInvitadoPage() {
 
                 <div className={`relative ${adminTableShellClass(darkMode)}`}>
                     {loading && (
-                        <div className={`absolute inset-0 z-10 flex items-center justify-center rounded-xl ${darkMode ? 'bg-gray-900/70' : 'bg-white/80'}`}>
+                        <div className={`absolute inset-0 z-10 flex items-center justify-center rounded-xl ${darkMode ? 'bg-tienda-canvas/70' : 'bg-white/80'}`}>
                             <p className={darkMode ? 'text-gray-300' : 'text-gray-600'}>Cargando…</p>
                         </div>
                     )}
@@ -376,7 +376,7 @@ export default function AdminCotizacionesInvitadoPage() {
                                                     onClick={() => handleDescargarPdf(row.id)}
                                                     className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold border shadow-sm transition-colors disabled:opacity-60 ${
                                                         darkMode
-                                                            ? 'border-gray-500 bg-gray-800/80 text-gray-100 hover:bg-gray-700'
+                                                            ? 'border-gray-500 bg-tienda-elevated/80 text-gray-100 hover:bg-gray-700'
                                                             : 'border-gray-300 bg-white text-gray-800 hover:bg-gray-50'
                                                     }`}
                                                 >
@@ -465,7 +465,7 @@ export default function AdminCotizacionesInvitadoPage() {
                     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm" onClick={cerrarModal} aria-hidden />
                     <div
                         className={`fixed inset-4 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 z-50 sm:max-w-2xl w-full rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col ${
-                            darkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
+                            darkMode ? 'bg-tienda-elevated border border-gray-700' : 'bg-white border border-gray-200'
                         }`}
                     >
                         <div className="shrink-0 flex items-center justify-between px-4 py-3 bg-emerald-600/25 border-b border-emerald-500/30">
@@ -515,7 +515,7 @@ export default function AdminCotizacionesInvitadoPage() {
                                             </thead>
                                             <tbody>
                                                 {(detalleModal.items || []).map((it, idx) => (
-                                                    <tr key={idx} className={darkMode ? 'bg-gray-800/50' : 'bg-white'}>
+                                                    <tr key={idx} className={darkMode ? 'bg-tienda-elevated/50' : 'bg-white'}>
                                                         <td className={`px-3 py-2.5 ${gridTdModal} ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
                                                             {it.nombre_producto}
                                                             {it.clave ? <span className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}> ({it.clave})</span> : null}

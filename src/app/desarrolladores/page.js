@@ -66,10 +66,10 @@ export default function DesarrolladoresPage() {
         dedupingInterval: 10000,
     })
 
-    const bg = darkMode ? 'bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900'
-    const sectionBg = darkMode ? 'from-gray-900 via-gray-900 to-gray-900' : 'from-white via-gray-50 to-white'
-    const cardBorder = darkMode ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-white'
-    const chipBorder = darkMode ? 'border-gray-700 bg-gray-900/80 text-gray-200' : 'border-gray-200 bg-white text-gray-700'
+    const bg = darkMode ? 'bg-tienda-canvas text-gray-100' : 'bg-gray-50 text-gray-900'
+    const sectionBg = darkMode ? 'from-tienda-canvas via-gray-900 to-tienda-canvas' : 'from-white via-gray-50 to-white'
+    const cardBorder = darkMode ? 'border-gray-700 bg-tienda-canvas' : 'border-gray-200 bg-white'
+    const chipBorder = darkMode ? 'border-gray-700 bg-tienda-canvas/80 text-gray-200' : 'border-gray-200 bg-white text-gray-700'
     const textMuted = darkMode ? 'text-gray-300' : 'text-gray-600'
 
     const fechaRango = (inicio, fin) => {

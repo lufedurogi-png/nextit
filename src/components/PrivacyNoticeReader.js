@@ -11,7 +11,7 @@ function ExternalSocialButton({ href, label, img, rounded, darkMode }) {
             target="_blank"
             rel="noopener noreferrer"
             className={`group flex flex-col items-center gap-2 rounded-2xl border-2 p-4 transition-all hover:border-[#FF8000] hover:shadow-lg ${
-                darkMode ? 'border-gray-600 bg-gray-800/80' : 'border-gray-200 bg-white'
+                darkMode ? 'border-gray-600 bg-tienda-elevated/80' : 'border-gray-200 bg-white'
             }`}
         >
             <span
@@ -243,13 +243,13 @@ export function PrivacyNoticeModal({ darkMode, open, onClose }) {
             <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm" aria-hidden onClick={onClose} />
             <div
                 className={`fixed left-1/2 top-1/2 z-[110] w-[min(100vw-1.5rem,520px)] max-h-[min(92vh,640px)] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl shadow-2xl border ${
-                    darkMode ? 'bg-gray-900 border-gray-700 text-gray-100' : 'bg-white border-gray-200 text-gray-900'
+                    darkMode ? 'bg-tienda-canvas border-gray-700 text-gray-100' : 'bg-white border-gray-200 text-gray-900'
                 }`}
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="privacy-modal-title"
             >
-                <div className={`flex items-center justify-between px-4 py-3 border-b ${darkMode ? 'border-gray-700 bg-gray-800/80' : 'border-gray-200 bg-gray-50'}`}>
+                <div className={`flex items-center justify-between px-4 py-3 border-b ${darkMode ? 'border-gray-700 bg-tienda-elevated/80' : 'border-gray-200 bg-gray-50'}`}>
                     <h2 id="privacy-modal-title" className="text-lg font-bold">
                         Aviso de privacidad
                     </h2>

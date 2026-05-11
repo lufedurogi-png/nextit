@@ -4,7 +4,7 @@ import VistaSubcategoriaClient from './VistaSubcategoriaClient'
 
 function SubcategoriaFallback() {
     return (
-        <div className="min-h-screen bg-gray-900 text-gray-100 flex items-center justify-center">
+        <div className="min-h-screen bg-tienda-canvas text-gray-100 flex items-center justify-center">
             <p className="text-gray-400 text-sm">Cargando productos…</p>
         </div>
     )
@@ -21,7 +21,7 @@ export default async function PageSubcategoria({ params, searchParams }) {
 
     if (!categoria || !subcategoriaParam) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-900 text-gray-100">
+            <div className="min-h-screen flex items-center justify-center bg-tienda-canvas text-gray-100">
                 <div className="text-center">
                     <h1 className="text-4xl font-bold mb-4">404 | NOT FOUND</h1>
                     <p className="mb-4">Categoría o subcategoría no encontrada</p>

@@ -2,11 +2,11 @@
 export default function LoadingProducto() {
     return (
         <>
-            <div className="fixed inset-x-0 top-0 z-[9999] h-1 bg-gray-100 dark:bg-gray-800">
+            <div className="fixed inset-x-0 top-0 z-[9999] h-1 bg-gray-100 dark:bg-tienda-elevated">
                 <div className="h-full bg-[#FF8000] animate-loading-bar" style={{ width: '40%' }} />
             </div>
-            <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-                <div className="h-14 shrink-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 animate-pulse" />
+            <div className="min-h-screen bg-gray-50 dark:bg-tienda-canvas">
+                <div className="h-14 shrink-0 bg-white dark:bg-tienda-elevated border-b border-gray-200 dark:border-gray-700 animate-pulse" />
                 <div className="max-w-7xl mx-auto px-4 py-8">
                     <div className="flex flex-col md:flex-row gap-8">
                         <div className="w-full md:w-1/2 h-80 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />

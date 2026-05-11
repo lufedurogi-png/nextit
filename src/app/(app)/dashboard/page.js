@@ -1022,11 +1022,11 @@ function DashboardInner() {
 
     return (
         <div className={`min-h-screen transition-colors duration-300 ${
-            darkMode ? 'bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900'
+            darkMode ? 'bg-tienda-canvas text-gray-100' : 'bg-gray-50 text-gray-900'
         }`}>
             {/* Header */}
             <header className={`sticky top-0 z-50 border-b transition-colors duration-300 ${
-                darkMode ? 'bg-gray-900/95 backdrop-blur-sm border-gray-800' : 'bg-white/95 backdrop-blur-sm border-gray-200'
+                darkMode ? 'bg-tienda-canvas/95 backdrop-blur-sm border-gray-800' : 'bg-white/95 backdrop-blur-sm border-gray-200'
             }`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16">
@@ -1062,9 +1062,9 @@ function DashboardInner() {
                                         localStorage.setItem('darkMode', JSON.stringify(newMode))
                                         window.dispatchEvent(new CustomEvent('darkModeChange', { detail: newMode }))
                                     }}
-                                    className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-[#FF8000] focus:ring-offset-2 ${
+                                    className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 ${
                                         darkMode 
-                                            ? 'bg-[#2b4e94]' 
+                                            ? 'bg-gray-600' 
                                             : 'bg-gray-300'
                                     }`}
                                     aria-label="Toggle dark mode"
@@ -1120,7 +1120,7 @@ function DashboardInner() {
                                         />
                                         <div className={`absolute right-0 mt-2 w-48 rounded-lg shadow-lg border z-20 ${
                                             darkMode 
-                                                ? 'bg-gray-800 border-gray-700' 
+                                                ? 'bg-tienda-elevated border-gray-700' 
                                                 : 'bg-white border-gray-200'
                                         }`}>
                                             <div className="py-1">
@@ -1339,7 +1339,7 @@ function DashboardInner() {
                         {activeTab === 'pedidos' && (
                             <div className={`rounded-xl shadow-2xl p-6 md:p-8 border-2 transition-all duration-300 animate-in fade-in slide-in-from-bottom-4 ${
                                 darkMode 
-                                    ? 'bg-gradient-to-br from-gray-800 via-gray-800 to-gray-900 border-gray-700 shadow-[#FF8000]/10' 
+                                    ? 'bg-gradient-to-br from-tienda-elevated via-gray-800 to-tienda-canvas border-gray-700 shadow-[#FF8000]/10' 
                                     : 'bg-gradient-to-br from-white via-gray-50 to-white border-gray-200 shadow-[#FF8000]/5'
                             }`}>
                                 {/* Filtros */}
@@ -1459,7 +1459,7 @@ function DashboardInner() {
                                         <thead>
                                             <tr className={`border-b-2 bg-gradient-to-r ${
                                                 darkMode 
-                                                    ? 'border-gray-700 from-gray-800 to-gray-700' 
+                                                    ? 'border-gray-700 from-tienda-elevated to-gray-700' 
                                                     : 'border-gray-300 from-gray-100 to-gray-50'
                                             }`}>
                                                 <th className={`px-4 py-4 text-left text-sm font-bold tracking-wider ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Fecha</th>
@@ -1623,7 +1623,7 @@ function DashboardInner() {
                                         />
                                         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
                                             <div
-                                                className={`pointer-events-auto w-full max-w-6xl rounded-xl border-2 shadow-2xl overflow-hidden ${darkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'}`}
+                                                className={`pointer-events-auto w-full max-w-6xl rounded-xl border-2 shadow-2xl overflow-hidden ${darkMode ? 'bg-tienda-elevated border-gray-600' : 'bg-white border-gray-300'}`}
                                                 style={{ width: 'min(100%, 72rem)' }}
                                                 onClick={(e) => e.stopPropagation()}
                                                 onKeyDown={(e) => e.key === 'Escape' && setPapeleraOpen(false)}
@@ -1631,7 +1631,7 @@ function DashboardInner() {
                                                 aria-modal="true"
                                                 aria-labelledby="papelera-title"
                                             >
-                                                <div className={`flex items-center justify-between px-6 py-4 border-b-2 ${darkMode ? 'border-gray-600 bg-gray-800' : 'border-gray-200 bg-gray-50'}`}>
+                                                <div className={`flex items-center justify-between px-6 py-4 border-b-2 ${darkMode ? 'border-gray-600 bg-tienda-elevated' : 'border-gray-200 bg-gray-50'}`}>
                                                     <h3 id="papelera-title" className={`text-lg font-bold flex items-center gap-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
                                                         <div className="relative w-6 h-6">
                                                             <Image src="/Imagenes/icon_basura.png" alt="" fill className={`object-contain ${darkMode ? 'brightness-0 invert' : ''}`} />
@@ -1656,7 +1656,7 @@ function DashboardInner() {
                                                         <div className="overflow-x-auto rounded-lg border-2 border-gray-300/50 dark:border-gray-600/50">
                                                             <table className="w-full">
                                                                 <thead>
-                                                                    <tr className={`border-b-2 bg-gradient-to-r ${darkMode ? 'border-gray-700 from-gray-800 to-gray-700' : 'border-gray-300 from-gray-100 to-gray-50'}`}>
+                                                                    <tr className={`border-b-2 bg-gradient-to-r ${darkMode ? 'border-gray-700 from-tienda-elevated to-gray-700' : 'border-gray-300 from-gray-100 to-gray-50'}`}>
                                                                         <th className={`px-4 py-4 text-left text-sm font-bold tracking-wider ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Folio</th>
                                                                         <th className={`px-4 py-4 text-left text-sm font-bold tracking-wider ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Fecha</th>
                                                                         <th className={`px-4 py-4 text-left text-sm font-bold tracking-wider ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Monto</th>
@@ -1718,7 +1718,7 @@ function DashboardInner() {
                                         />
                                         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
                                             <div
-                                                className={`pointer-events-auto w-full max-w-md rounded-xl border-2 shadow-2xl p-6 ${darkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'}`}
+                                                className={`pointer-events-auto w-full max-w-md rounded-xl border-2 shadow-2xl p-6 ${darkMode ? 'bg-tienda-elevated border-gray-600' : 'bg-white border-gray-300'}`}
                                                 onClick={(e) => e.stopPropagation()}
                                                 role="dialog"
                                                 aria-modal="true"
@@ -1773,7 +1773,7 @@ function DashboardInner() {
                                         />
                                         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
                                             <div
-                                                className={`pointer-events-auto w-full max-w-md rounded-xl border-2 shadow-2xl p-6 ${darkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'}`}
+                                                className={`pointer-events-auto w-full max-w-md rounded-xl border-2 shadow-2xl p-6 ${darkMode ? 'bg-tienda-elevated border-gray-600' : 'bg-white border-gray-300'}`}
                                                 onClick={(e) => e.stopPropagation()}
                                                 role="dialog"
                                                 aria-modal="true"
@@ -1808,7 +1808,7 @@ function DashboardInner() {
                         {activeTab === 'cotizaciones' && (
                             <div className={`rounded-xl shadow-2xl p-6 md:p-8 border-2 transition-all duration-300 animate-in fade-in slide-in-from-bottom-4 ${
                                 darkMode
-                                    ? 'bg-gradient-to-br from-gray-800 via-gray-800 to-gray-900 border-gray-700 shadow-[#FF8000]/10'
+                                    ? 'bg-gradient-to-br from-tienda-elevated via-gray-800 to-tienda-canvas border-gray-700 shadow-[#FF8000]/10'
                                     : 'bg-gradient-to-br from-white via-gray-50 to-white border-gray-200 shadow-[#FF8000]/5'
                             }`}>
                                 <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
@@ -1910,7 +1910,7 @@ function DashboardInner() {
                                                         <button
                                                             type="button"
                                                             onClick={() => setCotizacionVerProductosId(cotizacionVerProductosId === cot.id ? null : cot.id)}
-                                                            className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium bg-[#2b4e94] hover:bg-[#1e3a6f] text-white transition-colors border-2 border-[#2b4e94] hover:border-[#1e3a6f]"
+                                                            className="inline-flex items-center justify-center gap-2 rounded-lg border-2 border-brand bg-brand px-4 py-2 font-medium text-white transition-colors hover:border-brand-hover hover:bg-brand-hover"
                                                         >
                                                             <div className="relative w-4 h-4 shrink-0">
                                                                 <Image src="/Imagenes/icon_producto.png" alt="" fill className="object-contain brightness-0 invert" />
@@ -2019,7 +2019,7 @@ function DashboardInner() {
                                                                     return (
                                                                         <div
                                                                             key={item.clave + String(idx)}
-                                                                            className={`flex flex-col sm:flex-row gap-3 p-3 rounded-lg ${darkMode ? 'bg-gray-800/50' : 'bg-gray-50'}`}
+                                                                            className={`flex flex-col sm:flex-row gap-3 p-3 rounded-lg ${darkMode ? 'bg-tienda-elevated/50' : 'bg-gray-50'}`}
                                                                         >
                                                                             {item.imagen && (
                                                                                 <div className="relative w-full sm:w-20 h-20 shrink-0 rounded overflow-hidden bg-gray-200 dark:bg-gray-700">
@@ -2170,7 +2170,7 @@ function DashboardInner() {
                                     <>
                                         <div className="fixed inset-0 bg-black/60 z-40 backdrop-blur-sm" onClick={() => setConfirmEliminarCotizacionId(null)} role="button" tabIndex={0} aria-label="Cerrar" />
                                         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
-                                            <div className={`pointer-events-auto w-full max-w-md rounded-xl border-2 shadow-2xl p-6 ${darkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'}`} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="confirm-cotizacion-papelera-title">
+                                            <div className={`pointer-events-auto w-full max-w-md rounded-xl border-2 shadow-2xl p-6 ${darkMode ? 'bg-tienda-elevated border-gray-600' : 'bg-white border-gray-300'}`} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="confirm-cotizacion-papelera-title">
                                                 <h3 id="confirm-cotizacion-papelera-title" className={`text-lg font-bold mb-3 ${darkMode ? 'text-white' : 'text-gray-900'}`}>¿Mover esta cotización a la papelera?</h3>
                                                 <p className={`text-sm mb-5 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Podrás restaurarla desde la Papelera hasta 30 días.</p>
                                                 <div className="flex justify-end gap-3">
@@ -2197,8 +2197,8 @@ function DashboardInner() {
                                     <>
                                         <div className="fixed inset-0 bg-black/60 z-40 backdrop-blur-sm" onClick={() => setPapeleraCotizacionesOpen(false)} role="button" tabIndex={0} aria-label="Cerrar" />
                                         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
-                                            <div className={`pointer-events-auto w-full max-w-6xl rounded-xl border-2 shadow-2xl overflow-hidden ${darkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'}`} style={{ width: 'min(100%, 72rem)' }} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="papelera-cotizaciones-title">
-                                                <div className={`flex items-center justify-between px-6 py-4 border-b-2 ${darkMode ? 'border-gray-600 bg-gray-800' : 'border-gray-200 bg-gray-50'}`}>
+                                            <div className={`pointer-events-auto w-full max-w-6xl rounded-xl border-2 shadow-2xl overflow-hidden ${darkMode ? 'bg-tienda-elevated border-gray-600' : 'bg-white border-gray-300'}`} style={{ width: 'min(100%, 72rem)' }} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="papelera-cotizaciones-title">
+                                                <div className={`flex items-center justify-between px-6 py-4 border-b-2 ${darkMode ? 'border-gray-600 bg-tienda-elevated' : 'border-gray-200 bg-gray-50'}`}>
                                                     <h3 id="papelera-cotizaciones-title" className={`text-lg font-bold flex items-center gap-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
                                                         <div className="relative w-6 h-6">
                                                             <Image src="/Imagenes/icon_basura.png" alt="" fill className={`object-contain ${darkMode ? 'brightness-0 invert' : ''}`} />
@@ -2214,7 +2214,7 @@ function DashboardInner() {
                                                         <div className="overflow-x-auto rounded-lg border-2 border-gray-300/50 dark:border-gray-600/50">
                                                             <table className="w-full">
                                                                 <thead>
-                                                                    <tr className={`border-b-2 bg-gradient-to-r ${darkMode ? 'border-gray-700 from-gray-800 to-gray-700' : 'border-gray-300 from-gray-100 to-gray-50'}`}>
+                                                                    <tr className={`border-b-2 bg-gradient-to-r ${darkMode ? 'border-gray-700 from-tienda-elevated to-gray-700' : 'border-gray-300 from-gray-100 to-gray-50'}`}>
                                                                         <th className={`px-4 py-4 text-left text-sm font-bold tracking-wider ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Fecha</th>
                                                                         <th className={`px-4 py-4 text-left text-sm font-bold tracking-wider ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Productos</th>
                                                                         <th className={`px-4 py-4 text-left text-sm font-bold tracking-wider ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Total</th>
@@ -2265,7 +2265,7 @@ function DashboardInner() {
                                     <>
                                         <div className="fixed inset-0 bg-black/60 z-40 backdrop-blur-sm" onClick={() => setShowPapeleraCotizacionesVaciaModal(false)} role="button" tabIndex={0} aria-label="Cerrar" />
                                         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
-                                            <div className={`pointer-events-auto w-full max-w-md rounded-xl border-2 shadow-2xl p-6 ${darkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'}`} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="papelera-cotizaciones-vacia-title">
+                                            <div className={`pointer-events-auto w-full max-w-md rounded-xl border-2 shadow-2xl p-6 ${darkMode ? 'bg-tienda-elevated border-gray-600' : 'bg-white border-gray-300'}`} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="papelera-cotizaciones-vacia-title">
                                                 <h3 id="papelera-cotizaciones-vacia-title" className={`text-lg font-bold mb-3 ${darkMode ? 'text-white' : 'text-gray-900'}`}>No hay cotizaciones en la papelera.</h3>
                                                 <p className={`text-sm mb-5 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Las cotizaciones que muevas a la papelera aparecerán aquí hasta 30 días para poder restaurarlas.</p>
                                                 <div className="flex justify-end">
@@ -2293,14 +2293,14 @@ function DashboardInner() {
                             return (
                             <div className={`rounded-xl shadow-2xl p-6 md:p-8 border-2 transition-all duration-300 animate-in fade-in slide-in-from-bottom-4 ${
                                 darkMode 
-                                    ? 'bg-gradient-to-br from-gray-800 via-gray-800 to-gray-900 border-gray-700 shadow-[#FF8000]/10' 
+                                    ? 'bg-gradient-to-br from-tienda-elevated via-gray-800 to-tienda-canvas border-gray-700 shadow-[#FF8000]/10' 
                                     : 'bg-gradient-to-br from-white via-gray-50 to-white border-gray-200 shadow-[#FF8000]/5'
                             }`}>
                                 <div className="space-y-4">
                                         {direccionesPagina.map((contacto) => (
                                             <div key={contacto.id} className={`relative overflow-hidden rounded-xl border-2 transition-all duration-300 hover:shadow-lg hover:shadow-[#FF8000]/10 hover:-translate-y-0.5 ${
                                                 darkMode 
-                                                    ? 'bg-gradient-to-br from-gray-800 to-gray-900 border-gray-600/80 hover:border-[#FF8000]/40' 
+                                                    ? 'bg-gradient-to-br from-tienda-elevated to-tienda-canvas border-gray-600/80 hover:border-[#FF8000]/40' 
                                                     : 'bg-gradient-to-br from-white to-gray-50/50 border-gray-200 hover:border-[#FF8000]/30'
                                             }`}>
                                                 <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-[#FF8000] to-[#FF9500] rounded-l-xl" />
@@ -2347,7 +2347,7 @@ function DashboardInner() {
                                                                     <Image src="/Imagenes/icon_estrella.png" alt="" width={18} height={18} className="object-contain" />
                                                                 </button>
                                                                 {principalTooltipId === contacto.id && (
-                                                                    <div className={`absolute z-10 right-full top-1/2 -translate-y-1/2 mr-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap shadow-lg ${darkMode ? 'bg-gray-700 text-white border border-gray-600' : 'bg-gray-800 text-white border border-gray-600'}`}>
+                                                                    <div className={`absolute z-10 right-full top-1/2 -translate-y-1/2 mr-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap shadow-lg ${darkMode ? 'bg-gray-700 text-white border border-gray-600' : 'bg-tienda-elevated text-white border border-gray-600'}`}>
                                                                         Quitar de principal
                                                                     </div>
                                                                 )}
@@ -2366,7 +2366,7 @@ function DashboardInner() {
                                                                     <span className="text-[10px] font-bold leading-none">?</span>
                                                                 </button>
                                                                 {principalTooltipId === contacto.id && (
-                                                                    <div className={`absolute z-10 right-full top-1/2 -translate-y-1/2 mr-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap shadow-lg ${darkMode ? 'bg-gray-700 text-white border border-gray-600' : 'bg-gray-800 text-white border border-gray-600'}`}>
+                                                                    <div className={`absolute z-10 right-full top-1/2 -translate-y-1/2 mr-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap shadow-lg ${darkMode ? 'bg-gray-700 text-white border border-gray-600' : 'bg-tienda-elevated text-white border border-gray-600'}`}>
                                                                         Agregar como principal
                                                                     </div>
                                                                 )}
@@ -2430,7 +2430,7 @@ function DashboardInner() {
                         {contactoDeleteId != null && (
                             <>
                                 <div className="fixed inset-0 z-50 bg-black/50" onClick={() => setContactoDeleteId(null)} aria-hidden />
-                                <div className={`fixed inset-4 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 z-50 sm:max-w-sm w-full rounded-xl shadow-2xl border-2 p-6 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+                                <div className={`fixed inset-4 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 z-50 sm:max-w-sm w-full rounded-xl shadow-2xl border-2 p-6 ${darkMode ? 'bg-tienda-elevated border-gray-700' : 'bg-white border-gray-200'}`}>
                                     <p className={`text-center font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>¿Eliminar esta dirección?</p>
                                     <div className="flex gap-3 justify-center">
                                         <Button type="button" onClick={() => setContactoDeleteId(null)} className="px-5 py-2.5 rounded-lg bg-gray-500 hover:bg-gray-600 text-white font-medium">
@@ -2448,9 +2448,9 @@ function DashboardInner() {
                         {contactoModal && (
                             <>
                                 <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm" onClick={closeContactoModal} />
-                                <div className={`fixed inset-4 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 z-50 sm:max-w-xl w-full max-h-[90vh] overflow-hidden flex flex-col rounded-2xl shadow-2xl sm:border-2 ${darkMode ? 'bg-gradient-to-b from-gray-800 to-gray-900 border-gray-700' : 'bg-gradient-to-b from-white to-gray-50 border-gray-200'} ring-4 ${darkMode ? 'ring-[#FF8000]/20' : 'ring-[#FF8000]/10'}`}>
+                                <div className={`fixed inset-4 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 z-50 sm:max-w-xl w-full max-h-[90vh] overflow-hidden flex flex-col rounded-2xl shadow-2xl sm:border-2 ${darkMode ? 'bg-gradient-to-b from-tienda-elevated to-tienda-canvas border-gray-700' : 'bg-gradient-to-b from-white to-gray-50 border-gray-200'} ring-4 ${darkMode ? 'ring-[#FF8000]/20' : 'ring-[#FF8000]/10'}`}>
                                     {/* Header con barra naranja y botón cerrar rojo */}
-                                    <div className={`flex-none flex items-center justify-between px-5 py-4 border-b-2 ${darkMode ? 'border-gray-700 bg-gray-800/80' : 'border-gray-200 bg-white/80'} rounded-t-2xl`}>
+                                    <div className={`flex-none flex items-center justify-between px-5 py-4 border-b-2 ${darkMode ? 'border-gray-700 bg-tienda-elevated/80' : 'border-gray-200 bg-white/80'} rounded-t-2xl`}>
                                         <div className="h-1 w-12 rounded-full bg-gradient-to-r from-[#FF8000] to-[#FF9500] shrink-0" aria-hidden />
                                         <h3 className={`text-lg font-bold flex-1 text-center ${darkMode ? 'text-white' : 'text-gray-900'}`}>
                                             {contactoEditId ? 'Editar dirección' : 'Nueva dirección de envío'}
@@ -2548,14 +2548,14 @@ function DashboardInner() {
                             return (
                             <div className={`rounded-xl shadow-2xl p-6 md:p-8 border-2 transition-all duration-300 animate-in fade-in slide-in-from-bottom-4 ${
                                 darkMode 
-                                    ? 'bg-gradient-to-br from-gray-800 via-gray-800 to-gray-900 border-gray-700 shadow-[#FF8000]/10' 
+                                    ? 'bg-gradient-to-br from-tienda-elevated via-gray-800 to-tienda-canvas border-gray-700 shadow-[#FF8000]/10' 
                                     : 'bg-gradient-to-br from-white via-gray-50 to-white border-gray-200 shadow-[#FF8000]/5'
                             }`}>
                                 <div className="space-y-4">
                                     {datosFacturacionPagina.map((d) => (
                                         <div key={d.id} className={`relative overflow-hidden rounded-xl border-2 transition-all duration-300 hover:shadow-lg hover:shadow-[#FF8000]/10 hover:-translate-y-0.5 ${
                                             darkMode 
-                                                ? 'bg-gradient-to-br from-gray-800 to-gray-900 border-gray-600/80 hover:border-[#FF8000]/40' 
+                                                ? 'bg-gradient-to-br from-tienda-elevated to-tienda-canvas border-gray-600/80 hover:border-[#FF8000]/40' 
                                                 : 'bg-gradient-to-br from-white to-gray-50/50 border-gray-200 hover:border-[#FF8000]/30'
                                         }`}>
                                             <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-[#FF8000] to-[#FF9500] rounded-l-xl" />
@@ -2602,7 +2602,7 @@ function DashboardInner() {
                                                                 <Image src="/Imagenes/icon_estrella.png" alt="" width={18} height={18} className="object-contain" />
                                                             </button>
                                                             {facturacionPrincipalTooltipId === d.id && (
-                                                                <div className={`absolute z-10 right-full top-1/2 -translate-y-1/2 mr-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap shadow-lg ${darkMode ? 'bg-gray-700 text-white border border-gray-600' : 'bg-gray-800 text-white border border-gray-600'}`}>
+                                                                <div className={`absolute z-10 right-full top-1/2 -translate-y-1/2 mr-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap shadow-lg ${darkMode ? 'bg-gray-700 text-white border border-gray-600' : 'bg-tienda-elevated text-white border border-gray-600'}`}>
                                                                     Quitar de principal
                                                                 </div>
                                                             )}
@@ -2621,7 +2621,7 @@ function DashboardInner() {
                                                                 <span className="text-[10px] font-bold leading-none">?</span>
                                                             </button>
                                                             {facturacionPrincipalTooltipId === d.id && (
-                                                                <div className={`absolute z-10 right-full top-1/2 -translate-y-1/2 mr-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap shadow-lg ${darkMode ? 'bg-gray-700 text-white border border-gray-600' : 'bg-gray-800 text-white border border-gray-600'}`}>
+                                                                <div className={`absolute z-10 right-full top-1/2 -translate-y-1/2 mr-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap shadow-lg ${darkMode ? 'bg-gray-700 text-white border border-gray-600' : 'bg-tienda-elevated text-white border border-gray-600'}`}>
                                                                     Agregar como principal
                                                                 </div>
                                                             )}
@@ -2685,7 +2685,7 @@ function DashboardInner() {
                         {facturacionDeleteId != null && (
                             <>
                                 <div className="fixed inset-0 z-50 bg-black/50" onClick={() => setFacturacionDeleteId(null)} aria-hidden />
-                                <div className={`fixed inset-4 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 z-50 sm:max-w-sm w-full rounded-xl shadow-2xl border-2 p-6 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+                                <div className={`fixed inset-4 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 z-50 sm:max-w-sm w-full rounded-xl shadow-2xl border-2 p-6 ${darkMode ? 'bg-tienda-elevated border-gray-700' : 'bg-white border-gray-200'}`}>
                                     <p className={`text-center font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>¿Eliminar estos datos de facturación?</p>
                                     <div className="flex gap-3 justify-center">
                                         <Button type="button" onClick={() => setFacturacionDeleteId(null)} className="px-5 py-2.5 rounded-lg bg-gray-500 hover:bg-gray-600 text-white font-medium">
@@ -2703,8 +2703,8 @@ function DashboardInner() {
                         {facturacionModal && (
                             <>
                                 <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm" onClick={closeFacturacionModal} />
-                                <div className={`fixed inset-4 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 z-50 sm:max-w-xl w-full max-h-[90vh] overflow-hidden flex flex-col rounded-2xl shadow-2xl sm:border-2 ${darkMode ? 'bg-gradient-to-b from-gray-800 to-gray-900 border-gray-700' : 'bg-gradient-to-b from-white to-gray-50 border-gray-200'} ring-4 ${darkMode ? 'ring-[#FF8000]/20' : 'ring-[#FF8000]/10'}`}>
-                                    <div className={`flex-none flex items-center justify-between px-5 py-4 border-b-2 ${darkMode ? 'border-gray-700 bg-gray-800/80' : 'border-gray-200 bg-white/80'} rounded-t-2xl`}>
+                                <div className={`fixed inset-4 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 z-50 sm:max-w-xl w-full max-h-[90vh] overflow-hidden flex flex-col rounded-2xl shadow-2xl sm:border-2 ${darkMode ? 'bg-gradient-to-b from-tienda-elevated to-tienda-canvas border-gray-700' : 'bg-gradient-to-b from-white to-gray-50 border-gray-200'} ring-4 ${darkMode ? 'ring-[#FF8000]/20' : 'ring-[#FF8000]/10'}`}>
+                                    <div className={`flex-none flex items-center justify-between px-5 py-4 border-b-2 ${darkMode ? 'border-gray-700 bg-tienda-elevated/80' : 'border-gray-200 bg-white/80'} rounded-t-2xl`}>
                                         <div className="h-1 w-12 rounded-full bg-gradient-to-r from-[#FF8000] to-[#FF9500] shrink-0" aria-hidden />
                                         <h3 className={`text-lg font-bold flex-1 text-center ${darkMode ? 'text-white' : 'text-gray-900'}`}>
                                             {facturacionEditId ? 'Editar datos de facturación' : 'Nuevos datos de facturación'}
@@ -2801,7 +2801,7 @@ function DashboardInner() {
                         {activeTab === 'chat' && (
                             <div className={`rounded-xl shadow-2xl p-6 md:p-8 border-2 transition-all duration-300 animate-in fade-in slide-in-from-bottom-4 ${
                                 darkMode
-                                    ? 'bg-gradient-to-br from-gray-800 via-gray-800 to-gray-900 border-gray-700 shadow-[#FF8000]/10'
+                                    ? 'bg-gradient-to-br from-tienda-elevated via-gray-800 to-tienda-canvas border-gray-700 shadow-[#FF8000]/10'
                                     : 'bg-gradient-to-br from-white via-gray-50 to-white border-gray-200 shadow-[#FF8000]/5'
                             }`}>
                                 <div className="flex items-center gap-3 mb-4">
@@ -2822,7 +2822,7 @@ function DashboardInner() {
                         {activeTab === 'privacidad' && (
                             <div className={`rounded-xl shadow-2xl p-6 md:p-8 border-2 transition-all duration-300 animate-in fade-in slide-in-from-bottom-4 ${
                                 darkMode
-                                    ? 'bg-gradient-to-br from-gray-800 via-gray-800 to-gray-900 border-gray-700 shadow-[#FF8000]/10'
+                                    ? 'bg-gradient-to-br from-tienda-elevated via-gray-800 to-tienda-canvas border-gray-700 shadow-[#FF8000]/10'
                                     : 'bg-gradient-to-br from-white via-gray-50 to-white border-gray-200 shadow-[#FF8000]/5'
                             }`}>
                                 <div className="flex items-center gap-3 mb-6">
@@ -2838,7 +2838,7 @@ function DashboardInner() {
                                         </p>
                                     </div>
                                 </div>
-                                <div className={`rounded-2xl border p-4 md:p-6 ${darkMode ? 'border-gray-600 bg-gray-900/40' : 'border-gray-200 bg-white/80'}`}>
+                                <div className={`rounded-2xl border p-4 md:p-6 ${darkMode ? 'border-gray-600 bg-tienda-canvas/40' : 'border-gray-200 bg-white/80'}`}>
                                     <PrivacyNoticeReader darkMode={darkMode} showLogo />
                                 </div>
                             </div>
@@ -2869,7 +2869,7 @@ function DashboardInner() {
                             return (
                                 <div className={`rounded-xl shadow-2xl border-2 transition-all duration-300 animate-in fade-in slide-in-from-bottom-4 overflow-hidden ${
                                     darkMode
-                                        ? 'bg-gradient-to-br from-gray-800 via-gray-800 to-gray-900 border-gray-700 shadow-[#FF8000]/10'
+                                        ? 'bg-gradient-to-br from-tienda-elevated via-gray-800 to-tienda-canvas border-gray-700 shadow-[#FF8000]/10'
                                         : 'bg-gradient-to-br from-white via-gray-50 to-white border-gray-200 shadow-[#FF8000]/5'
                                 }`}>
                                     <div className="px-6 pt-6 pb-2">
@@ -2936,7 +2936,7 @@ function DashboardInner() {
                                                 {showNuevaPasswordModal && (
                                                     <>
                                                         <div className="fixed inset-0 z-40" aria-hidden onClick={() => setShowNuevaPasswordModal(false)} />
-                                                        <div className={`absolute left-full top-1/2 z-50 w-56 max-w-[14rem] -translate-y-1/2 ml-1.5 rounded-xl border-2 shadow-xl transition-all duration-200 ${darkMode ? 'border-gray-600 bg-gray-800' : 'border-gray-200 bg-white'}`} role="dialog" aria-labelledby="password-requirements-title" aria-describedby="password-requirements-desc">
+                                                        <div className={`absolute left-full top-1/2 z-50 w-56 max-w-[14rem] -translate-y-1/2 ml-1.5 rounded-xl border-2 shadow-xl transition-all duration-200 ${darkMode ? 'border-gray-600 bg-tienda-elevated' : 'border-gray-200 bg-white'}`} role="dialog" aria-labelledby="password-requirements-title" aria-describedby="password-requirements-desc">
                                                             <div className="p-3">
                                                                 <p id="password-requirements-title" className={`text-xs font-semibold mb-2 ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Requisitos de la contraseña</p>
                                                                 <ul id="password-requirements-desc" className="space-y-1.5">
@@ -2985,7 +2985,7 @@ function DashboardInner() {
                                                 {showRepetirPasswordModal && (
                                                     <>
                                                         <div className="fixed inset-0 z-40" aria-hidden onClick={() => setShowRepetirPasswordModal(false)} />
-                                                        <div className={`absolute left-full top-1/2 z-50 w-56 max-w-[14rem] -translate-y-1/2 ml-1.5 rounded-xl border-2 shadow-xl transition-all duration-200 ${darkMode ? 'border-gray-600 bg-gray-800' : 'border-gray-200 bg-white'}`} role="dialog" aria-labelledby="confirm-password-modal-title" aria-describedby="confirm-password-modal-desc">
+                                                        <div className={`absolute left-full top-1/2 z-50 w-56 max-w-[14rem] -translate-y-1/2 ml-1.5 rounded-xl border-2 shadow-xl transition-all duration-200 ${darkMode ? 'border-gray-600 bg-tienda-elevated' : 'border-gray-200 bg-white'}`} role="dialog" aria-labelledby="confirm-password-modal-title" aria-describedby="confirm-password-modal-desc">
                                                             <div className="p-3">
                                                                 <p id="confirm-password-modal-title" className={`text-xs font-semibold mb-2 ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Confirmar contraseña</p>
                                                                 <div id="confirm-password-modal-desc">
@@ -3036,7 +3036,7 @@ function DashboardInner() {
             {detallePedidoId != null && (
                 <>
                     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm" onClick={() => setDetallePedidoId(null)} />
-                    <div className={`fixed inset-4 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 z-50 sm:max-w-xl w-full rounded-2xl shadow-2xl ring-2 ring-[#FF8000]/20 overflow-hidden max-h-[90vh] flex flex-col ${darkMode ? 'bg-gradient-to-b from-gray-800 to-gray-900 border border-gray-700' : 'bg-gradient-to-b from-white to-gray-50 border border-gray-200'}`}>
+                    <div className={`fixed inset-4 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 z-50 sm:max-w-xl w-full rounded-2xl shadow-2xl ring-2 ring-[#FF8000]/20 overflow-hidden max-h-[90vh] flex flex-col ${darkMode ? 'bg-gradient-to-b from-tienda-elevated to-tienda-canvas border border-gray-700' : 'bg-gradient-to-b from-white to-gray-50 border border-gray-200'}`}>
                         {/* Header con barra naranja */}
                         <div className="shrink-0 flex items-center justify-between pr-2 pl-4 py-3 bg-gradient-to-r from-[#FF8000]/15 via-[#FF8000]/10 to-transparent border-b border-[#FF8000]/30">
                             <h3 className={`text-xl font-bold tracking-tight ${darkMode ? 'text-white' : 'text-gray-900'}`}>
@@ -3086,7 +3086,7 @@ function DashboardInner() {
                                                 </thead>
                                                 <tbody className={darkMode ? 'divide-y divide-gray-600' : 'divide-y divide-gray-200'}>
                                                     {(detallePedido.items || []).map((it, i) => (
-                                                        <tr key={i} className={darkMode ? 'bg-gray-800/50' : 'bg-white'}>
+                                                        <tr key={i} className={darkMode ? 'bg-tienda-elevated/50' : 'bg-white'}>
                                                             <td className={`px-3 py-2.5 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>{it.nombre_producto}</td>
                                                             <td className={`px-3 py-2.5 text-center ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{it.cantidad}</td>
                                                             <td className={`px-3 py-2.5 text-right font-medium ${darkMode ? 'text-[#FF8000]' : 'text-[#e67300]'}`}>$ {Number(it.subtotal).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
@@ -3118,7 +3118,7 @@ function DashboardInner() {
 
             {/* Footer */}
             <footer className={`border-t transition-colors duration-300 ${
-                darkMode ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200'
+                darkMode ? 'bg-tienda-canvas border-gray-800' : 'bg-white border-gray-200'
             }`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -3249,7 +3249,7 @@ export default function Dashboard() {
     return (
         <Suspense
             fallback={(
-                <div className="min-h-screen bg-gray-900 flex items-center justify-center text-gray-400 text-sm">
+                <div className="min-h-screen bg-tienda-canvas flex items-center justify-center text-gray-400 text-sm">
                     Cargando panel…
                 </div>
             )}

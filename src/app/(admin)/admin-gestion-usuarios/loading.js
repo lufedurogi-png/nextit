@@ -8,7 +8,7 @@ export default function AdminGestionUsuariosLoading() {
                     <div className="h-4 w-64 rounded bg-gray-700/60" />
                 </div>
             </div>
-            <div className="rounded-xl border border-gray-700 bg-gray-800 p-5">
+            <div className="rounded-xl border border-gray-700 bg-tienda-elevated p-5">
                 <div className="h-6 w-24 rounded bg-gray-700 mb-4" />
                 <div className="flex gap-4">
                     <div className="h-10 flex-1 rounded bg-gray-700/60" />
@@ -16,7 +16,7 @@ export default function AdminGestionUsuariosLoading() {
                     <div className="h-10 w-36 rounded bg-gray-700/60" />
                 </div>
             </div>
-            <div className="rounded-xl border border-gray-700 bg-gray-800 p-6">
+            <div className="rounded-xl border border-gray-700 bg-tienda-elevated p-6">
                 <div className="h-6 w-40 rounded bg-gray-700 mb-4" />
                 <div className="h-64 rounded-lg bg-gray-700/30" />
             </div>

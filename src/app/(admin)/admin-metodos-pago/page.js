@@ -53,7 +53,7 @@ export default function AdminMetodosPagoPage() {
         ? `w-full rounded-lg border px-3 py-2.5 pr-12 text-sm transition-colors ${
             hasValue
                 ? 'bg-[#E5EBFD] border-gray-600 text-gray-900'
-                : 'bg-gray-900 border-gray-600 text-white'
+                : 'bg-tienda-canvas border-gray-600 text-white'
         }`
         : `w-full rounded-lg border px-3 py-2.5 pr-12 text-sm transition-colors ${
             hasValue
@@ -84,7 +84,7 @@ export default function AdminMetodosPagoPage() {
     const activeCount = methods.filter((m) => !!m.active).length
     const inactiveCount = Math.max(0, methods.length - activeCount)
     const panelShell = darkMode
-        ? 'rounded-2xl overflow-hidden border-2 border-emerald-900/40 bg-gray-800 shadow-xl'
+        ? 'rounded-2xl overflow-hidden border-2 border-emerald-900/40 bg-tienda-elevated shadow-xl'
         : 'rounded-2xl overflow-hidden border-2 border-emerald-200/90 bg-white shadow-xl'
     const panelHead = darkMode
         ? 'bg-emerald-600/25 border-b-2 border-emerald-500/40'
@@ -143,7 +143,7 @@ export default function AdminMetodosPagoPage() {
                     </div>
                     {loading ? (
                         <div className="p-5">
-                            <div className={`rounded-xl border p-6 text-sm ${darkMode ? 'bg-gray-900/60 border-gray-700 text-gray-300' : 'bg-gray-50 border-gray-200 text-gray-600'}`}>
+                            <div className={`rounded-xl border p-6 text-sm ${darkMode ? 'bg-tienda-canvas/60 border-gray-700 text-gray-300' : 'bg-gray-50 border-gray-200 text-gray-600'}`}>
                                 Cargando métodos de pago...
                             </div>
                         </div>
@@ -158,8 +158,8 @@ export default function AdminMetodosPagoPage() {
                                         className={`rounded-xl border-2 p-4 transition-all ${
                                             darkMode
                                                 ? active
-                                                    ? 'bg-gray-900/70 border-emerald-600/60'
-                                                    : 'bg-gray-900/40 border-amber-500/50'
+                                                    ? 'bg-tienda-canvas/70 border-emerald-600/60'
+                                                    : 'bg-tienda-canvas/40 border-amber-500/50'
                                                 : active
                                                     ? 'bg-emerald-50/40 border-emerald-300'
                                                     : 'bg-amber-50/40 border-amber-300'
@@ -168,7 +168,7 @@ export default function AdminMetodosPagoPage() {
                                         <div className="flex items-start justify-between gap-4">
                                             <div className="flex items-center gap-3 min-w-0">
                                                 <div className={`h-14 w-1.5 rounded-full ${active ? 'bg-emerald-500' : 'bg-amber-500'}`} aria-hidden />
-                                                <div className={`rounded-lg p-2 ${darkMode ? 'bg-gray-800 ring-1 ring-gray-700' : 'bg-white ring-1 ring-gray-200'}`}>
+                                                <div className={`rounded-lg p-2 ${darkMode ? 'bg-tienda-elevated ring-1 ring-gray-700' : 'bg-white ring-1 ring-gray-200'}`}>
                                                     <Image
                                                         src={METHOD_ICON[method.code] || '/Imagenes/icons_metodosdepago.png'}
                                                         alt=""
@@ -254,7 +254,7 @@ export default function AdminMetodosPagoPage() {
                                     ? 'border-emerald-700/70 bg-emerald-900/20 text-emerald-300'
                                     : 'border-emerald-200 bg-emerald-50 text-emerald-700'
                                 : darkMode
-                                    ? 'border-gray-700 bg-gray-900/70 text-gray-400'
+                                    ? 'border-gray-700 bg-tienda-canvas/70 text-gray-400'
                                     : 'border-gray-200 bg-gray-50 text-gray-600'
                             }`}>
                                 {canToggle

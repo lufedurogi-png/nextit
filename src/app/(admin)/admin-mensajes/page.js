@@ -193,9 +193,9 @@ export default function AdminMensajesPage() {
                 </div>
             </div>
 
-            <div className={`rounded-xl border-2 overflow-hidden flex flex-col h-[calc(100vh-11rem)] max-h-[42rem] min-h-[28rem] ${darkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-white border-gray-200'}`}>
+            <div className={`rounded-xl border-2 overflow-hidden flex flex-col h-[calc(100vh-11rem)] max-h-[42rem] min-h-[28rem] ${darkMode ? 'bg-tienda-elevated/50 border-gray-700' : 'bg-white border-gray-200'}`}>
                 <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-hidden">
-                    <div className={`w-full md:w-72 shrink-0 border-b md:border-b-0 md:border-r flex flex-col ${darkMode ? 'border-gray-700 bg-gray-800/80' : 'border-gray-200 bg-gray-50'}`}>
+                    <div className={`w-full md:w-72 shrink-0 border-b md:border-b-0 md:border-r flex flex-col ${darkMode ? 'border-gray-700 bg-tienda-elevated/80' : 'border-gray-200 bg-gray-50'}`}>
                         <div className="p-3 border-b border-gray-600/50 flex items-center gap-2 shrink-0">
                             <Image src="/Imagenes/icon_mensaje.png" alt="" width={20} height={20} className="object-contain opacity-80" />
                             <span className={`font-semibold text-sm ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Clientes con chat</span>

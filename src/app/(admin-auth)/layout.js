@@ -9,15 +9,15 @@ function LayoutContent({ children }) {
     const { darkMode, setDarkMode } = useAdminTheme()
 
     const pill = `inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium transition-colors ${
-        darkMode ? 'bg-gray-800/80 text-gray-200 hover:bg-gray-700' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+        darkMode ? 'bg-tienda-elevated/80 text-gray-200 hover:bg-gray-700' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
     }`
 
     return (
         <div className={`min-h-screen transition-colors duration-300 flex flex-col ${
-            darkMode ? 'bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900'
+            darkMode ? 'bg-tienda-canvas text-gray-100' : 'bg-gray-50 text-gray-900'
         }`}>
             <header className={`sticky top-0 z-50 border-b flex-shrink-0 ${
-                darkMode ? 'bg-gray-900/95 backdrop-blur-sm border-gray-800' : 'bg-white/95 backdrop-blur-sm border-gray-200'
+                darkMode ? 'bg-tienda-canvas/95 backdrop-blur-sm border-gray-800' : 'bg-white/95 backdrop-blur-sm border-gray-200'
             }`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="hidden md:flex items-center justify-between h-16">

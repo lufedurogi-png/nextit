@@ -491,7 +491,7 @@ export default function CheckoutModal({
             <div className="fixed inset-0 bg-black/50 z-40" onClick={() => !loading && onClose()} aria-hidden />
             <div
                 className={`fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg max-h-[90vh] overflow-hidden rounded-2xl border-2 shadow-2xl z-50 flex flex-col ${
-                    darkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-200'
+                    darkMode ? 'bg-tienda-elevated border-gray-600' : 'bg-white border-gray-200'
                 }`}
                 onClick={(e) => e.stopPropagation()}
                 role="dialog"
@@ -517,7 +517,7 @@ export default function CheckoutModal({
                 </div>
 
                 {/* Tabs */}
-                <div className={`flex border-b shrink-0 ${darkMode ? 'border-gray-600 bg-gray-800/80' : 'border-gray-200 bg-gray-50'}`}>
+                <div className={`flex border-b shrink-0 ${darkMode ? 'border-gray-600 bg-tienda-elevated/80' : 'border-gray-200 bg-gray-50'}`}>
                     {steps.map((s) => (
                         <button
                             key={s.id}
@@ -1142,7 +1142,7 @@ export default function CheckoutModal({
                     <div className="fixed inset-0 bg-black/70 z-[60]" onClick={() => !savingDireccion && setShowAddDireccion(false)} aria-hidden />
                     <div
                         className={`fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[94%] max-w-2xl max-h-[90vh] overflow-hidden rounded-2xl border-2 shadow-2xl z-[70] flex flex-col ${
-                            darkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-200'
+                            darkMode ? 'bg-tienda-elevated border-gray-600' : 'bg-white border-gray-200'
                         }`}
                         role="dialog"
                         aria-modal="true"
@@ -1315,7 +1315,7 @@ export default function CheckoutModal({
                     <div className="fixed inset-0 bg-black/70 z-[60]" onClick={() => !savingFacturacion && setShowAddFacturacion(false)} aria-hidden />
                     <div
                         className={`fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[94%] max-w-2xl max-h-[90vh] overflow-hidden rounded-2xl border-2 shadow-2xl z-[70] flex flex-col ${
-                            darkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-200'
+                            darkMode ? 'bg-tienda-elevated border-gray-600' : 'bg-white border-gray-200'
                         }`}
                         role="dialog"
                         aria-modal="true"

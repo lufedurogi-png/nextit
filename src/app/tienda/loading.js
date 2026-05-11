@@ -2,14 +2,14 @@
 export default function LoadingTienda() {
     return (
         <>
-            <div className="fixed inset-x-0 top-0 z-[9999] h-1 bg-gray-100 dark:bg-gray-800">
+            <div className="fixed inset-x-0 top-0 z-[9999] h-1 bg-gray-100 dark:bg-tienda-elevated">
                 <div
                     className="h-full bg-[#FF8000] animate-loading-bar"
                     style={{ width: '40%' }}
                 />
             </div>
-            <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-                <div className="h-14 shrink-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 animate-pulse" />
+            <div className="min-h-screen bg-gray-50 dark:bg-tienda-canvas">
+                <div className="h-14 shrink-0 bg-white dark:bg-tienda-elevated border-b border-gray-200 dark:border-gray-700 animate-pulse" />
                 <div className="max-w-7xl mx-auto px-4 py-8">
                     <div className="h-6 w-48 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-6" />
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

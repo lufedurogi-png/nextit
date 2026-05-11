@@ -51,7 +51,7 @@ function JsonPre({ value, darkMode }) {
     return (
         <pre
             className={`text-xs font-mono overflow-auto max-h-64 p-3 rounded-lg border whitespace-pre-wrap ${
-                darkMode ? 'bg-gray-900/80 border-gray-600 text-gray-200' : 'bg-white border-gray-200 text-gray-800'
+                darkMode ? 'bg-tienda-canvas/80 border-gray-600 text-gray-200' : 'bg-white border-gray-200 text-gray-800'
             }`}
         >
             {s === '' ? '—' : s}
@@ -139,8 +139,8 @@ export default function AdminPedidosPage() {
         `w-full min-w-0 text-xs !px-2 !py-1.5 !rounded-md !shadow-none focus:!outline-none focus:!ring-1 focus:!ring-emerald-500/50 focus:!border-emerald-500 ${
             darkMode
                 ? active
-                    ? '!bg-gray-900 !border-emerald-600/60 !text-gray-100'
-                    : '!bg-gray-900/90 !border-gray-500 !text-gray-100'
+                    ? '!bg-tienda-canvas !border-emerald-600/60 !text-gray-100'
+                    : '!bg-tienda-canvas/90 !border-gray-500 !text-gray-100'
                 : active
                   ? '!bg-white !border-emerald-400 !text-gray-900'
                   : '!bg-white !border-gray-300 !text-gray-900'
@@ -149,8 +149,8 @@ export default function AdminPedidosPage() {
         `w-full min-w-0 text-xs !px-2 !py-1.5 !rounded-md !shadow-none focus:!outline-none focus:!ring-1 focus:!ring-emerald-500/50 focus:!border-emerald-500 ${
             darkMode
                 ? active
-                    ? '!bg-gray-900 !border-emerald-600/60 !text-gray-100'
-                    : '!bg-gray-900/90 !border-gray-500 !text-gray-100'
+                    ? '!bg-tienda-canvas !border-emerald-600/60 !text-gray-100'
+                    : '!bg-tienda-canvas/90 !border-gray-500 !text-gray-100'
                 : active
                   ? '!bg-white !border-emerald-400 !text-gray-900'
                   : '!bg-white !border-gray-300 !text-gray-900'
@@ -330,7 +330,7 @@ export default function AdminPedidosPage() {
                 </div>
             </div>
 
-            <div className={`rounded-xl overflow-hidden border shadow-xl ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+            <div className={`rounded-xl overflow-hidden border shadow-xl ${darkMode ? 'bg-tienda-elevated border-gray-700' : 'bg-white border-gray-200'}`}>
                 <div className={`px-5 py-4 ${darkMode ? 'bg-emerald-600/25 border-b border-emerald-500/30' : 'bg-emerald-50 border-b border-emerald-200'}`}>
                     <div className="flex items-center justify-between flex-wrap gap-3">
                         <div className="flex items-center gap-3">
@@ -496,7 +496,7 @@ export default function AdminPedidosPage() {
                                     <tr
                                         key={pedido.id}
                                         className={`border-b transition-colors ${darkMode ? `hover:bg-gray-700/25 ${tableBorderClass}` : `hover:bg-gray-50 ${tableBorderClass}`} ${
-                                            i % 2 === 1 ? (darkMode ? 'bg-gray-800/40' : 'bg-gray-50/80') : ''
+                                            i % 2 === 1 ? (darkMode ? 'bg-tienda-elevated/40' : 'bg-gray-50/80') : ''
                                         }`}
                                     >
                                         <td className={`py-3 px-4 border-r ${tableBorderClass} ${cellTextClass}`}>{pedido.fecha}</td>
@@ -653,7 +653,7 @@ export default function AdminPedidosPage() {
                     <div className="fixed inset-0 z-[62] bg-black/60 backdrop-blur-sm" onClick={cerrarEnvioListaModal} aria-hidden />
                     <div
                         className={`fixed left-1/2 top-1/2 z-[63] w-[94%] max-w-2xl max-h-[90vh] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl shadow-2xl flex flex-col ${
-                            darkMode ? 'bg-gray-800 border border-gray-600' : 'bg-white border border-gray-200'
+                            darkMode ? 'bg-tienda-elevated border border-gray-600' : 'bg-white border border-gray-200'
                         }`}
                         role="dialog"
                         aria-modal="true"
@@ -679,7 +679,7 @@ export default function AdminPedidosPage() {
                             {!envioListaModalLoading && envioListaModalData && (
                                 <>
                                     {envioListaModalData.direccion_envio && (
-                                        <div className={`rounded-xl p-3 border ${darkMode ? 'border-gray-600 bg-gray-900/40' : 'border-gray-200 bg-gray-50'}`}>
+                                        <div className={`rounded-xl p-3 border ${darkMode ? 'border-gray-600 bg-tienda-canvas/40' : 'border-gray-200 bg-gray-50'}`}>
                                             <p className={`text-xs font-semibold uppercase tracking-wide mb-2 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Destino (domicilio de envío)</p>
                                             <p className="font-medium">{envioListaModalData.direccion_envio.nombre}</p>
                                             <p className="mt-1 text-xs leading-relaxed">
@@ -695,7 +695,7 @@ export default function AdminPedidosPage() {
                                         </div>
                                     )}
                                     {envioListaModalData.envio ? (
-                                        <div className={`rounded-xl p-3 border ${darkMode ? 'border-gray-600 bg-gray-900/40' : 'border-gray-200 bg-gray-50'}`}>
+                                        <div className={`rounded-xl p-3 border ${darkMode ? 'border-gray-600 bg-tienda-canvas/40' : 'border-gray-200 bg-gray-50'}`}>
                                             <p className={`text-xs font-semibold uppercase tracking-wide mb-2 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Cálculo y totales</p>
                                             <p>
                                                 Subtotal productos:{' '}
@@ -741,7 +741,7 @@ export default function AdminPedidosPage() {
                                                     </thead>
                                                     <tbody className={darkMode ? 'divide-y divide-gray-600' : 'divide-y divide-gray-200'}>
                                                         {envioListaModalData.items.map((it, idx) => (
-                                                            <tr key={it.id ?? idx} className={darkMode ? 'bg-gray-800/40' : 'bg-white'}>
+                                                            <tr key={it.id ?? idx} className={darkMode ? 'bg-tienda-elevated/40' : 'bg-white'}>
                                                                 <td className={`px-2 py-2 max-w-[200px] ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
                                                                     <span className="line-clamp-2">{it.nombre_producto}</span>
                                                                 </td>
@@ -780,7 +780,7 @@ export default function AdminPedidosPage() {
                     />
                     <div
                         className={`fixed left-1/2 top-1/2 z-[61] w-[94%] max-w-lg max-h-[85vh] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl shadow-2xl flex flex-col ${
-                            darkMode ? 'bg-gray-800 border border-gray-600' : 'bg-white border border-gray-200'
+                            darkMode ? 'bg-tienda-elevated border border-gray-600' : 'bg-white border border-gray-200'
                         }`}
                         role="dialog"
                         aria-modal="true"
@@ -801,7 +801,7 @@ export default function AdminPedidosPage() {
                         </div>
                         <div className={`p-4 sm:p-5 overflow-y-auto flex-1 space-y-4 text-sm ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
                             {detalleEnvioContext.envioPedido && (
-                                <div className={`rounded-xl p-3 border ${darkMode ? 'border-gray-600 bg-gray-900/40' : 'border-gray-200 bg-gray-50'}`}>
+                                <div className={`rounded-xl p-3 border ${darkMode ? 'border-gray-600 bg-tienda-canvas/40' : 'border-gray-200 bg-gray-50'}`}>
                                     <p className={`text-xs font-semibold uppercase tracking-wide mb-2 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Pedido (envío total)</p>
                                     <p>
                                         Subtotal productos:{' '}
@@ -840,7 +840,7 @@ export default function AdminPedidosPage() {
                                 </div>
                             )}
                             {detalleEnvioContext.item?.envio_linea ? (
-                                <div className={`rounded-xl p-3 border ${darkMode ? 'border-gray-600 bg-gray-900/40' : 'border-gray-200 bg-gray-50'}`}>
+                                <div className={`rounded-xl p-3 border ${darkMode ? 'border-gray-600 bg-tienda-canvas/40' : 'border-gray-200 bg-gray-50'}`}>
                                     <p className={`text-xs font-semibold uppercase tracking-wide mb-2 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Esta línea (desde almacén)</p>
                                     <p>
                                         Costo prorrateado:{' '}
@@ -874,7 +874,7 @@ export default function AdminPedidosPage() {
                     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm" onClick={() => setDetallePedidoId(null)} aria-hidden />
                     <div
                         className={`fixed inset-4 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 z-50 sm:max-w-xl w-full rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col ${
-                            darkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
+                            darkMode ? 'bg-tienda-elevated border border-gray-700' : 'bg-white border border-gray-200'
                         }`}
                     >
                         <div className="shrink-0 flex items-center justify-between px-4 py-3 bg-emerald-600/20 border-b border-emerald-500/30">
@@ -953,7 +953,7 @@ export default function AdminPedidosPage() {
                                                 </thead>
                                                 <tbody className={darkMode ? 'divide-y divide-gray-600' : 'divide-y divide-gray-200'}>
                                                     {(detallePedido.items || []).map((it, idx) => (
-                                                        <tr key={it.id ?? idx} className={darkMode ? 'bg-gray-800/50' : 'bg-white'}>
+                                                        <tr key={it.id ?? idx} className={darkMode ? 'bg-tienda-elevated/50' : 'bg-white'}>
                                                             <td className={`px-3 py-2.5 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>{it.nombre_producto}</td>
                                                             <td className={`px-3 py-2.5 text-center ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{it.cantidad}</td>
                                                             <td className={`px-3 py-2.5 text-center ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>

@@ -288,7 +288,7 @@ export default function AdminProductosManuales() {
             </div>
 
             {/* Formulario */}
-            <div className={`rounded-xl overflow-hidden border shadow-xl ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+            <div className={`rounded-xl overflow-hidden border shadow-xl ${darkMode ? 'bg-tienda-elevated border-gray-700' : 'bg-white border-gray-200'}`}>
                 <div className={`px-5 py-4 ${darkMode ? 'bg-emerald-600/25 border-b border-emerald-500/30' : 'bg-emerald-50 border-b border-emerald-200'}`}>
                     <h2 className={`text-lg font-bold ${darkMode ? 'text-emerald-200' : 'text-emerald-800'}`}>{editingId ? 'Editar producto' : 'Nuevo producto'}</h2>
                 </div>
@@ -506,7 +506,7 @@ export default function AdminProductosManuales() {
             </div>
 
             {/* Listado con filtros */}
-            <div className={`rounded-xl overflow-hidden border shadow-xl ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+            <div className={`rounded-xl overflow-hidden border shadow-xl ${darkMode ? 'bg-tienda-elevated border-gray-700' : 'bg-white border-gray-200'}`}>
                 <div className={`px-5 py-4 ${darkMode ? 'bg-gray-700/50 border-b border-gray-600' : 'bg-gray-50 border-b border-gray-200'}`}>
                     <h2 className={`text-lg font-bold mb-4 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>Productos</h2>
                     <div className="flex flex-wrap gap-4">

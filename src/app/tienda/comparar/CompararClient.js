@@ -91,8 +91,8 @@ export default function CompararClient() {
         return Array.from(set).sort()
     }, [productos])
 
-    const bg = darkMode ? 'bg-gray-900' : 'bg-gray-50'
-    const cardBg = darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+    const bg = darkMode ? 'bg-tienda-canvas' : 'bg-gray-50'
+    const cardBg = darkMode ? 'bg-tienda-elevated border-gray-700' : 'bg-white border-gray-200'
     const text = darkMode ? 'text-gray-100' : 'text-gray-900'
     const textMuted = darkMode ? 'text-gray-400' : 'text-gray-600'
 
@@ -254,7 +254,7 @@ export default function CompararClient() {
                                 {allSpecKeys.length > 0 && (
                                     <>
                                         <tr className={`border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-                                            <td colSpan={productos.length + 1} className={`px-4 sm:px-6 py-2 font-bold text-[#FF8000] border-l-4 border-[#FF8000] ${darkMode ? 'bg-gray-800/60' : 'bg-amber-50'}`}>
+                                            <td colSpan={productos.length + 1} className={`px-4 sm:px-6 py-2 font-bold text-[#FF8000] border-l-4 border-[#FF8000] ${darkMode ? 'bg-tienda-elevated/60' : 'bg-amber-50'}`}>
                                                 Especificaciones técnicas
                                             </td>
                                         </tr>
