@@ -43,11 +43,28 @@ class PlanSubscriptionService
         ])->save();
     }
 
-    public static function hasProAccess(User $user): bool
+    public static function indefiniteActive(User $user): bool
     {
+        return (bool) $user->pro_subscription_indefinite && ! (bool) $user->pro_subscription_indefinite_paused;
+    }
+
+    /**
+     * Acceso efectivo Pro (periodo vigente o Pro indefinido sin pausa).
+     */
+    public static function effectiveProActive(User $user): bool
+    {
+        if (self::indefiniteActive($user)) {
+            return true;
+        }
+
         $end = $user->pro_subscription_ends_at;
 
         return $end instanceof CarbonInterface && $end->isFuture();
+    }
+
+    public static function hasProAccess(User $user): bool
+    {
+        return self::effectiveProActive($user);
     }
 
     public static function secondsRemaining(User $user): int

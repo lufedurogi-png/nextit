@@ -375,6 +375,7 @@ class SocialController extends Controller
 
         $friendIds = $this->friendIds($me);
         $recommendedUsers = $this->recommendedUsersFromFriendsOfFriends($me, $friendIds);
+        $recommendedUsers = $this->withRecommendedUserFriendshipStatus($me, $recommendedUsers);
         $recommendedGroups = $this->recommendedGroupsByNameSimilarity($me);
 
         return response()->json([
@@ -382,6 +383,57 @@ class SocialController extends Controller
             'recommended_users' => $recommendedUsers,
             'recommended_groups' => $recommendedGroups,
         ]);
+    }
+
+    /**
+     * @param  \Illuminate\Database\Eloquent\Collection<int, User>  $users
+     * @return array<int, array<string, mixed>>
+     */
+    private function withRecommendedUserFriendshipStatus(int $me, $users): array
+    {
+        if ($users->isEmpty()) {
+            return [];
+        }
+
+        $ids = $users->pluck('id')->map(fn ($id) => (int) $id)->all();
+        $statusByOtherId = $this->pendingFriendshipStatusByOtherUserId($me, $ids);
+
+        return $users->map(fn (User $u) => array_merge($u->only(['id', 'name', 'email', 'avatar_path']), [
+            'friendship_status' => $statusByOtherId[(int) $u->id] ?? 'none',
+        ]))->values()->all();
+    }
+
+    /**
+     * @param  array<int, int>  $otherUserIds
+     * @return array<int, string>
+     */
+    private function pendingFriendshipStatusByOtherUserId(int $me, array $otherUserIds): array
+    {
+        if ($otherUserIds === []) {
+            return [];
+        }
+
+        $rows = UserFriendship::query()
+            ->where('status', 'pending')
+            ->where(function ($q) use ($me, $otherUserIds) {
+                $q->where(function ($qq) use ($me, $otherUserIds) {
+                    $qq->where('requester_id', $me)->whereIn('addressee_id', $otherUserIds);
+                })->orWhere(function ($qq) use ($me, $otherUserIds) {
+                    $qq->where('addressee_id', $me)->whereIn('requester_id', $otherUserIds);
+                });
+            })
+            ->get(['requester_id', 'addressee_id']);
+
+        $map = [];
+        foreach ($rows as $f) {
+            $other = (int) $f->requester_id === $me ? (int) $f->addressee_id : (int) $f->requester_id;
+            if (! in_array($other, $otherUserIds, true)) {
+                continue;
+            }
+            $map[$other] = (int) $f->requester_id === $me ? 'outgoing_pending' : 'incoming_pending';
+        }
+
+        return $map;
     }
 
     private function friendIds(int $userId): array
@@ -437,6 +489,7 @@ class SocialController extends Controller
 
         return User::query()
             ->where('id', '!=', $me)
+            ->when($friendIds !== [], fn ($q) => $q->whereNotIn('id', $friendIds))
             ->latest()
             ->limit(8)
             ->get(['id', 'name', 'email', 'avatar_path']);

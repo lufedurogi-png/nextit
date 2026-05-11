@@ -5,6 +5,9 @@ use App\Http\Controllers\Api\AdminFranchiseCatalogController;
 use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\AdminMetodoPagoController;
 use App\Http\Controllers\Api\AdminPlanProController;
+use App\Http\Controllers\Api\AdminPlanPromotionalFeedbackController;
+use App\Http\Controllers\Api\AdminPlanProIndefiniteController;
+use App\Http\Controllers\Api\AdminPlanRevenueController;
 use App\Http\Controllers\Api\AdminScanUsageController;
 use App\Http\Controllers\Api\AdminStatsController;
 use App\Http\Controllers\Api\AdminUserController;
@@ -21,6 +24,8 @@ use App\Http\Controllers\Api\ListingController;
 use App\Http\Controllers\Api\MetodoPagoController;
 use App\Http\Controllers\Api\PlanMercadoPagoController;
 use App\Http\Controllers\Api\PlanPayPalController;
+use App\Http\Controllers\Api\PlanPromocionalController;
+use App\Http\Controllers\Api\PlanPromotionalFeedbackController;
 use App\Http\Controllers\Api\PlanSubscriptionController;
 use App\Http\Controllers\Api\PlanTarjetaController;
 use App\Http\Controllers\Api\ProfileController;
@@ -76,6 +81,18 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/plan-pro', [AdminPlanProController::class, 'update']);
         Route::get('/plan-pro/usuarios-activos', [AdminPlanProController::class, 'usersWithActivePlan']);
 
+        Route::get('/plan-pagos/resumen-mes', [AdminPlanRevenueController::class, 'currentMonth']);
+        Route::get('/plan-pagos/informes', [AdminPlanRevenueController::class, 'reportsIndex']);
+
+        Route::get('/plan-promo/comentarios', [AdminPlanPromotionalFeedbackController::class, 'index']);
+
+        Route::get('/plan-pro/indefinidos/buscar', [AdminPlanProIndefiniteController::class, 'search']);
+        Route::get('/plan-pro/indefinidos', [AdminPlanProIndefiniteController::class, 'indefiniteList']);
+        Route::post('/plan-pro/usuarios/{user}/indefinido', [AdminPlanProIndefiniteController::class, 'grant'])->whereNumber('user');
+        Route::post('/plan-pro/usuarios/{user}/indefinido/pausar', [AdminPlanProIndefiniteController::class, 'pause'])->whereNumber('user');
+        Route::post('/plan-pro/usuarios/{user}/indefinido/reanudar', [AdminPlanProIndefiniteController::class, 'resume'])->whereNumber('user');
+        Route::post('/plan-pro/usuarios/{user}/indefinido/quitar', [AdminPlanProIndefiniteController::class, 'remove'])->whereNumber('user');
+
         Route::get('/scan-usage/overview', [AdminScanUsageController::class, 'overview']);
         Route::get('/scan-usage/history', [AdminScanUsageController::class, 'yearlyHistory']);
         Route::get('/scan-usage/users', [AdminScanUsageController::class, 'usersMonthly']);
@@ -91,6 +108,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/plan/paypal/orders', [PlanPayPalController::class, 'createOrder']);
     Route::post('/plan/paypal/orders/capture', [PlanPayPalController::class, 'capture']);
     Route::post('/plan/tarjeta/checkout', [PlanTarjetaController::class, 'checkout']);
+    Route::post('/plan/promocional/checkout', [PlanPromocionalController::class, 'checkout']);
+    Route::post('/plan/promocional/feedback', [PlanPromotionalFeedbackController::class, 'store']);
 
     Route::get('/feed', [FeedPostController::class, 'index']);
     Route::get('/feed/tab-preference', [FeedPostController::class, 'getTabPreference']);

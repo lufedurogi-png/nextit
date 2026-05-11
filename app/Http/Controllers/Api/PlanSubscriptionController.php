@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\PlanSetting;
+use App\Services\PlanMonthlyRevenueSnapshotService;
 use App\Services\PlanSubscriptionService;
+use App\Support\MetodoPagoToggle;
 use Carbon\CarbonInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -40,9 +42,12 @@ class PlanSubscriptionController extends Controller
 
     public function subscription(Request $request): JsonResponse
     {
-        $user = $request->user();
-        $end = $user->pro_subscription_ends_at;
-        $active = $end instanceof CarbonInterface && $end->isFuture();
+        PlanMonthlyRevenueSnapshotService::syncAllMissingThroughLastCompletedMonth();
+
+        $user = $request->user()->fresh();
+        $indefinite = PlanSubscriptionService::indefiniteActive($user);
+        $active = PlanSubscriptionService::effectiveProActive($user);
+        $lastMethod = strtolower((string) ($user->pro_last_payment_method ?? ''));
 
         return response()->json([
             'success' => true,
@@ -50,9 +55,14 @@ class PlanSubscriptionController extends Controller
                 'pro_active' => $active,
                 'pro_scan_unlocked' => $active,
                 'pro_started_at' => $user->pro_subscription_started_at?->toIso8601String(),
-                'pro_ends_at' => $user->pro_subscription_ends_at?->toIso8601String(),
+                'pro_ends_at' => $indefinite ? null : $user->pro_subscription_ends_at?->toIso8601String(),
                 'pro_cancelled' => (bool) $user->pro_subscription_cancelled,
-                'seconds_remaining' => PlanSubscriptionService::secondsRemaining($user),
+                'seconds_remaining' => $indefinite ? null : PlanSubscriptionService::secondsRemaining($user),
+                'pro_indefinite' => $indefinite,
+                'pro_last_payment_method' => $user->pro_last_payment_method,
+                'show_promotional_feedback' => $active
+                    && MetodoPagoToggle::isEnabled('promocional')
+                    && $lastMethod === 'promocional',
             ],
         ]);
     }
@@ -60,6 +70,13 @@ class PlanSubscriptionController extends Controller
     public function cancel(Request $request): JsonResponse
     {
         $user = $request->user();
+        if (PlanSubscriptionService::indefiniteActive($user)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Las cuentas con Pro indefinido no usan esta cancelación. Contacta al equipo si necesitas cambios.',
+            ], 422);
+        }
+
         $end = $user->pro_subscription_ends_at;
         if (! ($end instanceof CarbonInterface) || ! $end->isFuture()) {
             return response()->json([

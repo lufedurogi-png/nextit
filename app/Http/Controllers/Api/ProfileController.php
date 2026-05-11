@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Collection;
 use App\Models\User;
-use Carbon\CarbonInterface;
+use App\Services\PlanSubscriptionService;
 use App\Models\UserFeedPost;
 use App\Models\UserFriendship;
 use App\Support\FeedCommentNesting;
@@ -24,8 +24,7 @@ class ProfileController extends Controller
         ]);
 
         if (array_key_exists('viku_chan_mode', $data)) {
-            $end = $user->pro_subscription_ends_at;
-            $proActive = $end instanceof CarbonInterface && $end->isFuture();
+            $proActive = PlanSubscriptionService::effectiveProActive($user);
             if (! $proActive) {
                 return response()->json([
                     'message' => 'Modo Viku chan solo está disponible con plan Pro Coleccionista activo.',

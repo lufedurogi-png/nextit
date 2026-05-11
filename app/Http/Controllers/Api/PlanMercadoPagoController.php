@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\PlanMercadoPagoSnapshot;
 use App\Models\User;
 use App\Services\MercadoPagoService;
+use App\Services\PlanProPaymentLogService;
 use App\Services\PlanSubscriptionService;
 use App\Support\MetodoPagoToggle;
 use Illuminate\Http\JsonResponse;
@@ -363,7 +364,7 @@ class PlanMercadoPagoController extends Controller
         $refExterna = (string) ($payment['id'] ?? $paymentId);
 
         try {
-            DB::transaction(function () use ($user, $refExterna, $preferenceId) {
+            DB::transaction(function () use ($user, $refExterna, $preferenceId, $paid, $currencyPaid, $snapshot) {
                 $rowLocked = PlanMercadoPagoSnapshot::query()
                     ->where('preference_id', $preferenceId)
                     ->where('user_id', $user->id)
@@ -378,7 +379,19 @@ class PlanMercadoPagoController extends Controller
                     return;
                 }
 
-                PlanSubscriptionService::activate($user->fresh(), 'mercadopago', $refExterna);
+                $freshUser = $user->fresh();
+                PlanSubscriptionService::activate($freshUser, 'mercadopago', $refExterna);
+
+                $currencyForFee = $currencyPaid !== ''
+                    ? $currencyPaid
+                    : strtoupper((string) ($snapshot['currency'] ?? 'MXN'));
+                PlanProPaymentLogService::record(
+                    $freshUser->fresh(),
+                    'mercadopago',
+                    $paid,
+                    $currencyForFee,
+                    $refExterna
+                );
 
                 $rowLocked->applied_at = now();
                 $rowLocked->expires_at = now()->addDays(30);

@@ -20,6 +20,10 @@ class MetodoPagoToggle
             'label' => 'Tarjeta de crédito o débito',
             'description' => 'Cobro directo en tu checkout con tarjeta guardada.',
         ],
+        'promocional' => [
+            'label' => 'Promocional por tiempo limitado',
+            'description' => 'Activa Pro Coleccionista sin costo durante la promoción.',
+        ],
     ];
 
     /**

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\PlanPayPalSnapshot;
 use App\Services\PayPalService;
+use App\Services\PlanProPaymentLogService;
 use App\Services\PlanSubscriptionService;
 use App\Support\MetodoPagoToggle;
 use Illuminate\Http\JsonResponse;
@@ -231,7 +232,7 @@ class PlanPayPalController extends Controller
         $paypalOrderId = $valid['order_id'];
 
         try {
-            DB::transaction(function () use ($user, $captureId, $paypalOrderId) {
+            DB::transaction(function () use ($user, $captureId, $paypalOrderId, $paid, $snapshot) {
                 $rowLocked = PlanPayPalSnapshot::query()
                     ->where('paypal_order_id', $paypalOrderId)
                     ->where('user_id', $user->id)
@@ -246,7 +247,16 @@ class PlanPayPalController extends Controller
                     return;
                 }
 
-                PlanSubscriptionService::activate($user->fresh(), 'paypal', (string) $captureId);
+                $freshUser = $user->fresh();
+                PlanSubscriptionService::activate($freshUser, 'paypal', (string) $captureId);
+
+                PlanProPaymentLogService::record(
+                    $freshUser->fresh(),
+                    'paypal',
+                    $paid,
+                    strtoupper((string) $snapshot['currency']),
+                    $captureId
+                );
 
                 $rowLocked->applied_at = now();
                 $rowLocked->expires_at = now()->addDays(30);
