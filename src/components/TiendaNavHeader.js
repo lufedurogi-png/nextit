@@ -82,10 +82,10 @@ export default function TiendaNavHeader({ darkMode, setDarkMode, onToggleLeftSid
     }
 
     const pill = `inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium transition-colors ${
-        darkMode ? 'bg-gray-800/80 text-gray-200 hover:bg-gray-700' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+        darkMode ? 'bg-tienda-elevated/90 text-gray-200 ring-1 ring-white/[0.06] hover:bg-tienda-elevated' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
     }`
     const pillSm = `inline-flex items-center justify-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium transition-colors ${
-        darkMode ? 'bg-gray-800/80 text-gray-200 hover:bg-gray-700' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+        darkMode ? 'bg-tienda-elevated/90 text-gray-200 ring-1 ring-white/[0.06] hover:bg-tienda-elevated' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
     }`
 
     return (
@@ -93,7 +93,7 @@ export default function TiendaNavHeader({ darkMode, setDarkMode, onToggleLeftSid
         <header
             ref={mobileStickyNavRef}
             className={`z-50 border-b transition-colors duration-300 max-md:fixed max-md:inset-x-0 max-md:top-0 max-md:z-[60] max-md:shadow-md md:sticky md:top-0 ${
-                darkMode ? 'bg-gray-900/95 backdrop-blur-sm border-gray-800' : 'bg-white/95 backdrop-blur-sm border-gray-200'
+                darkMode ? 'border-gray-800/60 bg-tienda-canvas/95 backdrop-blur-md' : 'border-gray-200 bg-white/95 backdrop-blur-sm'
             }`}
         >
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -117,21 +117,21 @@ export default function TiendaNavHeader({ darkMode, setDarkMode, onToggleLeftSid
                             </div>
                             <button
                                 onClick={toggleDark}
-                                className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-[#FF8000] focus:ring-offset-2 ${
-                                    darkMode ? 'bg-[#2b4e94]' : 'bg-gray-300'
+                                className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 ${
+                                    darkMode ? 'bg-gray-600' : 'bg-gray-300'
                                 }`}
                                 aria-label="Cambiar tema"
                             >
                                 <span className={`inline-block h-5 w-5 rounded-full bg-white transition-transform duration-300 ${darkMode ? 'translate-x-8' : 'translate-x-1'}`} />
                             </button>
-                            <span className={`text-xs font-medium ${darkMode ? 'text-[#FF8000]' : 'text-gray-500'}`}>
+                            <span className={`text-xs font-medium ${darkMode ? 'text-brand' : 'text-gray-500'}`}>
                                 {darkMode ? 'Oscuro' : 'Claro'}
                             </span>
                         </div>
                         {user && (
                             <Link
                                 href="/favoritos"
-                                className={`flex items-center gap-1.5 transition-colors font-medium ${darkMode ? 'text-gray-300 hover:text-[#FF8000]' : 'text-gray-700 hover:text-[#FF8000]'}`}
+                                className={`flex items-center gap-1.5 transition-colors font-medium ${darkMode ? 'text-gray-300 hover:text-brand' : 'text-gray-700 hover:text-brand'}`}
                                 aria-label="Favoritos"
                             >
                                 <Image
@@ -143,7 +143,7 @@ export default function TiendaNavHeader({ darkMode, setDarkMode, onToggleLeftSid
                                 />
                                 <span>Favoritos</span>
                                 {favoritosCount > 0 && (
-                                    <span className="flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-[#FF8000] text-white text-xs font-semibold">
+                                    <span className="flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-brand text-white text-xs font-semibold">
                                         {favoritosCount > 99 ? '99+' : favoritosCount}
                                     </span>
                                 )}
@@ -151,7 +151,7 @@ export default function TiendaNavHeader({ darkMode, setDarkMode, onToggleLeftSid
                         )}
                         <Link
                             href="/tienda/carrito"
-                            className={`flex items-center gap-1.5 transition-colors font-medium ${darkMode ? 'text-gray-300 hover:text-[#FF8000]' : 'text-gray-700 hover:text-[#FF8000]'}`}
+                            className={`flex items-center gap-1.5 transition-colors font-medium ${darkMode ? 'text-gray-300 hover:text-brand' : 'text-gray-700 hover:text-brand'}`}
                             aria-label="Carrito"
                         >
                             <Image
@@ -163,18 +163,18 @@ export default function TiendaNavHeader({ darkMode, setDarkMode, onToggleLeftSid
                             />
                             <span>Carrito</span>
                             {cartCount > 0 && (
-                                <span className="flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-[#FF8000] text-white text-xs font-semibold">
+                                <span className="flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-brand text-white text-xs font-semibold">
                                     {cartCount > 99 ? '99+' : cartCount}
                                 </span>
                             )}
                         </Link>
                         {mostrarLinkTiendaBarra && (
-                            <Link href="/" className={`transition-colors font-medium ${darkMode ? 'text-gray-300 hover:text-[#FF8000]' : 'text-gray-700 hover:text-[#FF8000]'}`}>
+                            <Link href="/" className={`transition-colors font-medium ${darkMode ? 'text-gray-300 hover:text-brand' : 'text-gray-700 hover:text-brand'}`}>
                                 Tienda
                             </Link>
                         )}
                         {mostrarLinkInicioBarra && (
-                            <Link href="/" className={`transition-colors font-medium ${darkMode ? 'text-gray-300 hover:text-[#FF8000]' : 'text-gray-700 hover:text-[#FF8000]'}`}>
+                            <Link href="/" className={`transition-colors font-medium ${darkMode ? 'text-gray-300 hover:text-brand' : 'text-gray-700 hover:text-brand'}`}>
                                 Inicio
                             </Link>
                         )}
@@ -182,7 +182,7 @@ export default function TiendaNavHeader({ darkMode, setDarkMode, onToggleLeftSid
                             <div className="relative tienda-nav-user-dropdown">
                                 <button
                                     onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                                    className={`flex items-center space-x-2 transition-colors font-medium ${darkMode ? 'text-gray-300 hover:text-[#FF8000]' : 'text-gray-700 hover:text-[#FF8000]'}`}
+                                    className={`flex items-center space-x-2 transition-colors font-medium ${darkMode ? 'text-gray-300 hover:text-brand' : 'text-gray-700 hover:text-brand'}`}
                                 >
                                     <span>Tienda: {user?.name || user?.email}</span>
                                     <svg className={`w-4 h-4 transition-transform duration-200 ${userDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -197,7 +197,7 @@ export default function TiendaNavHeader({ darkMode, setDarkMode, onToggleLeftSid
                                                 <Link
                                                     href="/dashboard"
                                                     onClick={() => setUserDropdownOpen(false)}
-                                                    className={`flex items-center px-4 py-2 text-sm transition-colors ${darkMode ? 'text-gray-300 hover:bg-gray-700 hover:text-[#FF8000]' : 'text-gray-700 hover:bg-gray-100 hover:text-[#FF8000]'}`}
+                                                    className={`flex items-center px-4 py-2 text-sm transition-colors ${darkMode ? 'text-gray-300 hover:bg-gray-700 hover:text-brand' : 'text-gray-700 hover:bg-gray-100 hover:text-brand'}`}
                                                 >
                                                     <Image src="/Imagenes/icon_home.webp" alt="" width={20} height={20} className={`mr-3 object-contain ${darkMode ? 'brightness-0 invert' : ''}`} />
                                                     Home
@@ -205,7 +205,7 @@ export default function TiendaNavHeader({ darkMode, setDarkMode, onToggleLeftSid
                                                 <Link
                                                     href="/dashboard"
                                                     onClick={() => setUserDropdownOpen(false)}
-                                                    className={`flex items-center px-4 py-2 text-sm transition-colors ${darkMode ? 'text-gray-300 hover:bg-gray-700 hover:text-[#FF8000]' : 'text-gray-700 hover:bg-gray-100 hover:text-[#FF8000]'}`}
+                                                    className={`flex items-center px-4 py-2 text-sm transition-colors ${darkMode ? 'text-gray-300 hover:bg-gray-700 hover:text-brand' : 'text-gray-700 hover:bg-gray-100 hover:text-brand'}`}
                                                 >
                                                     <Image src="/Imagenes/icon_pedidos.png" alt="" width={20} height={20} className={`mr-3 object-contain ${darkMode ? 'brightness-0 invert' : ''}`} />
                                                     Mis pedidos
@@ -213,7 +213,7 @@ export default function TiendaNavHeader({ darkMode, setDarkMode, onToggleLeftSid
                                                 <Link
                                                     href="/favoritos"
                                                     onClick={() => setUserDropdownOpen(false)}
-                                                    className={`flex items-center px-4 py-2 text-sm transition-colors ${darkMode ? 'text-gray-300 hover:bg-gray-700 hover:text-[#FF8000]' : 'text-gray-700 hover:bg-gray-100 hover:text-[#FF8000]'}`}
+                                                    className={`flex items-center px-4 py-2 text-sm transition-colors ${darkMode ? 'text-gray-300 hover:bg-gray-700 hover:text-brand' : 'text-gray-700 hover:bg-gray-100 hover:text-brand'}`}
                                                 >
                                                     <Image src="/Imagenes/icon_favoritos.png" alt="" width={20} height={20} className={`mr-3 object-contain ${darkMode ? 'brightness-0 invert' : ''}`} />
                                                     Favoritos
@@ -223,7 +223,7 @@ export default function TiendaNavHeader({ darkMode, setDarkMode, onToggleLeftSid
                                                         setUserDropdownOpen(false)
                                                         logout()
                                                     }}
-                                                    className={`w-full flex items-center px-4 py-2 text-sm transition-colors text-left ${darkMode ? 'text-gray-300 hover:bg-gray-700 hover:text-[#FF8000]' : 'text-gray-700 hover:bg-gray-100 hover:text-[#FF8000]'}`}
+                                                    className={`w-full flex items-center px-4 py-2 text-sm transition-colors text-left ${darkMode ? 'text-gray-300 hover:bg-gray-700 hover:text-brand' : 'text-gray-700 hover:bg-gray-100 hover:text-brand'}`}
                                                 >
                                                     <Image src="/Imagenes/icon_cerrar_sesion.webp" alt="" width={20} height={20} className={`mr-3 object-contain ${darkMode ? 'brightness-0 invert' : ''}`} />
                                                     Cerrar
@@ -234,7 +234,7 @@ export default function TiendaNavHeader({ darkMode, setDarkMode, onToggleLeftSid
                                 )}
                             </div>
                         ) : (
-                            <Link href="/login" className={`transition-colors font-medium ${darkMode ? 'text-gray-300 hover:text-[#FF8000]' : 'text-gray-700 hover:text-[#FF8000]'}`}>
+                            <Link href="/login" className={`transition-colors font-medium ${darkMode ? 'text-gray-300 hover:text-brand' : 'text-gray-700 hover:text-brand'}`}>
                                 Iniciar sesión
                             </Link>
                         )}
@@ -273,7 +273,7 @@ export default function TiendaNavHeader({ darkMode, setDarkMode, onToggleLeftSid
                                     type="button"
                                     onClick={toggleDark}
                                     className={`relative inline-flex h-5 w-10 shrink-0 items-center rounded-full transition-colors ${
-                                        darkMode ? 'bg-[#2b4e94]' : 'bg-gray-300'
+                                        darkMode ? 'bg-gray-600' : 'bg-gray-300'
                                     }`}
                                     aria-label="Cambiar tema"
                                 >
@@ -329,7 +329,7 @@ export default function TiendaNavHeader({ darkMode, setDarkMode, onToggleLeftSid
                                         <Image src="/Imagenes/icon_favoritos.png" alt="" width={14} height={14} className={`object-contain ${darkMode ? 'brightness-0 invert' : ''}`} />
                                         Favoritos
                                         {favoritosCount > 0 && (
-                                            <span className="rounded-full bg-[#FF8000] px-1 text-[10px] font-semibold text-white">
+                                            <span className="rounded-full bg-brand px-1 text-[10px] font-semibold text-white">
                                                 {favoritosCount > 99 ? '99+' : favoritosCount}
                                             </span>
                                         )}
@@ -338,7 +338,7 @@ export default function TiendaNavHeader({ darkMode, setDarkMode, onToggleLeftSid
                                         <Image src="/Imagenes/icon_carrito.png" alt="" width={14} height={14} className={`object-contain ${darkMode ? 'brightness-0 invert' : ''}`} />
                                         Carrito
                                         {cartCount > 0 && (
-                                            <span className="rounded-full bg-[#FF8000] px-1 text-[10px] font-semibold text-white">
+                                            <span className="rounded-full bg-brand px-1 text-[10px] font-semibold text-white">
                                                 {cartCount > 99 ? '99+' : cartCount}
                                             </span>
                                         )}
@@ -353,7 +353,7 @@ export default function TiendaNavHeader({ darkMode, setDarkMode, onToggleLeftSid
                                     <Image src="/Imagenes/icon_carrito.png" alt="" width={14} height={14} className={`object-contain ${darkMode ? 'brightness-0 invert' : ''}`} />
                                     Carrito
                                     {cartCount > 0 && (
-                                        <span className="rounded-full bg-[#FF8000] px-1 text-[10px] font-semibold text-white">
+                                        <span className="rounded-full bg-brand px-1 text-[10px] font-semibold text-white">
                                             {cartCount > 99 ? '99+' : cartCount}
                                         </span>
                                     )}

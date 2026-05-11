@@ -19,21 +19,27 @@ function getFirstImageUrl(producto) {
     return null
 }
 
-const MAX_COMPARAR = 4
-
-export default function ProductCard({ producto, darkMode, busquedaId = null, comparar = false, seleccionado = false, onCompararChange, compararLleno = false, returnUrl = null }) {
+export default function ProductCard({
+    producto,
+    darkMode,
+    busquedaId = null,
+    comparar = false,
+    seleccionado = false,
+    onCompararChange,
+    compararLleno = false,
+    returnUrl = null,
+    cuadricula = false,
+}) {
     const { user } = useAuth({ middleware: 'guest' })
     const [hasToken, setHasToken] = useState(false)
     useEffect(() => {
         setHasToken(typeof window !== 'undefined' && !!localStorage.getItem('auth_token'))
     }, [])
     const [imgError, setImgError] = useState(false)
-    const [addingCart, setAddingCart] = useState(false)
     const [togglingFavorito, setTogglingFavorito] = useState(false)
-    const [cantidadCart, setCantidadCart] = useState(1)
     const isLogged = !!user || hasToken
     const { isFavorito, toggle: toggleFavorito } = useFavoritos(isLogged)
-    const { add: addToCarrito, isInCart } = useCarrito(isLogged)
+    const { isInCart } = useCarrito(isLogged)
     const { modoActivo, isInQuote, cantidad: quoteCantidad, toggleItem, setCantidad } = useCotizacion(user)
     const imageUrl = getFirstImageUrl(producto)
     const titulo = producto?.descripcion || ''
@@ -46,22 +52,18 @@ export default function ProductCard({ producto, darkMode, busquedaId = null, com
     const hayStock = totalStock > 0
     const src = imgError || !imageUrl ? FALLBACK_IMAGE : imageUrl
 
-    const [stockErrorModal, setStockErrorModal] = useState(null)
-
-    useEffect(() => {
-        if (totalStock > 0) setCantidadCart((prev) => Math.min(Math.max(1, prev), totalStock))
-    }, [totalStock])
-
     if (!clave) return null
 
+    const shellClass = cuadricula
+        ? darkMode
+            ? 'group relative overflow-hidden rounded-none border-0 bg-tienda-elevated shadow-none transition-colors duration-150 hover:bg-white/[0.035]'
+            : 'group relative overflow-hidden rounded-none border-0 bg-white shadow-none transition-colors duration-150 hover:bg-gray-50'
+        : darkMode
+            ? 'group relative overflow-hidden rounded-xl border border-gray-700/40 bg-tienda-elevated shadow-sm transition-[box-shadow,border-color] duration-200 hover:border-brand/45 hover:shadow-md'
+            : 'group relative overflow-hidden rounded-xl border border-gray-200/90 bg-white shadow-sm transition-[box-shadow,border-color] duration-200 hover:border-brand/50 hover:shadow-md'
+
     return (
-        <div
-            className={`group relative rounded-lg overflow-hidden border transition-all duration-300 hover:shadow-xl hover:scale-105 ${
-                darkMode
-                    ? 'bg-gray-800 border-gray-700 hover:border-[#FF8000]'
-                    : 'bg-white border-gray-200 hover:border-[#FF8000]'
-            }`}
-        >
+        <div className={shellClass}>
             <Link
                 href={returnUrl ? `/tienda/producto/${encodeURIComponent(clave)}?from=${encodeURIComponent(returnUrl)}` : `/tienda/producto/${encodeURIComponent(clave)}`}
                 className="block"
@@ -69,8 +71,12 @@ export default function ProductCard({ producto, darkMode, busquedaId = null, com
                     if (busquedaId) registrarSeleccionBusqueda(busquedaId, clave)
                 }}
             >
-                <div className="relative h-48 bg-gray-100 overflow-hidden cursor-pointer">
-                            {user && (
+                <div
+                    className={`relative h-48 cursor-pointer overflow-hidden ${
+                        darkMode ? 'bg-black/25' : 'bg-gray-50'
+                    }`}
+                >
+                    {user && (
                         <button
                             type="button"
                             onClick={(e) => {
@@ -79,7 +85,7 @@ export default function ProductCard({ producto, darkMode, busquedaId = null, com
                                 if (togglingFavorito) return
                                 toggleFavorito(clave).finally(() => setTogglingFavorito(false))
                             }}
-                            className="absolute top-2 left-2 z-10 flex flex-col items-center justify-center w-9 h-9 rounded-full bg-red-600 hover:bg-red-700 text-white shadow transition-colors"
+                            className="absolute left-2 top-2 z-10 flex h-9 w-9 flex-col items-center justify-center rounded-full border border-white/15 bg-black/35 text-white shadow-sm backdrop-blur-sm transition-colors hover:border-red-400/50 hover:bg-red-600/90"
                             aria-label={isFavorito(clave) ? 'Quitar de favoritos' : 'Agregar a favoritos'}
                         >
                             <Image
@@ -107,7 +113,7 @@ export default function ProductCard({ producto, darkMode, busquedaId = null, com
                                 disabled={!seleccionado && compararLleno}
                                 onChange={(e) => onCompararChange?.(clave, e.target.checked)}
                                 onClick={(e) => e.stopPropagation()}
-                                className="w-5 h-5 rounded border-2 border-gray-400 bg-white/90 text-[#FF8000] focus:ring-[#FF8000] focus:ring-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="h-5 w-5 rounded border-2 border-gray-400 bg-white/90 text-brand focus:ring-2 focus:ring-brand focus:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50"
                                 aria-label={`Comparar ${titulo.slice(0, 40)}`}
                             />
                         </div>
@@ -122,7 +128,7 @@ export default function ProductCard({ producto, darkMode, busquedaId = null, com
                                 checked={isInQuote(clave)}
                                 onChange={(e) => toggleItem(clave, e.target.checked, quoteCantidad(clave) || 1)}
                                 onClick={(e) => e.stopPropagation()}
-                                className="w-5 h-5 rounded border-2 border-gray-400 bg-white/90 text-[#FF8000] focus:ring-[#FF8000] focus:ring-offset-0"
+                                className="h-5 w-5 rounded border-2 border-gray-400 bg-white/90 text-brand focus:ring-2 focus:ring-brand focus:ring-offset-0"
                                 aria-label={`Cotizar ${titulo.slice(0, 40)}`}
                             />
                         </div>
@@ -131,60 +137,99 @@ export default function ProductCard({ producto, darkMode, busquedaId = null, com
                         src={src}
                         alt={titulo.slice(0, 60) || 'Producto'}
                         fill
-                        className="object-contain group-hover:scale-105 transition-transform duration-300 p-2"
+                        className="object-contain p-2 transition-transform duration-300 group-hover:scale-[1.02]"
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                         onError={() => setImgError(true)}
                         unoptimized={src.startsWith('http')}
                     />
                     {grupo && (
-                        <span className={`absolute bottom-2 right-2 text-xs px-2 py-1 rounded ${
-                            darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600'
-                        }`}>
+                        <span
+                            className={`absolute bottom-2 right-2 rounded-md px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide ${
+                                darkMode ? 'bg-black/35 text-gray-300 ring-1 ring-white/10' : 'bg-white/90 text-gray-600 ring-1 ring-gray-200/80'
+                            }`}
+                        >
                             {grupo}
                         </span>
                     )}
                 </div>
-                <div className="p-4">
-                    <h3 className={`font-semibold mb-2 line-clamp-2 cursor-pointer ${
-                        darkMode ? 'text-white' : 'text-gray-900'
-                    }`}>
+                <div className="border-t border-gray-100/80 p-4 dark:border-white/[0.06]">
+                    <h3
+                        title={titulo}
+                        className={`mb-2 line-clamp-2 cursor-pointer text-[15px] font-medium leading-snug ${
+                            darkMode ? 'text-gray-100' : 'text-gray-900'
+                        }`}
+                    >
                         {titulo}
                     </h3>
-                    <div className="flex flex-col gap-0.5">
+                    <div className="flex flex-col gap-1.5">
                         {producto.tiene_descuento && producto.precio_anterior != null && (
                             <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                                 <span className="line-through">{formatPrecio(producto.precio_anterior, producto.moneda)}</span>
                                 {' → '}
-                                <span className="font-semibold text-[#FF8000]">{formatPrecio(producto.precio_actual ?? producto.precio, producto.moneda)}</span>
+                                <span className={`font-semibold tabular-nums ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>
+                                    {formatPrecio(producto.precio_actual ?? producto.precio, producto.moneda)}
+                                </span>
                                 {producto.porcentaje_descuento > 0 && (
-                                    <span className={`ml-1 ${darkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>({Math.round(producto.porcentaje_descuento)}%)</span>
+                                    <span className={`ml-1 ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>({Math.round(producto.porcentaje_descuento)}%)</span>
                                 )}
                             </p>
                         )}
-                        <div className="flex items-center justify-between">
-                            <span className={`text-lg font-bold ${darkMode ? 'text-[#FF8000]' : 'text-[#FF8000]'}`}>
+                        <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-2">
+                            <span
+                                className={`shrink-0 text-base font-semibold tabular-nums ${
+                                    darkMode ? 'text-gray-100' : 'text-gray-900'
+                                }`}
+                            >
                                 {precioFormateado}
+                            </span>
+                            <span
+                                className={`inline-flex max-w-full items-center rounded-md border px-2 py-0.5 text-[11px] font-medium tabular-nums leading-tight ${
+                                    hayStock
+                                        ? darkMode
+                                            ? 'border-white/[0.1] bg-white/[0.03] text-gray-400'
+                                            : 'border-gray-200 bg-white text-gray-600'
+                                        : darkMode
+                                            ? 'border-rose-500/20 bg-rose-950/25 text-rose-200/85'
+                                            : 'border-rose-200/80 bg-rose-50/90 text-rose-800'
+                                }`}
+                            >
+                                {hayStock ? `Stock: ${totalStock}` : 'Sin stock'}
                             </span>
                         </div>
                     </div>
-                    <p className={`mt-1 text-sm ${
-                        hayStock
-                            ? darkMode ? 'text-emerald-400' : 'text-emerald-600'
-                            : darkMode ? 'text-red-400' : 'text-red-600'
-                    }`}>
-                        {hayStock ? `En stock: ${totalStock}` : 'Sin stock'}
-                    </p>
                 </div>
             </Link>
+            {isInCart(clave) && (
+                <div
+                    className={`px-4 pb-2 pt-1 ${cuadricula ? 'border-t border-gray-200/70 dark:border-white/[0.08]' : '-mt-1'}`}
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <Link
+                        href="/tienda/carrito"
+                        className={`inline-flex text-sm font-medium underline decoration-brand/35 underline-offset-2 transition-colors hover:decoration-brand ${
+                            darkMode ? 'text-brand hover:text-brand-hover' : 'text-brand hover:text-brand-hover'
+                        }`}
+                    >
+                        Ver carrito →
+                    </Link>
+                </div>
+            )}
             {modoActivo && isInQuote(clave) && (
-                <div className="px-4 py-2 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                    <label className="text-sm font-semibold shrink-0 text-[#FF8000]" htmlFor={`qty-quote-${clave}`}>
+                <div
+                    className={`flex items-center gap-2 px-4 py-2 ${cuadricula ? 'border-t border-gray-200/70 dark:border-white/[0.08]' : ''}`}
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <label className="shrink-0 text-sm font-medium text-brand" htmlFor={`qty-quote-${clave}`}>
                         Cantidad a cotizar:
                     </label>
-                    <div className={`relative flex items-center gap-0 rounded-xl overflow-hidden border-2 border-l-4 ${
-                        darkMode ? 'bg-gray-700 border-gray-600 border-l-[#FF8000]' : 'bg-gray-200 border-gray-300 border-l-[#FF8000]'
-                    }`}>
-                        <span className="pl-2.5 shrink-0 text-[#FF8000] font-bold text-sm" aria-hidden>#</span>
+                    <div
+                        className={`relative flex items-center gap-0 overflow-hidden rounded-lg border border-l-[3px] border-l-brand ${
+                            darkMode ? 'border-gray-600/50 bg-black/20' : 'border-gray-300 bg-gray-100'
+                        }`}
+                    >
+                        <span className="shrink-0 pl-2.5 text-sm font-semibold text-brand" aria-hidden>
+                            #
+                        </span>
                         <input
                             id={`qty-quote-${clave}`}
                             type="number"
@@ -245,165 +290,6 @@ export default function ProductCard({ producto, darkMode, busquedaId = null, com
                     </div>
                 </div>
             )}
-            <div className="px-4 pb-4 space-y-2">
-                {!isInCart(clave) && hayStock && (
-                    <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                        <label className={`text-sm font-semibold shrink-0 ${darkMode ? 'text-teal-400' : 'text-teal-600'}`} htmlFor={`qty-card-${clave}`}>
-                            Cantidad:
-                        </label>
-                        <div className={`relative flex items-center gap-0 rounded-xl overflow-hidden border-2 border-l-4 ${
-                            darkMode ? 'bg-gray-700 border-gray-600 border-l-teal-500' : 'bg-gray-200 border-gray-300 border-l-teal-500'
-                        }`}>
-                            <span className={`pl-2.5 shrink-0 font-bold text-sm ${darkMode ? 'text-teal-400' : 'text-teal-600'}`} aria-hidden>#</span>
-                            <input
-                                id={`qty-card-${clave}`}
-                                type="number"
-                                min={1}
-                                max={totalStock}
-                                value={Math.min(cantidadCart, totalStock) || 1}
-                                onChange={(e) => setCantidadCart(Math.max(1, Math.min(totalStock, Number(e.target.value) || 1)))}
-                                className={`w-14 py-2 pr-0 text-sm font-semibold text-center bg-transparent border-0 focus:ring-0 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${darkMode ? 'text-white' : 'text-gray-900'}`}
-                            />
-                            <div className={`flex flex-col shrink-0 border-l ${darkMode ? 'border-gray-600' : 'border-gray-400'}`}>
-                                <button
-                                    type="button"
-                                    aria-label="Aumentar cantidad"
-                                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCantidadCart((p) => Math.min(totalStock, p + 1)); }}
-                                    className={`p-1 flex items-center justify-center ${darkMode ? 'hover:bg-gray-600 text-gray-300' : 'hover:bg-gray-300 text-gray-600'}`}
-                                >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
-                                </button>
-                                <button
-                                    type="button"
-                                    aria-label="Disminuir cantidad"
-                                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCantidadCart((p) => Math.max(1, p - 1)); }}
-                                    className={`p-1 flex items-center justify-center border-t ${darkMode ? 'border-gray-600 hover:bg-gray-600 text-gray-300' : 'border-gray-400 hover:bg-gray-300 text-gray-600'}`}
-                                >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-                {isInCart(clave) ? (
-                    <div className="space-y-2" onClick={(e) => e.stopPropagation()}>
-                        <Link
-                            href="/tienda/carrito"
-                            className={`block w-full py-2 rounded-lg font-medium text-center transition-colors ${
-                                darkMode ? 'bg-emerald-700 hover:bg-emerald-600 text-white' : 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                            }`}
-                        >
-                            En el carrito
-                        </Link>
-                        {hayStock && (
-                        <div className="flex items-center gap-2">
-                            <div className={`relative flex items-center gap-0 rounded-xl overflow-hidden border-2 border-l-4 ${
-                                darkMode ? 'bg-gray-700 border-gray-600 border-l-teal-500' : 'bg-gray-200 border-gray-300 border-l-teal-500'
-                            }`}>
-                                <span className={`pl-2.5 shrink-0 font-bold text-sm ${darkMode ? 'text-teal-400' : 'text-teal-600'}`} aria-hidden>#</span>
-                                <input
-                                    type="number"
-                                    min={1}
-                                    max={totalStock}
-                                    value={Math.min(cantidadCart, totalStock) || 1}
-                                    onChange={(e) => setCantidadCart(Math.max(1, Math.min(totalStock, Number(e.target.value) || 1)))}
-                                    className={`w-14 py-2 pr-0 text-sm font-semibold text-center bg-transparent border-0 focus:ring-0 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${darkMode ? 'text-white' : 'text-gray-900'}`}
-                                />
-                                <div className={`flex flex-col shrink-0 border-l ${darkMode ? 'border-gray-600' : 'border-gray-400'}`}>
-                                    <button
-                                        type="button"
-                                        aria-label="Aumentar cantidad"
-                                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCantidadCart((p) => Math.min(totalStock, p + 1)); }}
-                                        className={`p-1 flex items-center justify-center ${darkMode ? 'hover:bg-gray-600 text-gray-300' : 'hover:bg-gray-300 text-gray-600'}`}
-                                    >
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        aria-label="Disminuir cantidad"
-                                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCantidadCart((p) => Math.max(1, p - 1)); }}
-                                        className={`p-1 flex items-center justify-center border-t ${darkMode ? 'border-gray-600 hover:bg-gray-600 text-gray-300' : 'border-gray-400 hover:bg-gray-300 text-gray-600'}`}
-                                    >
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-                                    </button>
-                                </div>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={async (e) => {
-                                    e.preventDefault()
-                                    e.stopPropagation()
-                                    if (addingCart) return
-                                    if (!hayStock) {
-                                        setStockErrorModal('No hay stock disponible para este producto.')
-                                        return
-                                    }
-                                    if (cantidadCart > totalStock) {
-                                        setStockErrorModal(`La cantidad solicitada (${cantidadCart}) supera el stock disponible (${totalStock} unidades).`)
-                                        return
-                                    }
-                                    setAddingCart(true)
-                                    try {
-                                        await addToCarrito(clave, cantidadCart)
-                                    } finally {
-                                        setAddingCart(false)
-                                    }
-                                }}
-                                disabled={addingCart || !hayStock}
-                                className={`flex-1 py-2 rounded-lg text-sm font-semibold text-white transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70 disabled:hover:scale-100 ${
-                                    darkMode ? 'bg-teal-600 hover:bg-teal-500 shadow-md hover:shadow-teal-500/25' : 'bg-teal-500 hover:bg-teal-600 shadow-md hover:shadow-lg'
-                                }`}
-                            >
-                                {addingCart ? '…' : 'Agregar más'}
-                            </button>
-                        </div>
-                        )}
-                    </div>
-                ) : (
-                    <>
-                        <button
-                            onClick={async (e) => {
-                                e.preventDefault()
-                                e.stopPropagation()
-                                if (addingCart) return
-                                if (!hayStock) {
-                                    setStockErrorModal('No hay stock disponible para este producto. No se puede agregar al carrito.')
-                                    return
-                                }
-                                if (cantidadCart > totalStock) {
-                                    setStockErrorModal(`La cantidad solicitada (${cantidadCart}) supera el stock disponible (${totalStock} unidades). No se puede agregar al carrito.`)
-                                    return
-                                }
-                                setAddingCart(true)
-                                try {
-                                    await addToCarrito(clave, cantidadCart)
-                                } finally {
-                                    setAddingCart(false)
-                                }
-                            }}
-                            disabled={addingCart}
-                            className={`w-full py-2 rounded-lg font-medium transition-colors disabled:opacity-70 ${
-                                darkMode
-                                    ? 'bg-[#FF8000] hover:bg-[#FF9500] text-white'
-                                    : 'bg-[#FF8000] hover:bg-[#FF9500] text-white'
-                            }`}
-                        >
-                            {addingCart ? 'Agregando…' : hayStock ? 'Agregar al carrito' : 'Sin stock'}
-                        </button>
-                        {stockErrorModal && (
-                            <>
-                                <div className="fixed inset-0 bg-black/50 z-[100]" onClick={() => setStockErrorModal(null)} aria-hidden />
-                                <div className={`fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[101] w-full max-w-sm rounded-xl border-2 shadow-xl p-4 ${darkMode ? 'bg-gray-800 border-red-900/50' : 'bg-white border-red-200'}`} onClick={(e) => e.stopPropagation()}>
-                                    <p className={`text-sm font-medium ${darkMode ? 'text-red-300' : 'text-red-700'}`}>{stockErrorModal}</p>
-                                    <button type="button" onClick={() => setStockErrorModal(null)} className={`mt-3 w-full py-2 rounded-lg text-sm font-medium ${darkMode ? 'bg-gray-600 hover:bg-gray-500 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-800'}`}>
-                                        Cerrar
-                                    </button>
-                                </div>
-                            </>
-                        )}
-                    </>
-                )}
-            </div>
         </div>
     )
 }

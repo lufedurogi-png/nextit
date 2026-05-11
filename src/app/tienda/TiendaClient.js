@@ -9,6 +9,7 @@ import { useAuth } from '@/hooks/auth'
 import { useTiendaDarkMode } from '@/hooks/useTiendaDarkMode'
 import { usePersistedBoolean } from '@/hooks/usePersistedBoolean'
 import ProductCard from '@/components/ProductCard'
+import ProductGrid from '@/components/ProductGrid'
 import SearchBar from '@/components/SearchBar'
 import {
     getCatalogEstado,
@@ -212,9 +213,9 @@ export default function TiendaClient({ initialData = {} }) {
     return (
         <div
             className={`flex min-h-screen flex-col transition-colors duration-300 ${
-                darkMode ? 'bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900'
+                darkMode ? 'bg-tienda-canvas text-gray-100' : 'bg-gray-50 text-gray-900'
             }`}
-            style={darkMode ? { '--sidebar-bg': 'rgb(31 41 55)' } : undefined}
+            style={darkMode ? { '--sidebar-bg': 'rgb(32 32 32)' } : undefined}
         >
             {/* Header: TiendaNavHeader incluye Cotizaciones (dropdown) y Chat con proveedor */}
             <TiendaNavHeader darkMode={darkMode} setDarkMode={setDarkMode} onToggleLeftSidebar={toggleMobileDrawer} />
@@ -358,7 +359,7 @@ export default function TiendaClient({ initialData = {} }) {
                                 }}
                                 className={`w-full ${sidebarRetraido ? 'justify-center px-2' : 'text-left px-3'} py-2 rounded-lg text-sm transition-colors flex items-center ${sidebarRetraido ? '' : 'justify-between'} ${
                                     openCotizacionesPanel
-                                        ? darkMode ? 'bg-[#FF8000] text-white' : 'bg-[#FF8000] text-white'
+                                        ? darkMode ? 'bg-brand text-white' : 'bg-brand text-white'
                                         : darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-100'
                                 }`}
                                 title="Mis cotizaciones"
@@ -408,8 +409,8 @@ export default function TiendaClient({ initialData = {} }) {
                                             className={`w-full ${sidebarRetraido ? 'justify-center px-2' : 'text-left px-3'} py-2 rounded-lg text-sm transition-colors flex items-center ${sidebarRetraido ? '' : 'justify-between'} ${
                                                 selectedCategory === cat.id
                                                     ? darkMode
-                                                        ? 'bg-[#FF8000] text-white'
-                                                        : 'bg-[#FF8000] text-white'
+                                                        ? 'bg-brand text-white'
+                                                        : 'bg-brand text-white'
                                                     : darkMode
                                                         ? 'text-gray-300 hover:bg-gray-700'
                                                         : 'text-gray-700 hover:bg-gray-100'
@@ -456,7 +457,7 @@ export default function TiendaClient({ initialData = {} }) {
                 {openSubcategoryPanel && !sidebarRetraido && (
                     <div
                         className={`max-md:fixed max-md:inset-x-4 max-md:top-[var(--tienda-header-height)] max-md:mt-4 max-md:z-50 max-md:max-h-[min(85dvh,32rem)] max-md:overflow-hidden max-md:rounded-lg max-md:shadow-2xl md:absolute md:left-full md:top-0 md:ml-0 md:z-50 md:w-[min(28rem,calc(100vw-5rem))] md:max-h-[calc(100vh-2rem)] md:overflow-hidden md:rounded-r-xl md:rounded-l-none md:border md:border-l-0 md:shadow-2xl transition-all duration-300 ease-in-out ${
-                            darkMode ? 'max-md:border max-md:border-gray-700 bg-gray-800 md:border-gray-700' : 'max-md:border max-md:border-gray-200 bg-white md:border-gray-200'
+                            darkMode ? 'max-md:border max-md:border-gray-700/45 bg-tienda-elevated md:border-gray-700/45' : 'max-md:border max-md:border-gray-200 bg-white md:border-gray-200'
                         }`}
                         style={darkMode ? { backgroundColor: 'var(--sidebar-bg)' } : undefined}
                     >
@@ -530,7 +531,7 @@ export default function TiendaClient({ initialData = {} }) {
                     <>
                     <div
                         className={`max-md:fixed max-md:inset-x-4 max-md:top-[var(--tienda-header-height)] max-md:mt-4 max-md:z-50 max-md:max-h-[min(85dvh,28rem)] max-md:overflow-hidden max-md:rounded-xl max-md:shadow-2xl md:absolute md:left-full md:top-0 md:ml-0 md:z-50 md:w-72 md:max-h-[calc(100vh-2rem)] md:overflow-hidden md:rounded-r-xl md:rounded-l-none md:border md:border-l-0 md:shadow-2xl transition-all duration-300 ease-in-out ${
-                            darkMode ? 'max-md:border max-md:border-gray-700 bg-gray-800 md:border-gray-700' : 'max-md:border max-md:border-gray-200 bg-white md:border-gray-200'
+                            darkMode ? 'max-md:border max-md:border-gray-700/45 bg-tienda-elevated md:border-gray-700/45' : 'max-md:border max-md:border-gray-200 bg-white md:border-gray-200'
                         }`}
                         style={darkMode ? { backgroundColor: 'var(--sidebar-bg)' } : undefined}
                     >
@@ -568,7 +569,7 @@ export default function TiendaClient({ initialData = {} }) {
                                     }`}
                                 >
                                     <span>Modo cotización</span>
-                                    <span className={modoCotizacionActivo ? 'text-[#FF8000] font-medium' : darkMode ? 'text-gray-400' : 'text-gray-500'}>
+                                    <span className={modoCotizacionActivo ? 'text-brand font-medium' : darkMode ? 'text-gray-400' : 'text-gray-500'}>
                                         {modoCotizacionActivo ? 'Activado' : 'Desactivado'}
                                     </span>
                                 </button>
@@ -577,7 +578,7 @@ export default function TiendaClient({ initialData = {} }) {
                                 href="/tienda/cotizaciones"
                                 onClick={() => setOpenCotizacionesPanel(false)}
                                 className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-colors ${
-                                    darkMode ? 'text-white hover:bg-gray-700 hover:text-[#FF8000]' : 'text-gray-900 hover:bg-gray-100 hover:text-[#FF8000]'
+                                    darkMode ? 'text-white hover:bg-gray-700 hover:text-brand' : 'text-gray-900 hover:bg-gray-100 hover:text-brand'
                                 }`}
                             >
                                 <div className="relative w-5 h-5 flex-shrink-0">
@@ -594,7 +595,7 @@ export default function TiendaClient({ initialData = {} }) {
                                 href="/dashboard?tab=cotizaciones"
                                 onClick={() => setOpenCotizacionesPanel(false)}
                                 className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-colors ${
-                                    darkMode ? 'text-white hover:bg-gray-700 hover:text-[#FF8000]' : 'text-gray-900 hover:bg-gray-100 hover:text-[#FF8000]'
+                                    darkMode ? 'text-white hover:bg-gray-700 hover:text-brand' : 'text-gray-900 hover:bg-gray-100 hover:text-brand'
                                 }`}
                             >
                                 <div className="relative w-5 h-5 flex-shrink-0">
@@ -613,7 +614,7 @@ export default function TiendaClient({ initialData = {} }) {
                     {!modoCotizacionActivo && tooltipModoCotizacion && tooltipModoCotizacionRect && (
                         <div
                             className={`fixed z-[70] w-56 rounded-xl border-2 shadow-xl p-3 ${
-                                darkMode ? 'bg-gray-800 border-emerald-600/60' : 'bg-white border-emerald-500/60'
+                                darkMode ? 'border-emerald-600/50 bg-tienda-elevated' : 'border-emerald-500/60 bg-white'
                             }`}
                             style={{
                                 left: tooltipModoCotizacionRect.right + 8,
@@ -642,7 +643,7 @@ export default function TiendaClient({ initialData = {} }) {
                     {modoCotizacionActivo && tooltipModoCotizacion && tooltipModoCotizacionRect && (
                         <div
                             className={`fixed z-[70] w-52 rounded-xl border-2 shadow-xl p-3 ${
-                                darkMode ? 'bg-gray-800 border-amber-500/60' : 'bg-white border-amber-400/70'
+                                darkMode ? 'border-amber-500/50 bg-tienda-elevated' : 'border-amber-400/70 bg-white'
                             }`}
                             style={{
                                 left: tooltipModoCotizacionRect.right + 8,
@@ -673,7 +674,7 @@ export default function TiendaClient({ initialData = {} }) {
 
                         {!catalogDisponible && (
                             <div className={`mb-8 rounded-lg border p-6 ${
-                                darkMode ? 'bg-gray-800 border-amber-900/50' : 'bg-amber-50 border-amber-200'
+                                darkMode ? 'border-amber-900/45 bg-tienda-elevated' : 'border-amber-200 bg-amber-50'
                             }`}>
                                 <h2 className={`text-xl font-semibold mb-2 ${
                                     darkMode ? 'text-amber-400' : 'text-amber-800'
@@ -710,7 +711,7 @@ export default function TiendaClient({ initialData = {} }) {
                                         </div>
                                     ))
                                 ) : (
-                                    <div className={`absolute inset-0 flex items-center justify-center ${darkMode ? 'bg-gray-800' : 'bg-gray-100'}`}>
+                                    <div className={`absolute inset-0 flex items-center justify-center ${darkMode ? 'bg-tienda-elevated' : 'bg-gray-100'}`}>
                                         <span className={`text-sm ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>Sin imágenes de publicidad</span>
                                     </div>
                                 )}
@@ -724,7 +725,7 @@ export default function TiendaClient({ initialData = {} }) {
                                                 onClick={() => setCurrentSlide(index)}
                                                 className={`h-2 rounded-full transition-all ${
                                                     index === currentSlide
-                                                        ? 'w-8 bg-[#FF8000]'
+                                                        ? 'w-8 bg-brand'
                                                         : 'w-2 bg-white/50 hover:bg-white/75'
                                                 }`}
                                                 aria-label={`Ir a slide ${index + 1}`}
@@ -762,11 +763,11 @@ export default function TiendaClient({ initialData = {} }) {
                             }`}>
                                 Productos destacados
                             </h2>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                            <ProductGrid darkMode={darkMode}>
                                 {destacados.slice(0, 8).map((producto) => (
                                     <ProductCard key={producto.clave} producto={producto} darkMode={darkMode} />
                                 ))}
-                            </div>
+                            </ProductGrid>
                         </section>
 
                         {/* Sección: Últimos Productos */}
@@ -776,11 +777,11 @@ export default function TiendaClient({ initialData = {} }) {
                             }`}>
                                 Últimos productos
                             </h2>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                            <ProductGrid darkMode={darkMode}>
                                 {ultimos.slice(0, 8).map((producto) => (
                                     <ProductCard key={producto.clave} producto={producto} darkMode={darkMode} />
                                 ))}
-                            </div>
+                            </ProductGrid>
                         </section>
 
                         {/* Sección: Vistos Recientemente */}
@@ -791,11 +792,11 @@ export default function TiendaClient({ initialData = {} }) {
                             }`}>
                                 Vistos recientemente
                             </h2>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                            <ProductGrid darkMode={darkMode}>
                                 {vistosRecientemente.slice(0, 8).map((producto) => (
                                     <ProductCard key={producto.clave} producto={producto} darkMode={darkMode} />
                                 ))}
-                            </div>
+                            </ProductGrid>
                         </section>
                         )}
 
@@ -806,11 +807,11 @@ export default function TiendaClient({ initialData = {} }) {
                             }`}>
                                 Productos que te pueden interesar
                             </h2>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                            <ProductGrid darkMode={darkMode}>
                                 {productosInteres.slice(0, 8).map((producto) => (
                                     <ProductCard key={producto.clave} producto={producto} darkMode={darkMode} />
                                 ))}
-                            </div>
+                            </ProductGrid>
                         </section>
 
                         {/* Grid de Productos (filtro por categoría o marca); se mantiene visible mientras carga para no sentir corte */}
@@ -820,14 +821,17 @@ export default function TiendaClient({ initialData = {} }) {
                                     <p className={darkMode ? 'text-gray-400' : 'text-gray-600'}>Cargando…</p>
                                 )}
                                 {(productosFiltrados.length > 0 || !loadingFiltrados) && (
-                                    <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 transition-opacity duration-200 ${loadingFiltrados ? 'opacity-60 pointer-events-none' : ''}`}>
+                                    <ProductGrid
+                                        darkMode={darkMode}
+                                        className={`transition-opacity duration-200 ${loadingFiltrados ? 'pointer-events-none opacity-60' : ''}`}
+                                    >
                                         {productosFiltrados.map((producto) => (
                                             <ProductCard key={producto.clave} producto={producto} darkMode={darkMode} />
                                         ))}
-                                    </div>
+                                    </ProductGrid>
                                 )}
                                 {loadingFiltrados && productosFiltrados.length > 0 && (
-                                    <div className="absolute top-2 right-2 px-3 py-1 rounded-full text-sm font-medium bg-[#FF8000]/90 text-white">
+                                    <div className="absolute top-2 right-2 px-3 py-1 rounded-full text-sm font-medium bg-brand/90 text-white">
                                         Actualizando…
                                     </div>
                                 )}
@@ -848,7 +852,7 @@ export default function TiendaClient({ initialData = {} }) {
 
             {/* Sección de Contacto */}
             <footer className={`border-t transition-colors duration-300 ${
-                darkMode ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200'
+                darkMode ? 'border-gray-800/70 bg-tienda-canvas' : 'border-gray-200 bg-white'
             }`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
                     {/* Franja superior con solo logo */}
@@ -859,7 +863,7 @@ export default function TiendaClient({ initialData = {} }) {
                                     href="https://nxt.it.com"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="shrink-0 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#FF8000] p-2 flex items-center"
+                                    className="shrink-0 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand p-2 flex items-center"
                                 >
                                     <Image
                                         src="/Imagenes/logo_nxtIt.png"
@@ -897,7 +901,7 @@ export default function TiendaClient({ initialData = {} }) {
                             <div className={`space-y-2 ${
                                 darkMode ? 'text-gray-300' : 'text-gray-700'
                             }`}>
-                                <p className="text-lg font-semibold text-[#FF8000]">333 616-7279</p>
+                                <p className="text-lg font-semibold text-brand">333 616-7279</p>
                                 <p className="text-base">desarrollo@nxt.it.com</p>
                                 <p className="text-sm leading-relaxed">
                                     Av. Lopez Mateos #1038-11, Col Italia Providencia CP 44630<br />
@@ -917,17 +921,17 @@ export default function TiendaClient({ initialData = {} }) {
                                 darkMode ? 'text-gray-300' : 'text-gray-700'
                             }`}>
                                 <li>
-                                    <Link href="/" className="hover:text-[#FF8000] transition-colors">
+                                    <Link href="/" className="hover:text-brand transition-colors">
                                         Inicio
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link href="/" className="hover:text-[#FF8000] transition-colors">
+                                    <Link href="/" className="hover:text-brand transition-colors">
                                         Tienda
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link href="/login" className="hover:text-[#FF8000] transition-colors">
+                                    <Link href="/login" className="hover:text-brand transition-colors">
                                         Iniciar Sesión
                                     </Link>
                                 </li>
@@ -943,9 +947,9 @@ export default function TiendaClient({ initialData = {} }) {
                             </h3>
                             <Link
                                 href="/desarrolladores"
-                                className="inline-flex items-center gap-1 text-sm font-bold tracking-wide hover:text-[#FF8000] transition-colors mb-3"
+                                className="inline-flex items-center gap-1 text-sm font-bold tracking-wide hover:text-brand transition-colors mb-3"
                             >
-                                <span className="text-[#FF8000]">Equipo</span>
+                                <span className="text-brand">Equipo</span>
                                 <span className={darkMode ? 'text-gray-300' : 'text-gray-700'}>de desarrollo</span>
                             </Link>
                             <p className={`text-sm leading-relaxed ${

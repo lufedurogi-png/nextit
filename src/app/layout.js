@@ -27,7 +27,7 @@ const RootLayout = ({ children }) => {
             suppressHydrationWarning
             className={`${nunitoFont.className} ${playfairDisplay.variable} ${vt323.variable}`}
         >
-            <body className="antialiased bg-gray-950 w-full overflow-x-hidden" suppressHydrationWarning>
+            <body className="antialiased bg-gray-50 text-gray-900 dark:bg-tienda-canvas dark:text-gray-100 w-full overflow-x-hidden" suppressHydrationWarning>
                 {children}
             </body>
         </html>

@@ -5,6 +5,7 @@ import useSWR from 'swr'
 import Link from 'next/link'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import ProductCard from '@/components/ProductCard'
+import ProductGrid from '@/components/ProductGrid'
 import TiendaNavHeader from '@/components/TiendaNavHeader'
 import { getProductos, getFiltrosDinamicos } from '@/lib/productos'
 import { useTiendaDarkMode } from '@/hooks/useTiendaDarkMode'
@@ -229,7 +230,7 @@ export default function VistaSubcategoriaClient({ categoria, subcategoria, initi
 
     return (
         <div className={`flex min-h-screen flex-col transition-colors duration-300 ${
-            darkMode ? 'bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900'
+            darkMode ? 'bg-tienda-canvas text-gray-100' : 'bg-gray-50 text-gray-900'
         }`}>
             <TiendaNavHeader darkMode={darkMode} setDarkMode={setDarkMode} onToggleLeftSidebar={toggleMobileDrawer} />
             <div className="relative flex min-h-0 w-full flex-1 md:grid md:grid-cols-[16rem_minmax(0,1fr)] md:items-stretch md:gap-0">
@@ -248,7 +249,7 @@ export default function VistaSubcategoriaClient({ categoria, subcategoria, initi
                     className={`max-md:flex max-md:min-h-0 max-md:flex-col max-md:overflow-hidden max-md:fixed max-md:left-0 max-md:z-40 max-md:bottom-0 max-md:top-[var(--tienda-header-height)] max-md:w-[min(20rem,90vw)] max-md:shadow-xl max-md:transition-transform max-md:duration-300 ${
                         mobileFiltersOpen ? 'max-md:translate-x-0' : 'max-md:-translate-x-full'
                     } md:translate-x-0 md:relative md:z-10 md:flex md:h-full md:min-h-0 md:w-full md:flex-1 md:flex-col md:overflow-hidden shrink-0 border-r transition-colors duration-300 max-md:border-r md:border-r ${
-                    darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+                    darkMode ? 'border-gray-700/45 bg-tienda-elevated' : 'border-gray-200 bg-white'
                 }`}
                     {...drawerTouchProps}
                 >
@@ -377,11 +378,11 @@ export default function VistaSubcategoriaClient({ categoria, subcategoria, initi
                         <nav className={`text-sm mb-6 ${
                             darkMode ? 'text-gray-400' : 'text-gray-600'
                         }`}>
-                            <Link href="/" className="hover:text-[#FF8000] transition-colors">Tienda</Link>
+                            <Link href="/" className="hover:text-brand transition-colors">Tienda</Link>
                             <span className="mx-2">/</span>
                             <Link
                                 href={`/tienda/${encodeURIComponent(categoria)}/ver-todo`}
-                                className="hover:text-[#FF8000] transition-colors"
+                                className="hover:text-brand transition-colors"
                             >
                                 {categoria}
                             </Link>
@@ -404,7 +405,7 @@ export default function VistaSubcategoriaClient({ categoria, subcategoria, initi
                             {compararSeleccionados.length >= 2 && (
                                 <Link
                                     href={`/tienda/comparar?claves=${compararSeleccionados.map((c) => encodeURIComponent(c)).join(',')}&categoria=${encodeURIComponent(categoria)}&subcategoria=${encodeURIComponent(subcategoria)}`}
-                                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg font-semibold bg-[#FF8000] hover:bg-[#e67300] text-white transition-colors"
+                                    className="inline-flex items-center gap-2 rounded-lg bg-brand px-4 py-2 font-semibold text-white transition-colors hover:bg-brand-hover"
                                 >
                                     Comparar ({compararSeleccionados.length})
                                 </Link>
@@ -413,12 +414,12 @@ export default function VistaSubcategoriaClient({ categoria, subcategoria, initi
 
                         {!catalogDisponible && (
                             <div className={`rounded-lg border p-6 ${
-                                darkMode ? 'bg-gray-800 border-amber-900/50' : 'bg-amber-50 border-amber-200'
+                                darkMode ? 'border-amber-900/45 bg-tienda-elevated' : 'border-amber-200 bg-amber-50'
                             }`}>
                                 <p className={darkMode ? 'text-amber-400' : 'text-amber-800'}>
                                     Catálogo no disponible. Intenta más tarde.
                                 </p>
-                                <Link href="/" className="inline-block mt-2 text-[#FF8000] hover:underline">
+                                <Link href="/" className="mt-2 inline-block font-medium text-brand hover:text-brand-hover hover:underline">
                                     Volver a la tienda
                                 </Link>
                             </div>
@@ -431,11 +432,14 @@ export default function VistaSubcategoriaClient({ categoria, subcategoria, initi
                         {catalogDisponible && (productosAMostrar.length > 0 || !loading) && (
                             <div className="relative">
                                 {loading && (
-                                    <div className="absolute top-0 right-0 z-10 px-3 py-1 rounded-full text-sm font-medium bg-[#FF8000]/90 text-white">
+                                    <div className="absolute right-0 top-0 z-10 rounded-full bg-brand/90 px-3 py-1 text-sm font-medium text-white">
                                         {productosAMostrar.length > 0 ? 'Filtrando…' : 'Cargando…'}
                                     </div>
                                 )}
-                                <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 transition-opacity duration-200 ${loading ? 'opacity-70 pointer-events-none' : ''}`}>
+                                <ProductGrid
+                                    darkMode={darkMode}
+                                    className={`transition-opacity duration-200 ${loading ? 'pointer-events-none opacity-70' : ''}`}
+                                >
                                     {productosAMostrar.map((producto) => (
                                         <ProductCard
                                             key={producto.clave}
@@ -448,7 +452,7 @@ export default function VistaSubcategoriaClient({ categoria, subcategoria, initi
                                             returnUrl={urlConFiltros}
                                         />
                                     ))}
-                                </div>
+                                </ProductGrid>
                             </div>
                         )}
 
@@ -457,7 +461,7 @@ export default function VistaSubcategoriaClient({ categoria, subcategoria, initi
                                 darkMode ? 'text-gray-400' : 'text-gray-500'
                             }`}>
                                 <p>No hay productos en esta subcategoría.</p>
-                                <Link href="/" className="inline-block mt-2 text-[#FF8000] hover:underline">
+                                <Link href="/" className="mt-2 inline-block font-medium text-brand hover:text-brand-hover hover:underline">
                                     Volver a la tienda
                                 </Link>
                             </div>

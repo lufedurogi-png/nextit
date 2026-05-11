@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import useSWR from 'swr'
 import ProductCard from '@/components/ProductCard'
+import ProductGrid from '@/components/ProductGrid'
 import TiendaNavHeader from '@/components/TiendaNavHeader'
 import { getCatalogEstado, getFiltrosDinamicosBusqueda, getProductos } from '@/lib/productos'
 import { getBusqueda, getBusquedaSessionId } from '@/lib/busqueda'
@@ -282,7 +283,7 @@ export default function BusquedaClient({ initialData = null, initialQuery = '' }
     if (Object.keys(fActUrl).length > 0) paramsParaUrl.set('filtros', encodeURIComponent(JSON.stringify(fActUrl)))
     const urlConFiltros = paramsParaUrl.toString() ? `${pathname}?${paramsParaUrl.toString()}` : pathname
 
-    const bg = darkMode ? 'bg-gray-900' : 'bg-gray-50'
+    const bg = darkMode ? 'bg-tienda-canvas' : 'bg-gray-50'
     const textMuted = darkMode ? 'text-gray-400' : 'text-gray-600'
     const tieneResultados = resultadoBusqueda?.productos?.length > 0
     const loadingLista = usarApiProductos ? loadingProductosApi : false
@@ -319,7 +320,7 @@ export default function BusquedaClient({ initialData = null, initialQuery = '' }
                         className={`max-md:flex max-md:min-h-0 max-md:flex-col max-md:overflow-hidden max-md:fixed max-md:left-0 max-md:z-40 max-md:bottom-0 max-md:top-[var(--tienda-header-height)] max-md:w-[min(20rem,90vw)] max-md:shadow-xl max-md:transition-transform max-md:duration-300 ${
                             mobileFiltersOpen ? 'max-md:translate-x-0' : 'max-md:-translate-x-full'
                         } md:translate-x-0 md:relative md:z-10 md:flex md:h-full md:min-h-0 md:w-full md:flex-1 md:flex-col md:overflow-hidden shrink-0 border-r transition-colors duration-300 max-md:border-r md:border-r ${
-                            darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+                            darkMode ? 'border-gray-700/45 bg-tienda-elevated' : 'border-gray-200 bg-white'
                         }`}
                         {...drawerTouchProps}
                     >
@@ -447,7 +448,7 @@ export default function BusquedaClient({ initialData = null, initialQuery = '' }
                 <main className="min-h-0 min-w-0 flex-1 p-4 md:min-w-0 md:p-8">
                     <div className="max-w-7xl mx-auto">
                         <nav className={`text-sm mb-6 ${textMuted}`}>
-                            <Link href="/" className="hover:text-[#FF8000] transition-colors">
+                            <Link href="/" className="transition-colors hover:text-brand">
                                 Tienda
                             </Link>
                             <span className="mx-2">/</span>
@@ -462,11 +463,11 @@ export default function BusquedaClient({ initialData = null, initialQuery = '' }
                         )}
 
                         {!catalogDisponible && (
-                            <div className={`rounded-lg border p-6 ${darkMode ? 'bg-gray-800 border-amber-900/50' : 'bg-amber-50 border-amber-200'}`}>
+                            <div className={`rounded-lg border p-6 ${darkMode ? 'border-amber-900/45 bg-tienda-elevated' : 'border-amber-200 bg-amber-50'}`}>
                                 <p className={darkMode ? 'text-amber-400' : 'text-amber-800'}>
                                     Catálogo no disponible. Intenta más tarde.
                                 </p>
-                                <Link href="/" className="inline-block mt-2 text-[#FF8000] hover:underline">
+                                <Link href="/" className="mt-2 inline-block font-medium text-brand hover:text-brand-hover hover:underline">
                                     Volver a la tienda
                                 </Link>
                             </div>
@@ -487,7 +488,7 @@ export default function BusquedaClient({ initialData = null, initialQuery = '' }
                                                 <p
                                                     className={`mb-4 text-sm rounded-lg px-3 py-2 ${
                                                         darkMode
-                                                            ? 'bg-gray-800 text-amber-300 border border-amber-700/50'
+                                                            ? 'border border-amber-700/45 bg-tienda-elevated text-amber-300'
                                                             : 'bg-amber-50 text-amber-800 border border-amber-200'
                                                     }`}
                                                 >
@@ -502,14 +503,13 @@ export default function BusquedaClient({ initialData = null, initialQuery = '' }
                                             ) : (
                                                 <div className="relative">
                                                     {loadingLista && (
-                                                        <div className="absolute top-0 right-0 z-10 px-3 py-1 rounded-full text-sm font-medium bg-[#FF8000]/90 text-white">
+                                                        <div className="absolute right-0 top-0 z-10 rounded-full bg-brand/90 px-3 py-1 text-sm font-medium text-white">
                                                             {productosConStock.length > 0 ? 'Filtrando…' : 'Cargando…'}
                                                         </div>
                                                     )}
-                                                    <div
-                                                        className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 transition-opacity duration-200 ${
-                                                            loadingLista ? 'opacity-70 pointer-events-none' : ''
-                                                        }`}
+                                                    <ProductGrid
+                                                        darkMode={darkMode}
+                                                        className={`transition-opacity duration-200 ${loadingLista ? 'pointer-events-none opacity-70' : ''}`}
                                                     >
                                                         {productosConStock.map((producto) => (
                                                             <ProductCard
@@ -520,7 +520,7 @@ export default function BusquedaClient({ initialData = null, initialQuery = '' }
                                                                 returnUrl={urlConFiltros}
                                                             />
                                                         ))}
-                                                    </div>
+                                                    </ProductGrid>
                                                 </div>
                                             )}
                                             {resultadoBusqueda.productos.length > 0 && productosConStock.length === 0 && (
@@ -539,8 +539,8 @@ export default function BusquedaClient({ initialData = null, initialQuery = '' }
                                 href="/"
                                 className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium border transition-colors ${
                                     darkMode
-                                        ? 'bg-gray-800 border-gray-700 hover:text-[#FF8000] hover:border-[#FF8000]'
-                                        : 'bg-white border-gray-200 hover:text-[#FF8000] hover:border-[#FF8000]'
+                                        ? 'border-gray-700/45 bg-tienda-elevated hover:border-brand hover:text-brand'
+                                        : 'border-gray-200 bg-white hover:border-brand hover:text-brand'
                                 }`}
                             >
                                 ← Volver a la tienda
