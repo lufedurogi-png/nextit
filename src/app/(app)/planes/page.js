@@ -16,6 +16,8 @@ import {
     createPlanPayPalOrder,
     capturePlanPayPalOrder,
     checkoutPlanTarjeta,
+    checkoutPlanPromocional,
+    submitPromotionalPlanFeedback,
     cancelPlanSubscription,
     resumePlanSubscription,
 } from '@/lib/planCheckout'
@@ -24,6 +26,7 @@ const METHOD_ICON = {
     paypal: '/Imagenes/PayPal.png',
     mercadopago: '/Imagenes/mercado%20pago.png',
     tarjeta: '/Imagenes/icons_metodosdepago.png',
+    promocional: '/Imagenes/icon_modo.webp',
 }
 
 const FAQ = [
@@ -75,13 +78,17 @@ export default function PlanesPage() {
     const [catalog, setCatalog] = useState({ amount: 99, currency: 'MXN', period_days: 30, features: [] })
     const [subscription, setSubscription] = useState(null)
     const [payOpen, setPayOpen] = useState(false)
-    const [flags, setFlags] = useState({ paypal: true, mercadopago: true, tarjeta: true })
+    const [flags, setFlags] = useState({ paypal: true, mercadopago: true, tarjeta: true, promocional: false })
     const [checkoutLoading, setCheckoutLoading] = useState(false)
     const [checkoutError, setCheckoutError] = useState('')
     const [failModal, setFailModal] = useState('')
     const [successModal, setSuccessModal] = useState(false)
     const [cancelOpen, setCancelOpen] = useState(false)
     const [cancelBusy, setCancelBusy] = useState(false)
+    const [promoFeedback, setPromoFeedback] = useState('')
+    const [promoFeedbackBusy, setPromoFeedbackBusy] = useState(false)
+    const [promoFeedbackOk, setPromoFeedbackOk] = useState('')
+    const [promoFeedbackErr, setPromoFeedbackErr] = useState('')
 
     useEffect(() => {
         setMounted(true)
@@ -122,9 +129,10 @@ export default function PlanesPage() {
     const [clock, setClock] = useState(0)
     useEffect(() => {
         if (!subscription?.pro_active) return
+        if (subscription?.pro_indefinite || subscription?.seconds_remaining == null) return
         const id = setInterval(() => setClock((c) => c + 1), 1000)
         return () => clearInterval(id)
-    }, [subscription?.pro_active])
+    }, [subscription?.pro_active, subscription?.pro_indefinite, subscription?.seconds_remaining])
 
     const secondsLeft = useMemo(() => {
         if (!subscription?.pro_active || !subscription?.pro_ends_at) return 0
@@ -142,7 +150,7 @@ export default function PlanesPage() {
             const f = await fetchPaymentMethodFlags()
             setFlags(f)
         } catch {
-            setFlags({ paypal: true, mercadopago: true, tarjeta: true })
+            setFlags({ paypal: true, mercadopago: true, tarjeta: true, promocional: false })
         }
         setPayOpen(true)
     }
@@ -205,6 +213,14 @@ export default function PlanesPage() {
 
             if (metodoPago === 'tarjeta') {
                 await checkoutPlanTarjeta()
+                setPayOpen(false)
+                await loadSubscription()
+                setSuccessModal(true)
+                return
+            }
+
+            if (metodoPago === 'promocional') {
+                await checkoutPlanPromocional()
                 setPayOpen(false)
                 await loadSubscription()
                 setSuccessModal(true)
@@ -373,7 +389,7 @@ export default function PlanesPage() {
                                     ) : null}
                                     <p>
                                         <span className="font-semibold text-emerald-800 dark:text-emerald-200">Tiempo restante: </span>
-                                        {formatCountdown(secondsLeft)}
+                                        {secondsLeft === null ? 'Ilimitado' : formatCountdown(secondsLeft)}
                                     </p>
                                     {proCancelled ? (
                                         <p className="text-xs font-semibold text-amber-800 dark:text-amber-200">
@@ -431,7 +447,7 @@ export default function PlanesPage() {
                                     </button>
                                 ) : null}
 
-                                {plan.id === 'pro' && proActive && proCancelled ? (
+                                {plan.id === 'pro' && proActive && proCancelled && !subscription?.pro_indefinite ? (
                                     <button
                                         type="button"
                                         onClick={async () => {
@@ -459,6 +475,56 @@ export default function PlanesPage() {
                         </motion.article>
                     ))}
                 </div>
+
+                {subscription?.show_promotional_feedback && hasToken ? (
+                    <motion.section
+                        initial={{ opacity: 0, y: 14 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.15 }}
+                        className="mt-8 rounded-[1.6rem] border border-[#c9a227]/35 bg-[linear-gradient(180deg,rgba(201,162,39,0.12),rgba(255,255,255,0.92))] p-5 dark:border-[#c9a227]/30 dark:bg-[linear-gradient(180deg,rgba(201,162,39,0.15),rgba(15,23,42,0.92))]"
+                    >
+                        <h3 className="font-playfair text-2xl font-extrabold text-slate-900 dark:text-slate-50">Comentarios y sugerencias</h3>
+                        <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                            Activaste Pro con la promoción: cuéntanos qué te gustaría mejorar en la experiencia Coleccionador.
+                        </p>
+                        {promoFeedbackOk ? (
+                            <p className="mt-2 text-sm font-semibold text-emerald-700 dark:text-emerald-300">{promoFeedbackOk}</p>
+                        ) : null}
+                        {promoFeedbackErr ? (
+                            <p className="mt-2 text-sm font-semibold text-red-600 dark:text-red-400">{promoFeedbackErr}</p>
+                        ) : null}
+                        <textarea
+                            value={promoFeedback}
+                            onChange={(e) => setPromoFeedback(e.target.value)}
+                            placeholder="Escribe aquí tus comentarios o sugerencias…"
+                            rows={5}
+                            className="mt-4 w-full rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 text-sm text-slate-900 shadow-inner placeholder:text-slate-400 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500"
+                        />
+                        <div className="mt-4 flex flex-wrap gap-3">
+                            <button
+                                type="button"
+                                disabled={promoFeedbackBusy || promoFeedback.trim().length < 5}
+                                onClick={async () => {
+                                    setPromoFeedbackOk('')
+                                    setPromoFeedbackErr('')
+                                    setPromoFeedbackBusy(true)
+                                    try {
+                                        await submitPromotionalPlanFeedback(promoFeedback.trim())
+                                        setPromoFeedback('')
+                                        setPromoFeedbackOk('¡Gracias! Tu mensaje fue enviado.')
+                                    } catch (e) {
+                                        setPromoFeedbackErr(e?.message || 'No se pudo enviar.')
+                                    } finally {
+                                        setPromoFeedbackBusy(false)
+                                    }
+                                }}
+                                className="rounded-2xl bg-[#0b1b3c] px-5 py-2.5 text-sm font-extrabold text-white transition hover:brightness-110 disabled:opacity-50"
+                            >
+                                {promoFeedbackBusy ? 'Enviando…' : 'Enviar'}
+                            </button>
+                        </div>
+                    </motion.section>
+                ) : null}
 
                 <motion.section
                     initial={{ opacity: 0, y: 14 }}
@@ -555,7 +621,23 @@ export default function PlanesPage() {
                                     </div>
                                 </button>
                             ) : null}
-                            {!flags.mercadopago && !flags.paypal && !flags.tarjeta ? (
+                            {flags.promocional ? (
+                                <button
+                                    type="button"
+                                    disabled={checkoutLoading}
+                                    onClick={() => handleCheckout('promocional')}
+                                    className="flex w-full items-center gap-3 rounded-2xl border-2 border-dashed border-[#c9a227]/70 bg-[#c9a227]/10 p-4 text-left transition hover:border-[#c9a227] disabled:opacity-60 dark:bg-[#c9a227]/15"
+                                >
+                                    <Image src={METHOD_ICON.promocional} alt="" width={40} height={28} className="object-contain" />
+                                    <div>
+                                        <p className="font-extrabold text-slate-900 dark:text-slate-50">Promocional por tiempo limitado</p>
+                                        <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                                            Activa Pro gratis durante la promo
+                                        </p>
+                                    </div>
+                                </button>
+                            ) : null}
+                            {!flags.mercadopago && !flags.paypal && !flags.tarjeta && !flags.promocional ? (
                                 <p className="text-sm font-semibold text-amber-700 dark:text-amber-300">
                                     No hay métodos de pago habilitados. Un administrador puede activarlos en el panel.
                                 </p>

@@ -26,7 +26,7 @@ export async function fetchPlanCatalog() {
 export async function fetchPaymentMethodFlags() {
     const { data } = await axios.get('/metodos-pago')
     if (data?.success && data?.data?.flags) return data.data.flags
-    return { paypal: true, mercadopago: true, tarjeta: true }
+    return { paypal: true, mercadopago: true, tarjeta: true, promocional: false }
 }
 
 export async function fetchPlanSubscription() {
@@ -66,6 +66,18 @@ export async function checkoutPlanTarjeta() {
     const { data } = await axios.post('/plan/tarjeta/checkout')
     if (data?.success) return data
     throw new Error(data?.message || 'No se pudo completar el pago simulado')
+}
+
+export async function checkoutPlanPromocional() {
+    const { data } = await axios.post('/plan/promocional/checkout')
+    if (data?.success) return data
+    throw new Error(data?.message || 'No se pudo activar la promoción')
+}
+
+export async function submitPromotionalPlanFeedback(body) {
+    const { data } = await axios.post('/plan/promocional/feedback', { body })
+    if (data?.success) return data
+    throw new Error(data?.message || 'No se pudo enviar el comentario')
 }
 
 export async function cancelPlanSubscription() {
