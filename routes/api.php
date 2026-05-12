@@ -36,14 +36,18 @@ use App\Http\Controllers\Api\UploadController;
 use App\Http\Controllers\Api\UserSearchController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/plan/catalog', [PlanSubscriptionController::class, 'catalog']);
+Route::middleware('throttle:public-catalog')->group(function () {
+    Route::get('/plan/catalog', [PlanSubscriptionController::class, 'catalog']);
+});
 Route::post('/mercadopago/plan/webhook', [PlanMercadoPagoController::class, 'webhook']);
 
-Route::post('/auth/register', [AuthController::class, 'register']);
-Route::post('/auth/login', [AuthController::class, 'login']);
-Route::post('/auth/google/register', [GoogleAuthController::class, 'register']);
-Route::post('/auth/google/login', [GoogleAuthController::class, 'login']);
-Route::post('/auth/admin-login', [AuthController::class, 'adminLogin']);
+Route::middleware('throttle:auth-credentials')->group(function () {
+    Route::post('/auth/register', [AuthController::class, 'register']);
+    Route::post('/auth/login', [AuthController::class, 'login']);
+    Route::post('/auth/google/register', [GoogleAuthController::class, 'register']);
+    Route::post('/auth/google/login', [GoogleAuthController::class, 'login']);
+    Route::post('/auth/admin-login', [AuthController::class, 'adminLogin']);
+});
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/auth/me', [AuthController::class, 'me']);
