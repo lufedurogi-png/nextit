@@ -6,6 +6,9 @@ use App\Services\CatalogoStockPublicoService;
 use App\Services\MargenVentaService;
 use App\Services\ProductoSyncOrchestrator;
 use App\Services\Providers\Cva\CvaSyncService;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -38,6 +41,22 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        RateLimiter::for('auth-credentials', function (Request $request) {
+            $email = strtolower((string) $request->input('email', ''));
+            $byCredential = $email !== '' ? $email.'|'.$request->ip() : 'ip:'.$request->ip();
+
+            return [
+                Limit::perMinute(7)->by(sha1($byCredential)),
+                Limit::perMinute(35)->by(sha1('auth-ip|'.$request->ip())),
+            ];
+        });
+
+        RateLimiter::for('public-search', function (Request $request) {
+            return Limit::perMinute(90)->by(sha1('public-search|'.$request->ip()));
+        });
+
+        RateLimiter::for('anonymous-tracking', function (Request $request) {
+            return Limit::perMinute(45)->by(sha1('anon-track|'.$request->ip()));
+        });
     }
 }

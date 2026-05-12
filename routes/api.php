@@ -36,27 +36,29 @@ use App\Http\Controllers\Spa\Auth\AuthController as SpaAuthController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
-    // Admin auth (público - solo crea/admin login)
-    Route::prefix('admin/auth')->group(function () {
-        Route::post('/register', [AdminAuthController::class, 'register'])->name('admin.auth.register');
-        Route::post('/token', [AdminAuthController::class, 'token'])->name('admin.auth.token');
-    });
+    Route::middleware('throttle:auth-credentials')->group(function () {
+        // Admin auth (público - solo crea/admin login)
+        Route::prefix('admin/auth')->group(function () {
+            Route::post('/register', [AdminAuthController::class, 'register'])->name('admin.auth.register');
+            Route::post('/token', [AdminAuthController::class, 'token'])->name('admin.auth.token');
+        });
 
-    // Ventas auth (público - solo vendedores)
-    Route::prefix('ventas/auth')->group(function () {
-        Route::post('/token', [VentasAuthController::class, 'token'])->name('ventas.auth.token');
-    });
+        // Ventas auth (público - solo vendedores)
+        Route::prefix('ventas/auth')->group(function () {
+            Route::post('/token', [VentasAuthController::class, 'token'])->name('ventas.auth.token');
+        });
 
-    // public routes here ------------------------
-    // token
-    Route::post('/auth/register', [ApiAuthController::class, 'register'])->name('auth.register')->middleware('guest');
-    Route::post('/auth/token', [ApiAuthController::class, 'generateToken'])->name('auth.token')->middleware('guest');
+        // public routes here ------------------------
+        // token
+        Route::post('/auth/register', [ApiAuthController::class, 'register'])->name('auth.register')->middleware('guest');
+        Route::post('/auth/token', [ApiAuthController::class, 'generateToken'])->name('auth.token')->middleware('guest');
 
-    // cookie
-    Route::prefix('spa')->group(function () {
-        Route::post('/auth/register', [SpaAuthController::class, 'register'])->name('spa.auth.register')->middleware('guest');
-        Route::post('/auth/login', [SpaAuthController::class, 'login'])->name('spa.auth.login')->middleware('guest');
+        // cookie
+        Route::prefix('spa')->group(function () {
+            Route::post('/auth/register', [SpaAuthController::class, 'register'])->name('spa.auth.register')->middleware('guest');
+            Route::post('/auth/login', [SpaAuthController::class, 'login'])->name('spa.auth.login')->middleware('guest');
 
+        });
     });
 
     // Catálogo CVA (productos) - público
@@ -73,9 +75,13 @@ Route::prefix('v1')->group(function () {
     Route::get('/catalogos/marcas', [ProductoController::class, 'marcas'])->name('catalogos.marcas');
     Route::get('/catalogos/filtros-dinamicos', [ProductoController::class, 'filtrosDinamicos'])->name('catalogos.filtrosDinamicos');
 
-    // Búsqueda + registro de búsqueda/productos mostrados
-    Route::get('/busqueda', [BusquedaController::class, 'index'])->name('busqueda.index');
-    Route::post('/busqueda/seleccion', [BusquedaController::class, 'registrarSeleccion'])->name('busqueda.seleccion');
+    // Búsqueda + registro de búsqueda/productos mostrados (público; limitar abuso por IP)
+    Route::middleware('throttle:public-search')->group(function () {
+        Route::get('/busqueda', [BusquedaController::class, 'index'])->name('busqueda.index');
+    });
+    Route::post('/busqueda/seleccion', [BusquedaController::class, 'registrarSeleccion'])
+        ->middleware('throttle:anonymous-tracking')
+        ->name('busqueda.seleccion');
 
     // Publicidad (carrusel) - público
     Route::get('/publicidad', [PublicidadController::class, 'index'])->name('publicidad.index');
