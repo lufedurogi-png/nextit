@@ -36,13 +36,17 @@ class PlanPromotionalFeedbackController extends Controller
             ], 422);
         }
 
+        $request->merge([
+            'body' => trim((string) $request->input('body', '')),
+        ]);
+
         $valid = $request->validate([
-            'body' => ['required', 'string', 'min:5', 'max:4000'],
+            'body' => ['required', 'string', 'min:1', 'max:4000'],
         ]);
 
         PlanPromotionalFeedback::query()->create([
             'user_id' => $user->id,
-            'body' => trim($valid['body']),
+            'body' => $valid['body'],
         ]);
 
         return response()->json([

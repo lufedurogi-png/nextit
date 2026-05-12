@@ -1,12 +1,12 @@
 <?php
 
 use App\Http\Controllers\Api\AdminBackupController;
-use App\Http\Controllers\Api\AdminFranchiseCatalogController;
 use App\Http\Controllers\Api\AdminController;
+use App\Http\Controllers\Api\AdminFranchiseCatalogController;
 use App\Http\Controllers\Api\AdminMetodoPagoController;
 use App\Http\Controllers\Api\AdminPlanProController;
-use App\Http\Controllers\Api\AdminPlanPromotionalFeedbackController;
 use App\Http\Controllers\Api\AdminPlanProIndefiniteController;
+use App\Http\Controllers\Api\AdminPlanPromotionalFeedbackController;
 use App\Http\Controllers\Api\AdminPlanRevenueController;
 use App\Http\Controllers\Api\AdminScanUsageController;
 use App\Http\Controllers\Api\AdminStatsController;
@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\CollectorGroupController;
 use App\Http\Controllers\Api\FeedPostController;
 use App\Http\Controllers\Api\FranchiseController;
 use App\Http\Controllers\Api\FriendshipController;
+use App\Http\Controllers\Api\GoogleAuthController;
 use App\Http\Controllers\Api\ListingController;
 use App\Http\Controllers\Api\MetodoPagoController;
 use App\Http\Controllers\Api\PlanMercadoPagoController;
@@ -40,6 +41,8 @@ Route::post('/mercadopago/plan/webhook', [PlanMercadoPagoController::class, 'web
 
 Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/login', [AuthController::class, 'login']);
+Route::post('/auth/google/register', [GoogleAuthController::class, 'register']);
+Route::post('/auth/google/login', [GoogleAuthController::class, 'login']);
 Route::post('/auth/admin-login', [AuthController::class, 'adminLogin']);
 
 Route::middleware('auth:sanctum')->group(function () {

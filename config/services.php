@@ -49,6 +49,12 @@ return [
         'notification_url' => env('MERCADOPAGO_NOTIFICATION_URL'),
     ],
 
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => env('GOOGLE_REDIRECT_URI'),
+    ],
+
     'google_vision' => [
         /*
          * Ruta al JSON de la cuenta de servicio. Puede ser absoluta o relativa a la raíz del proyecto Laravel
