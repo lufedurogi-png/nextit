@@ -11,13 +11,15 @@ import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import AuthSessionStatus from '@/app/(auth)/AuthSessionStatus'
 import { getStoredDarkMode } from '@/lib/appTheme'
+import GoogleSignInPanel from '@/components/auth/GoogleSignInPanel'
+import AuthNoticeToast from '@/components/auth/AuthNoticeToast'
 
 const Login = () => {
     const router = useRouter()
     const searchParams = useSearchParams()
     const returnUrl = searchParams?.get?.('returnUrl') || '/dashboard'
 
-    const { login } = useAuth({
+    const { login, loginWithGoogle } = useAuth({
         middleware: 'guest',
         redirectIfAuthenticated: returnUrl,
     })
@@ -31,6 +33,12 @@ const Login = () => {
     const [isTransitioning, setIsTransitioning] = useState(false)
     const [isExpanded, setIsExpanded] = useState(false)
     const [isMobile, setIsMobile] = useState(false)
+
+    const [googleCredential, setGoogleCredential] = useState(null)
+    const [googlePreview, setGooglePreview] = useState(null)
+    const [googleBusy, setGoogleBusy] = useState(false)
+    const [noticeOpen, setNoticeOpen] = useState(false)
+    const [noticeMessage, setNoticeMessage] = useState('')
 
     const [darkMode, setDarkMode] = useState(false)
 
@@ -101,8 +109,39 @@ const Login = () => {
         })
     }
 
+    const handleGoogleSelect = async (credential, preview) => {
+        if (googleBusy) return
+        setGoogleBusy(true)
+        setGoogleCredential(credential)
+        setGooglePreview(preview)
+        setErrors([])
+        try {
+            await loginWithGoogle({
+                credential,
+                setErrors,
+                onRegistrationRequired: (msg) => {
+                    setGoogleCredential(null)
+                    setGooglePreview(null)
+                    setNoticeMessage(
+                        msg ||
+                            'Primero debes registrarte con Google en la pantalla de registro. Después podrás iniciar sesión aquí.'
+                    )
+                    setNoticeOpen(true)
+                },
+            })
+        } finally {
+            setGoogleBusy(false)
+        }
+    }
+
     return (
         <div className="relative w-full overflow-hidden" style={{ height: 'calc(100vh - 4rem)' }}>
+            <AuthNoticeToast
+                open={noticeOpen}
+                message={noticeMessage}
+                darkMode={darkMode}
+                onClose={() => setNoticeOpen(false)}
+            />
             {/* Contenedor principal split-screen */}
             <div className="flex flex-col lg:flex-row h-full w-full relative">
                 {/* Lado izquierdo - Cortina Naranja - Se expande de izquierda a derecha */}
@@ -160,6 +199,34 @@ const Login = () => {
                         </h2>
 
                         <AuthSessionStatus className="mb-4" status={status} />
+
+                        <GoogleSignInPanel
+                            darkMode={darkMode}
+                            mode="login"
+                            credential={googleCredential}
+                            preview={googlePreview}
+                            busy={googleBusy}
+                            onSelect={(cred, prev) => {
+                                void handleGoogleSelect(cred, prev)
+                            }}
+                            onClear={() => {
+                                if (googleBusy) return
+                                setGoogleCredential(null)
+                                setGooglePreview(null)
+                            }}
+                        />
+                        <InputError messages={errors.credential} className="mt-2 mb-2" />
+
+                        <div
+                            className={`mb-6 flex items-center gap-3 ${
+                                darkMode ? 'text-gray-400' : 'text-gray-500'
+                            }`}
+                            aria-hidden
+                        >
+                            <div className={`h-px flex-1 ${darkMode ? 'bg-gray-600' : 'bg-gray-300'}`} />
+                            <span className="text-sm font-semibold">O</span>
+                            <div className={`h-px flex-1 ${darkMode ? 'bg-gray-600' : 'bg-gray-300'}`} />
+                        </div>
                         
                         <form onSubmit={submitForm} className="space-y-4">
                             {/* Email Address */}

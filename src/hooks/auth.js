@@ -54,6 +54,58 @@ export const useAuth = ({ middleware, redirectIfAuthenticated } = {}) => {
         }
     )
 
+    const persistClientSession = async (token, u) => {
+        if (u?.role === 'admin') {
+            localStorage.setItem('auth_token', token)
+            if (u) localStorage.setItem('auth_user', JSON.stringify(u))
+            localStorage.setItem('auth_admin', 'true')
+            await mutate()
+            router.push('/admin-home')
+            return true
+        }
+        localStorage.removeItem('auth_admin')
+        localStorage.setItem('auth_token', token)
+        if (u) {
+            localStorage.setItem('auth_user', JSON.stringify(u))
+            if (u?.ui_theme != null) {
+                const tid = normalizeUiThemeId(u.ui_theme)
+                applyUiTheme(tid)
+                persistUiThemeSideEffects(tid)
+            }
+        }
+        await mutate()
+        router.push(redirectIfAuthenticated || '/inicio')
+        return true
+    }
+
+    const registerWithGoogle = async ({ setErrors, credential }) => {
+        setErrors([])
+
+        try {
+            const response = await axios.post('/auth/google/register', {
+                credential,
+                accepted_privacy: true,
+            })
+
+            if (response.data?.token) {
+                await persistClientSession(response.data.token, response.data?.user)
+                return
+            }
+            setErrors({
+                general: [response.data?.message || 'Error al registrar con Google'],
+            })
+        } catch (error) {
+            if (error.response?.status === 422) {
+                const errors = error.response.data?.errors || {}
+                setErrors(errors)
+            } else {
+                setErrors({
+                    general: [error.response?.data?.message || 'Error al registrar con Google'],
+                })
+            }
+        }
+    }
+
     const register = async ({ setErrors, ...props }) => {
         setErrors([])
 
@@ -67,26 +119,7 @@ export const useAuth = ({ middleware, redirectIfAuthenticated } = {}) => {
 
             if (response.data?.token) {
                 const u = response.data?.user
-                if (u?.role === 'admin') {
-                    localStorage.setItem('auth_token', response.data.token)
-                    if (u) localStorage.setItem('auth_user', JSON.stringify(u))
-                    localStorage.setItem('auth_admin', 'true')
-                    await mutate()
-                    router.push('/admin-home')
-                    return
-                }
-                localStorage.removeItem('auth_admin')
-                localStorage.setItem('auth_token', response.data.token)
-                if (u) {
-                    localStorage.setItem('auth_user', JSON.stringify(u))
-                    if (u?.ui_theme != null) {
-                        const tid = normalizeUiThemeId(u.ui_theme)
-                        applyUiTheme(tid)
-                        persistUiThemeSideEffects(tid)
-                    }
-                }
-                await mutate()
-                router.push(redirectIfAuthenticated || '/inicio')
+                await persistClientSession(response.data.token, u)
             } else {
                 setErrors({
                     general: [response.data?.message || 'Error al registrar usuario'],
@@ -116,26 +149,7 @@ export const useAuth = ({ middleware, redirectIfAuthenticated } = {}) => {
 
             if (response.data?.token) {
                 const u = response.data?.user
-                if (u?.role === 'admin') {
-                    localStorage.setItem('auth_token', response.data.token)
-                    if (u) localStorage.setItem('auth_user', JSON.stringify(u))
-                    localStorage.setItem('auth_admin', 'true')
-                    await mutate()
-                    router.push('/admin-home')
-                    return
-                }
-                localStorage.removeItem('auth_admin')
-                localStorage.setItem('auth_token', response.data.token)
-                if (u) {
-                    localStorage.setItem('auth_user', JSON.stringify(u))
-                    if (u?.ui_theme != null) {
-                        const tid = normalizeUiThemeId(u.ui_theme)
-                        applyUiTheme(tid)
-                        persistUiThemeSideEffects(tid)
-                    }
-                }
-                await mutate()
-                router.push(redirectIfAuthenticated || '/inicio')
+                await persistClientSession(response.data.token, u)
             } else {
                 setErrors({
                     email: [response.data?.message || 'Las credenciales proporcionadas son incorrectas.'],
@@ -152,6 +166,36 @@ export const useAuth = ({ middleware, redirectIfAuthenticated } = {}) => {
             } else {
                 setErrors({
                     general: [error.response?.data?.message || 'Error al iniciar sesión'],
+                })
+            }
+        }
+    }
+
+    const loginWithGoogle = async ({ setErrors, credential, onRegistrationRequired }) => {
+        setErrors([])
+
+        try {
+            const response = await axios.post('/auth/google/login', { credential })
+
+            if (response.data?.token) {
+                const u = response.data?.user
+                await persistClientSession(response.data.token, u)
+            } else {
+                setErrors({
+                    general: [response.data?.message || 'Error al iniciar sesión con Google'],
+                })
+            }
+        } catch (error) {
+            if (error.response?.status === 404 && error.response?.data?.code === 'REGISTRATION_REQUIRED') {
+                onRegistrationRequired?.(error.response?.data?.message)
+                return
+            }
+            if (error.response?.status === 422) {
+                const errors = error.response.data?.errors || {}
+                setErrors(errors)
+            } else {
+                setErrors({
+                    general: [error.response?.data?.message || 'Error al iniciar sesión con Google'],
                 })
             }
         }
@@ -238,7 +282,9 @@ export const useAuth = ({ middleware, redirectIfAuthenticated } = {}) => {
         user,
         mutate,
         register,
+        registerWithGoogle,
         login,
+        loginWithGoogle,
         forgotPassword,
         resetPassword,
         resendEmailVerification,

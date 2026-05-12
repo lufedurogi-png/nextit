@@ -10,10 +10,11 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { PrivacyNoticeModal } from '@/components/PrivacyNoticeReader'
 import { getStoredDarkMode } from '@/lib/appTheme'
+import GoogleSignInPanel from '@/components/auth/GoogleSignInPanel'
 
 const Page = () => {
     const router = useRouter()
-    const { register } = useAuth({
+    const { register, registerWithGoogle } = useAuth({
         middleware: 'guest',
         redirectIfAuthenticated: '/dashboard',
     })
@@ -33,6 +34,9 @@ const Page = () => {
     const [isTransitioning, setIsTransitioning] = useState(false)
     const [isExpanded, setIsExpanded] = useState(false)
     const [isMobile, setIsMobile] = useState(false)
+
+    const [googleCredential, setGoogleCredential] = useState(null)
+    const [googlePreview, setGooglePreview] = useState(null)
 
     const [darkMode, setDarkMode] = useState(false)
 
@@ -102,6 +106,18 @@ const Page = () => {
     const submitForm = event => {
         event.preventDefault()
 
+        if (googleCredential) {
+            if (!privacyAccepted) {
+                setErrors({ general: ['Debes aceptar el aviso de privacidad para registrarte.'] })
+                return
+            }
+            registerWithGoogle({
+                credential: googleCredential,
+                setErrors,
+            })
+            return
+        }
+
         if (!privacyAccepted) {
             setErrors({ general: ['Debes aceptar el aviso de privacidad para registrarte.'] })
             return
@@ -140,8 +156,38 @@ const Page = () => {
                                 Registro
                             </h2>
 
+                            <GoogleSignInPanel
+                                darkMode={darkMode}
+                                mode="register"
+                                credential={googleCredential}
+                                preview={googlePreview}
+                                onSelect={(cred, prev) => {
+                                    setGoogleCredential(cred)
+                                    setGooglePreview(prev)
+                                    setErrors([])
+                                }}
+                                onClear={() => {
+                                    setGoogleCredential(null)
+                                    setGooglePreview(null)
+                                }}
+                            />
+                            <InputError messages={errors.credential} className="mt-2" />
+
+                            <div
+                                className={`my-6 flex items-center gap-3 ${
+                                    darkMode ? 'text-gray-400' : 'text-gray-500'
+                                }`}
+                                aria-hidden
+                            >
+                                <div className={`h-px flex-1 ${darkMode ? 'bg-gray-600' : 'bg-gray-300'}`} />
+                                <span className="text-sm font-semibold">O</span>
+                                <div className={`h-px flex-1 ${darkMode ? 'bg-gray-600' : 'bg-gray-300'}`} />
+                            </div>
+
                         <form onSubmit={submitForm} className="contents">
                             <div className="space-y-4 sm:space-y-5 lg:min-w-0">
+                            {!googleCredential ? (
+                            <>
                             {/* Name */}
                             <div>
                                 <Label htmlFor="name" className={`text-sm font-medium mb-1.5 block ${darkMode ? 'text-white' : 'text-gray-700'}`}>
@@ -159,7 +205,7 @@ const Page = () => {
                                         }`}
                                         onChange={event => setName(event.target.value)}
                                         required
-                                        autoFocus
+                                        autoFocus={!googleCredential}
                                     />
                                     <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
                                         <svg className={`w-5 h-5 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -384,6 +430,19 @@ const Page = () => {
                                 </div>
                                 <InputError messages={errors.password_confirmation} className="mt-1.5" />
                             </div>
+                            </>
+                            ) : (
+                                <p
+                                    className={`rounded-lg border-2 px-3 py-3 text-sm leading-snug ${
+                                        darkMode
+                                            ? 'border-gray-600 bg-gray-800/60 text-gray-200'
+                                            : 'border-gray-200 bg-white text-gray-700'
+                                    }`}
+                                >
+                                    Registro con Google: revisa tu cuenta arriba, acepta el aviso de privacidad y pulsa{' '}
+                                    <span className="font-semibold">Registrarse</span>.
+                                </p>
+                            )}
                             </div>
 
                             <div className="space-y-4 lg:min-w-0">

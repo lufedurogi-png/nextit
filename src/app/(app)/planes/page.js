@@ -503,7 +503,7 @@ export default function PlanesPage() {
                         <div className="mt-4 flex flex-wrap gap-3">
                             <button
                                 type="button"
-                                disabled={promoFeedbackBusy || promoFeedback.trim().length < 5}
+                                disabled={promoFeedbackBusy || !promoFeedback.trim()}
                                 onClick={async () => {
                                     setPromoFeedbackOk('')
                                     setPromoFeedbackErr('')
