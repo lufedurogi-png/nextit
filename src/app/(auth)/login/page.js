@@ -135,7 +135,7 @@ const Login = () => {
     }
 
     return (
-        <div className="relative w-full overflow-hidden" style={{ height: 'calc(100vh - 4rem)' }}>
+        <div className="relative w-full overflow-x-hidden max-lg:min-h-[calc(100dvh-4rem)] lg:h-[calc(100vh-4rem)] lg:overflow-hidden">
             <AuthNoticeToast
                 open={noticeOpen}
                 message={noticeMessage}
@@ -143,13 +143,13 @@ const Login = () => {
                 onClose={() => setNoticeOpen(false)}
             />
             {/* Contenedor principal split-screen */}
-            <div className="flex flex-col lg:flex-row h-full w-full relative">
+            <div className="flex flex-col lg:flex-row w-full relative max-lg:min-h-0 lg:h-full">
                 {/* Lado izquierdo - Cortina Naranja - Se expande de izquierda a derecha */}
                 <div 
                     className={`lg:absolute lg:left-0 lg:top-0 lg:bottom-0 flex items-center justify-center bg-gradient-to-br from-[#0b1b3c] to-[#2563eb] transition-all duration-1000 ease-in-out z-50 order-1 ${
                         isExpanded 
                             ? 'h-full fixed top-0 bottom-0 left-0' 
-                            : 'h-auto lg:h-full min-h-[250px] sm:min-h-[300px] lg:min-h-0'
+                            : 'h-auto lg:h-full min-h-[200px] sm:min-h-[240px] lg:min-h-0'
                     }`}
                     style={{
                         width: isExpanded 
@@ -167,13 +167,13 @@ const Login = () => {
                                 : 'polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)'
                     }}
                 >
-                    <div className={`text-center px-6 sm:px-8 md:px-12 py-8 lg:py-0 transition-all duration-500 ${
+                    <div className={`text-center px-6 sm:px-8 md:px-12 py-5 sm:py-6 lg:py-0 transition-all duration-500 ${
                         isExpanded ? 'opacity-0 scale-110' : 'opacity-100 scale-100'
                     }`}>
-                        <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 md:mb-6">
+                        <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold text-white mb-3 sm:mb-4 md:mb-6">
                             ¡Bienvenido de vuelta!
                         </h2>
-                        <p className="text-lg sm:text-xl text-white/90 mb-6 md:mb-8">
+                        <p className="text-base sm:text-xl text-white/90 mb-4 sm:mb-6 md:mb-8">
                             ¿No tienes cuenta?
                         </p>
                         <button
@@ -186,13 +186,13 @@ const Login = () => {
                 </div>
 
                 {/* Lado derecho - Formulario de Login */}
-                <div className={`flex-1 flex items-center justify-center p-6 sm:p-8 lg:p-10 transition-all duration-700 ease-in-out min-w-0 order-2 w-full ${
+                <div className={`flex-1 flex items-start justify-center lg:items-center max-lg:py-6 max-lg:pb-10 p-6 sm:p-8 lg:p-10 transition-all duration-700 ease-in-out min-w-0 order-2 w-full max-lg:min-h-0 ${
                     isExpanded ? 'opacity-0 translate-x-full lg:translate-x-0 lg:opacity-0' : 'opacity-100 translate-x-0'
                 } ${
                     darkMode ? 'bg-gray-900' : 'bg-gray-50'
                 }`}>
                     <div className="w-full max-w-sm">
-                        <h2 className={`text-2xl sm:text-3xl font-bold mb-6 ${
+                        <h2 className={`text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 ${
                             darkMode ? 'text-white' : 'text-black'
                         }`}>
                             Iniciar sesión
