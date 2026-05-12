@@ -8,6 +8,10 @@ import { useAdminAuth } from '@/hooks/useAdminAuth'
 import { useMobileLeftDrawerSwipe } from '@/hooks/useMobileLeftDrawerSwipe'
 import IconoNavegacion from '@/components/IconoNavegacion'
 
+function isVerifiedAdminUser(user) {
+    return !!(user && (user.tipo === 1 || user.roles?.includes?.('admin')))
+}
+
 const navItems = [
     { href: '/admin-home', label: 'Inicio', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
     { href: '/admin-margen-venta', label: 'Margen venta', gananciaIcon: true },
@@ -99,9 +103,27 @@ export default function AdminLayout({ children }) {
         setMobileSidebarOpen(false)
     }, [pathname])
 
-    // Mostrar "Cargando..." solo después de montar para evitar hydration mismatch (server no tiene user/localStorage)
-    if (mounted && !user && typeof window !== 'undefined' && localStorage.getItem('auth_token')) {
-        return <div className="min-h-screen flex items-center justify-center bg-tienda-canvas text-white">Cargando...</div>
+    if (!mounted) {
+        return <div className="min-h-screen bg-tienda-canvas" aria-hidden />
+    }
+
+    {
+        const token = localStorage.getItem('auth_token')
+        const isAdminFlag = localStorage.getItem('auth_admin')
+        if (!token || !isAdminFlag) {
+            return (
+                <div className="min-h-screen flex items-center justify-center bg-tienda-canvas text-white">
+                    Redirigiendo…
+                </div>
+            )
+        }
+        if (!isVerifiedAdminUser(user)) {
+            return (
+                <div className="min-h-screen flex items-center justify-center bg-tienda-canvas text-white">
+                    Verificando acceso…
+                </div>
+            )
+        }
     }
 
     const mobilePill = `inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors ${

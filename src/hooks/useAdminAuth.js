@@ -1,9 +1,13 @@
 import useSWR from 'swr'
 import axios from '@/lib/axios'
-import { useEffect } from 'react'
+import { useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
 const ADMIN_AUTH_PREFIX = '/admin/'
+
+function isAdminUserPayload(userData) {
+    return !!(userData && (userData.tipo === 1 || userData.roles?.includes?.('admin')))
+}
 
 export const useAdminAuth = ({ middleware, redirectIfAuthenticated } = {}) => {
     const router = useRouter()
@@ -12,21 +16,10 @@ export const useAdminAuth = ({ middleware, redirectIfAuthenticated } = {}) => {
         const token = localStorage.getItem('auth_token')
         if (!token) throw new Error('No token')
 
-        const cachedUser = localStorage.getItem('auth_user')
-        if (cachedUser) {
-            try {
-                const user = JSON.parse(cachedUser)
-                if (user?.tipo === 1 || user?.roles?.includes?.('admin')) {
-                    return user
-                }
-            } catch (_) {}
-        }
-
         try {
             const response = await axios.get('/auth/profile')
             const userData = response.data?.data || response.data?.user || response.data
-            const isAdmin = userData?.tipo === 1 || userData?.roles?.includes?.('admin')
-            if (!isAdmin) {
+            if (!isAdminUserPayload(userData)) {
                 localStorage.removeItem('auth_token')
                 localStorage.removeItem('auth_user')
                 localStorage.removeItem('auth_admin')
@@ -44,7 +37,7 @@ export const useAdminAuth = ({ middleware, redirectIfAuthenticated } = {}) => {
 
     const { data: user, error, mutate } = useSWR(
         typeof window !== 'undefined' && localStorage.getItem('auth_token') && localStorage.getItem('auth_admin')
-            ? '/auth/profile'
+            ? 'admin-session'
             : null,
         getUser,
         { revalidateOnFocus: false, revalidateOnReconnect: false }
@@ -117,7 +110,7 @@ export const useAdminAuth = ({ middleware, redirectIfAuthenticated } = {}) => {
         }
     }
 
-    const logout = async () => {
+    const logout = useCallback(async () => {
         try {
             const token = localStorage.getItem('auth_token')
             if (token) {
@@ -135,15 +128,14 @@ export const useAdminAuth = ({ middleware, redirectIfAuthenticated } = {}) => {
                 window.location.href = '/admin-login'
             }
         }
-    }
+    }, [mutate])
 
     useEffect(() => {
         if (middleware === 'guest' && redirectIfAuthenticated && user) {
-            const isAdmin = user?.tipo === 1 || user?.roles?.includes?.('admin')
-            if (isAdmin) router.push(redirectIfAuthenticated)
+            if (isAdminUserPayload(user)) router.push(redirectIfAuthenticated)
         }
         if (middleware === 'auth' && error) logout()
-    }, [user, error])
+    }, [middleware, redirectIfAuthenticated, user, error, router, logout])
 
     return { user, register, login, logout }
 }
