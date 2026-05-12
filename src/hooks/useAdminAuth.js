@@ -1,6 +1,6 @@
 import useSWR from 'swr'
 import axios from '@/lib/axios'
-import { useEffect } from 'react'
+import { useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
 export const useAdminAuth = ({ middleware, redirectIfAuthenticated } = {}) => {
@@ -9,16 +9,6 @@ export const useAdminAuth = ({ middleware, redirectIfAuthenticated } = {}) => {
     const getUser = async () => {
         const token = localStorage.getItem('auth_token')
         if (!token) throw new Error('No token')
-
-        const cachedUser = localStorage.getItem('auth_user')
-        if (cachedUser) {
-            try {
-                const user = JSON.parse(cachedUser)
-                if (user?.role === 'admin') {
-                    return user
-                }
-            } catch (_) {}
-        }
 
         try {
             const response = await axios.get('/auth/me')
@@ -41,7 +31,7 @@ export const useAdminAuth = ({ middleware, redirectIfAuthenticated } = {}) => {
 
     const { data: user, error, mutate } = useSWR(
         typeof window !== 'undefined' && localStorage.getItem('auth_token') && localStorage.getItem('auth_admin')
-            ? '/auth/me-admin'
+            ? 'admin-session'
             : null,
         getUser,
         { revalidateOnFocus: false, revalidateOnReconnect: false }
@@ -85,7 +75,7 @@ export const useAdminAuth = ({ middleware, redirectIfAuthenticated } = {}) => {
         }
     }
 
-    const logout = async () => {
+    const logout = useCallback(async () => {
         try {
             const token = localStorage.getItem('auth_token')
             if (token) {
@@ -103,14 +93,14 @@ export const useAdminAuth = ({ middleware, redirectIfAuthenticated } = {}) => {
                 window.location.href = '/admin-login'
             }
         }
-    }
+    }, [mutate])
 
     useEffect(() => {
         if (middleware === 'guest' && redirectIfAuthenticated && user) {
             if (user?.role === 'admin') router.push(redirectIfAuthenticated)
         }
         if (middleware === 'auth' && error) logout()
-    }, [user, error])
+    }, [middleware, redirectIfAuthenticated, user, error, router, logout])
 
     return { user, register, login, logout }
 }

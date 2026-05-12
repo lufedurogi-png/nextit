@@ -115,9 +115,28 @@ export default function AdminLayout({ children }) {
         setMobileSidebarOpen(false)
     }, [pathname])
 
-    // Mostrar "Cargando..." solo después de montar para evitar hydration mismatch (server no tiene user/localStorage)
-    if (mounted && !user && typeof window !== 'undefined' && localStorage.getItem('auth_token')) {
-        return <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">Cargando...</div>
+    if (!mounted) {
+        return <div className="min-h-screen bg-gray-900" aria-hidden />
+    }
+
+    // No mostrar shell de administración hasta confirmar rol en el servidor (evita falsa UI con localStorage).
+    {
+        const token = localStorage.getItem('auth_token')
+        const isAdminFlag = localStorage.getItem('auth_admin')
+        if (!token || !isAdminFlag) {
+            return (
+                <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
+                    Redirigiendo…
+                </div>
+            )
+        }
+        if (user?.role !== 'admin') {
+            return (
+                <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
+                    Verificando acceso…
+                </div>
+            )
+        }
     }
 
     const mobilePill = `inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors ${
