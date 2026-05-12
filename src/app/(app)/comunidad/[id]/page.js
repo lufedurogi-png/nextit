@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useParams } from 'next/navigation'
 import axios from '@/lib/axios'
 import PageFade from '@/components/coleccionador/PageFade'
@@ -397,10 +398,11 @@ export default function GrupoDetallePage() {
                 </motion.div>
             </div>
 
-            {rulesOpen ? (
-                <div className="fixed inset-0 z-[320] flex items-end justify-center p-2 md:items-center md:pl-72 md:pr-6 md:py-6">
+            {rulesOpen && typeof document !== 'undefined'
+                ? createPortal(
+                <div className="fixed inset-0 z-[400] flex max-md:items-start max-md:justify-center max-md:overflow-y-auto max-md:p-3 max-md:pt-[max(0.5rem,env(safe-area-inset-top))] max-md:pb-[max(0.5rem,env(safe-area-inset-bottom))] md:items-center md:justify-center md:overflow-hidden md:p-2 md:pl-72 md:pr-6 md:py-6">
                     <button type="button" aria-label="Cerrar" className="absolute inset-0 bg-transparent" onClick={() => setRulesOpen(false)} />
-                    <div role="dialog" aria-modal="true" className="relative z-[1] max-h-[88vh] w-full max-w-lg overflow-y-auto rounded-3xl border border-slate-200 bg-white p-4 shadow-2xl dark:border-slate-600 dark:bg-slate-900">
+                    <div role="dialog" aria-modal="true" className="relative z-[1] max-h-[min(88dvh,calc(100dvh-1.25rem))] w-full max-w-lg overflow-y-auto rounded-3xl border border-slate-200 bg-white p-4 shadow-2xl dark:border-slate-600 dark:bg-slate-900 md:max-h-[88vh]">
                         <div className="flex items-center justify-between gap-2">
                             <p className="text-sm font-extrabold text-slate-900 dark:text-slate-50">Reglas del grupo</p>
                             <button
@@ -429,11 +431,14 @@ export default function GrupoDetallePage() {
                             <p className="mt-3 text-sm text-slate-500 dark:text-slate-300">Este grupo no tiene reglas definidas.</p>
                         )}
                     </div>
-                </div>
-            ) : null}
+                </div>,
+                document.body
+            )
+                : null}
 
-            {editOpen && group ? (
-                <div className="fixed inset-0 z-[320] flex items-end justify-center p-2 md:items-center md:pl-72 md:pr-6 md:py-6">
+            {editOpen && group && typeof document !== 'undefined'
+                ? createPortal(
+                <div className="fixed inset-0 z-[400] flex max-md:items-start max-md:justify-center max-md:overflow-y-auto max-md:p-3 max-md:pt-[max(0.5rem,env(safe-area-inset-top))] max-md:pb-[max(0.5rem,env(safe-area-inset-bottom))] md:items-center md:justify-center md:overflow-hidden md:p-2 md:pl-72 md:pr-6 md:py-6">
                     <button
                         type="button"
                         aria-label="Cerrar"
@@ -446,7 +451,7 @@ export default function GrupoDetallePage() {
                     <div
                         role="dialog"
                         aria-modal="true"
-                        className="relative z-[1] max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-slate-200 bg-white p-4 shadow-2xl dark:border-slate-600 dark:bg-slate-900 md:p-5"
+                        className="relative z-[1] max-h-[min(92dvh,calc(100dvh-1.25rem))] w-full max-w-2xl overflow-y-auto rounded-3xl border border-slate-200 bg-white p-4 shadow-2xl dark:border-slate-600 dark:bg-slate-900 md:max-h-[92vh] md:p-5"
                     >
                         <div className="flex items-center justify-between gap-2">
                             <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">Editar grupo</p>
@@ -670,11 +675,14 @@ export default function GrupoDetallePage() {
                             </button>
                         </div>
                     </div>
-                </div>
-            ) : null}
+                </div>,
+                document.body
+            )
+                : null}
 
-            {deleteOpen ? (
-                <div className="fixed inset-0 z-[330] flex items-center justify-center p-3 md:pl-72 md:pr-6">
+            {deleteOpen && typeof document !== 'undefined'
+                ? createPortal(
+                <div className="fixed inset-0 z-[400] flex items-center justify-center p-3 md:pl-72 md:pr-6">
                     <button type="button" aria-label="Cerrar" className="absolute inset-0 bg-transparent" onClick={() => setDeleteOpen(false)} />
                     <div className="relative z-[1] w-full max-w-sm rounded-3xl border border-slate-200 bg-white p-4 shadow-2xl dark:border-slate-600 dark:bg-slate-900">
                         <p className="text-sm font-extrabold text-slate-900 dark:text-slate-50">¿Eliminar este grupo para siempre?</p>
@@ -693,8 +701,10 @@ export default function GrupoDetallePage() {
                             </button>
                         </div>
                     </div>
-                </div>
-            ) : null}
+                </div>,
+                document.body
+            )
+                : null}
         </PageFade>
     )
 }
