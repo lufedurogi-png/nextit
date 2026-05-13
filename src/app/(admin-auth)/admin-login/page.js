@@ -6,7 +6,7 @@ import Input from '@/components/Input'
 import InputError from '@/components/InputError'
 import Label from '@/components/Label'
 import { useAdminAuth } from '@/hooks/useAdminAuth'
-import { useAdminTheme } from '@/app/(admin-auth)/AdminThemeContext'
+import { useAdminTheme } from '@/contexts/AdminThemeContext'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 

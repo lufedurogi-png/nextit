@@ -1,0 +1,205 @@
+'use client'
+
+import { useEffect, useState, useRef } from 'react'
+import Link from 'next/link'
+import { usePathname, useRouter } from 'next/navigation'
+import { useVentasAuth } from '@/hooks/useVentasAuth'
+import { useAdminTheme } from '@/contexts/AdminThemeContext'
+import ThemeToggle from '@/components/ThemeToggle'
+
+const navItems = [
+    { href: '/ventas-dashboard', label: 'Resumen', icon: 'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z' },
+    { href: '/ventas-pipeline', label: 'Pipeline', icon: 'M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2' },
+    { href: '/ventas-tareas', label: 'Pendientes', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4' },
+    { href: '/ventas-calendario', label: 'Calendario', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' },
+    { href: '/ventas-inbox', label: 'Bandeja', icon: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' },
+    { href: '/ventas-clientes', label: 'Clientes', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' },
+    { href: '/ventas-cotizaciones', label: 'Cotizaciones', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
+    { href: '/ventas-pedidos', label: 'Pedidos', icon: 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z' },
+    { href: '/ventas-reportes', label: 'Reportes', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' },
+    { href: '/ventas-catalogo', label: 'Catálogo', icon: 'M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z' },
+    { href: '/ventas-equipo', label: 'Equipo', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z' },
+]
+
+export default function VentasChrome({ children }) {
+    const pathname = usePathname()
+    const router = useRouter()
+    const { darkMode, setDarkMode } = useAdminTheme()
+    const { user, logout } = useVentasAuth({ middleware: 'auth' })
+    const [gateOk, setGateOk] = useState(false)
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+    const [userMenu, setUserMenu] = useState(false)
+    const menuRef = useRef(null)
+
+    useEffect(() => {
+        const ok =
+            typeof window !== 'undefined' &&
+            localStorage.getItem('auth_token') &&
+            localStorage.getItem('auth_ventas') === 'true'
+        if (!ok) {
+            router.replace('/ventas-login')
+            return
+        }
+        setGateOk(true)
+    }, [router])
+
+    useEffect(() => {
+        const fn = (e) => {
+            if (menuRef.current && !menuRef.current.contains(e.target)) setUserMenu(false)
+        }
+        document.addEventListener('click', fn)
+        return () => document.removeEventListener('click', fn)
+    }, [])
+
+    let displayName = 'Vendedor'
+    if (user?.name) displayName = user.name
+    else if (typeof window !== 'undefined') {
+        try {
+            const raw = localStorage.getItem('auth_user')
+            if (raw) displayName = JSON.parse(raw)?.name || displayName
+        } catch (_) {}
+    }
+
+    if (!gateOk) {
+        return (
+            <div className="min-h-screen flex flex-col items-center justify-center bg-[#16131f] text-violet-200 gap-3">
+                <div className="h-10 w-10 rounded-full border-2 border-violet-400/30 border-t-violet-400 animate-spin" />
+                <p className="text-sm">Comprobando sesión…</p>
+            </div>
+        )
+    }
+
+    return (
+        <div className="min-h-screen flex bg-[#f4f1fb] text-gray-900 dark:bg-[#12101a] dark:text-gray-100">
+            {mobileMenuOpen && (
+                <button
+                    type="button"
+                    className="fixed inset-0 z-30 bg-black/40 lg:hidden"
+                    aria-label="Cerrar menú"
+                    onClick={() => setMobileMenuOpen(false)}
+                />
+            )}
+
+            <aside
+                className={`fixed inset-y-0 left-0 z-40 flex flex-col border-r transition-transform duration-300 lg:static lg:translate-x-0 ${
+                    mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+                } w-60 border-violet-200/80 bg-white/95 dark:border-violet-950/50 dark:bg-[#1a1628]/95 backdrop-blur-md ${
+                    sidebarCollapsed ? 'lg:w-16' : 'lg:w-60'
+                }`}
+            >
+                <div className="h-16 flex items-center gap-2 px-4 border-b border-violet-100 dark:border-violet-900/40">
+                    <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-[#5b4d7a] to-[#8b7cb8] flex items-center justify-center text-white font-bold text-xs shrink-0">
+                        V
+                    </div>
+                    {!sidebarCollapsed && <span className="font-semibold text-violet-950 dark:text-violet-100 truncate">Ventas</span>}
+                </div>
+                <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5">
+                    {navItems.map((item) => {
+                        const active = pathname === item.href || pathname.startsWith(`${item.href}/`)
+                        return (
+                            <Link
+                                key={item.href}
+                                href={item.href}
+                                onClick={() => setMobileMenuOpen(false)}
+                                className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
+                                    active
+                                        ? 'bg-violet-100 text-violet-900 dark:bg-violet-600/25 dark:text-violet-100'
+                                        : 'text-gray-600 hover:bg-violet-50 dark:text-violet-200/70 dark:hover:bg-white/5'
+                                }`}
+                                title={sidebarCollapsed ? item.label : undefined}
+                            >
+                                <svg className="w-5 h-5 shrink-0 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d={item.icon} />
+                                </svg>
+                                {!sidebarCollapsed && <span>{item.label}</span>}
+                            </Link>
+                        )
+                    })}
+                </nav>
+                <div className="p-2 border-t border-violet-100 dark:border-violet-900/40 hidden lg:block">
+                    <button
+                        type="button"
+                        onClick={() => setSidebarCollapsed((o) => !o)}
+                        className="w-full rounded-lg py-2 text-xs text-violet-700 dark:text-violet-300 hover:bg-violet-50 dark:hover:bg-white/5"
+                    >
+                        {sidebarCollapsed ? '»' : '« Contraer'}
+                    </button>
+                </div>
+            </aside>
+
+            <div className="flex-1 flex flex-col min-w-0 lg:pl-0">
+                <header className="h-16 shrink-0 flex items-center justify-between gap-4 px-4 sm:px-6 border-b border-violet-100 bg-white/90 dark:border-violet-900/40 dark:bg-[#1a1628]/80 backdrop-blur">
+                    <div className="flex items-center gap-3 min-w-0">
+                        <button
+                            type="button"
+                            className="lg:hidden p-2 rounded-lg text-violet-800 dark:text-violet-200 hover:bg-violet-50 dark:hover:bg-white/10"
+                            onClick={() => setMobileMenuOpen(true)}
+                            aria-label="Abrir menú"
+                        >
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                            </svg>
+                        </button>
+                        <div className="relative max-w-md flex-1 hidden sm:block">
+                            <input
+                                type="search"
+                                readOnly
+                                placeholder="Buscar en ventas…"
+                                className="w-full rounded-xl border border-violet-100 bg-violet-50/50 py-2 pl-10 pr-3 text-sm text-gray-500 dark:border-violet-800/50 dark:bg-[#12101a] dark:text-violet-300/50"
+                            />
+                            <svg
+                                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-violet-400"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2 sm:gap-3 shrink-0" ref={menuRef}>
+                        <div
+                            className={`hidden sm:inline-flex items-center gap-1.5 rounded-xl px-2 py-1.5 text-xs font-medium ${
+                                darkMode ? 'bg-[#2a2540]/80 text-violet-100/90' : 'bg-violet-50 text-violet-900'
+                            }`}
+                        >
+                            <span className="hidden md:inline">Tema</span>
+                            <ThemeToggle dark={darkMode} onToggle={() => setDarkMode((d) => !d)} />
+                        </div>
+                        <div className="sm:hidden">
+                            <ThemeToggle dark={darkMode} onToggle={() => setDarkMode((d) => !d)} />
+                        </div>
+                        <span className="hidden sm:inline text-sm text-violet-900/70 dark:text-violet-200/80 truncate max-w-[10rem]">{displayName}</span>
+                        <div className="relative">
+                            <button
+                                type="button"
+                                onClick={() => setUserMenu((v) => !v)}
+                                className="flex items-center gap-2 rounded-xl border border-violet-100 dark:border-violet-800/60 px-2 py-1.5 hover:bg-violet-50 dark:hover:bg-white/5"
+                            >
+                                <span className="h-8 w-8 rounded-full bg-gradient-to-br from-[#5b4d7a] to-[#8b7cb8] text-white text-xs font-bold flex items-center justify-center">
+                                    {displayName.charAt(0).toUpperCase()}
+                                </span>
+                            </button>
+                            {userMenu && (
+                                <div className="absolute right-0 mt-2 w-48 rounded-xl border border-violet-100 bg-white py-1 shadow-xl dark:border-violet-800 dark:bg-[#1e1830] z-50">
+                                    <button
+                                        type="button"
+                                        className="w-full text-left px-4 py-2 text-sm hover:bg-violet-50 dark:hover:bg-white/10"
+                                        onClick={() => logout()}
+                                    >
+                                        Cerrar sesión
+                                    </button>
+                                    <Link href="/" className="block px-4 py-2 text-sm hover:bg-violet-50 dark:hover:bg-white/10" onClick={() => setUserMenu(false)}>
+                                        Ir a la tienda
+                                    </Link>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </header>
+                <main className="flex-1 overflow-auto p-4 sm:p-6">{children}</main>
+            </div>
+        </div>
+    )
+}

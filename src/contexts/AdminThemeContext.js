@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect } from 'react'
 
-const AdminThemeContext = createContext({ darkMode: true, setDarkMode: () => {} })
+const AdminThemeContext = createContext(null)
 
 export function AdminThemeProvider({ children }) {
     const [darkMode, setDarkMode] = useState(true)
@@ -41,6 +41,8 @@ export function AdminThemeProvider({ children }) {
 
 export function useAdminTheme() {
     const ctx = useContext(AdminThemeContext)
-    if (!ctx) throw new Error('useAdminTheme must be used within AdminThemeProvider')
+    if (ctx == null) {
+        throw new Error('useAdminTheme must be used within AdminThemeProvider')
+    }
     return ctx
 }
