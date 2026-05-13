@@ -43,9 +43,26 @@ export async function getTiendaDataForSSR() {
         const marcas = await marcasRes.json()
         const publicidadRaw = await publicidadRes.json()
         const catalogDisponible = estado?.data?.disponible ?? false
-        const publicidad = Array.isArray(publicidadRaw)
-            ? publicidadRaw.map((p) => ({ ...p, url: resolvePublicidadUrlForSSR(p.url) }))
-            : []
+        let publicidad = { carrusel_activo: true, slides: [] }
+        if (publicidadRaw && typeof publicidadRaw === 'object' && !Array.isArray(publicidadRaw) && Array.isArray(publicidadRaw.slides)) {
+            publicidad = {
+                carrusel_activo: publicidadRaw.carrusel_activo !== false && publicidadRaw.carrusel_activo !== 0,
+                slides: publicidadRaw.slides.map((p) => ({
+                    ...p,
+                    url: resolvePublicidadUrlForSSR(p.url),
+                    enlace: p.enlace ?? null,
+                })),
+            }
+        } else if (Array.isArray(publicidadRaw)) {
+            publicidad = {
+                carrusel_activo: true,
+                slides: publicidadRaw.map((p) => ({
+                    ...p,
+                    url: resolvePublicidadUrlForSSR(p.url),
+                    enlace: p.enlace ?? null,
+                })),
+            }
+        }
         return {
             catalogDisponible,
             destacados: dest?.success && Array.isArray(dest?.data) ? dest.data : [],
@@ -61,7 +78,7 @@ export async function getTiendaDataForSSR() {
             ultimos: [],
             categoriasPrincipales: [],
             marcas: [],
-            publicidad: [],
+            publicidad: { carrusel_activo: true, slides: [] },
         }
     }
 }
@@ -195,9 +212,9 @@ export async function getCategoriasPrincipales() {
     return []
 }
 
-export async function getMarcas() {
+export async function getMarcas(params = {}) {
     try {
-        const { data } = await axios.get('/catalogos/marcas')
+        const { data } = await axios.get('/catalogos/marcas', { params })
         if (data?.success && Array.isArray(data?.data)) return data.data
     } catch {
         return []
@@ -233,6 +250,7 @@ export async function getFiltrosDinamicos(categoria, subcategoria, opts = {}) {
         if (opts.marca) params.marca = opts.marca
         if (opts.precioMin != null) params.precio_min = opts.precioMin
         if (opts.precioMax != null) params.precio_max = opts.precioMax
+        if (opts.soloConStock) params.solo_con_stock = 1
         if (opts.filtros && Object.keys(opts.filtros).length > 0) {
             Object.entries(opts.filtros).forEach(([k, v]) => {
                 if (v != null && String(v).trim() !== '') params[`filtros[${k}]`] = v
@@ -257,6 +275,7 @@ export async function getFiltrosDinamicosBusqueda(query, opts = {}) {
         if (opts.marca) params.marca = opts.marca
         if (opts.precioMin != null) params.precio_min = opts.precioMin
         if (opts.precioMax != null) params.precio_max = opts.precioMax
+        if (opts.soloConStock) params.solo_con_stock = 1
         if (opts.filtros && Object.keys(opts.filtros).length > 0) {
             Object.entries(opts.filtros).forEach(([k, v]) => {
                 if (v != null && String(v).trim() !== '') params[`filtros[${k}]`] = v

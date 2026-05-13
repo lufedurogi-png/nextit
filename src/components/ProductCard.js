@@ -7,7 +7,6 @@ import { useAuth } from '@/hooks/auth'
 import { formatPrecio, resolveStorageUrl } from '@/lib/productos'
 import { registrarSeleccionBusqueda } from '@/lib/busqueda'
 import { useCarrito } from '@/lib/carrito'
-import { useFavoritos } from '@/lib/favoritos'
 import { useCotizacion } from '@/lib/cotizaciones'
 
 const FALLBACK_IMAGE = '/Imagenes/caja.png'
@@ -36,9 +35,7 @@ export default function ProductCard({
         setHasToken(typeof window !== 'undefined' && !!localStorage.getItem('auth_token'))
     }, [])
     const [imgError, setImgError] = useState(false)
-    const [togglingFavorito, setTogglingFavorito] = useState(false)
     const isLogged = !!user || hasToken
-    const { isFavorito, toggle: toggleFavorito } = useFavoritos(isLogged)
     const { isInCart } = useCarrito(isLogged)
     const { modoActivo, isInQuote, cantidad: quoteCantidad, toggleItem, setCantidad } = useCotizacion(user)
     const imageUrl = getFirstImageUrl(producto)
@@ -76,32 +73,6 @@ export default function ProductCard({
                         darkMode ? 'bg-black/25' : 'bg-gray-50'
                     }`}
                 >
-                    {user && (
-                        <button
-                            type="button"
-                            onClick={(e) => {
-                                e.preventDefault()
-                                e.stopPropagation()
-                                if (togglingFavorito) return
-                                toggleFavorito(clave).finally(() => setTogglingFavorito(false))
-                            }}
-                            className="absolute left-2 top-2 z-10 flex h-9 w-9 flex-col items-center justify-center rounded-full border border-white/15 bg-black/35 text-white shadow-sm backdrop-blur-sm transition-colors hover:border-red-400/50 hover:bg-red-600/90"
-                            aria-label={isFavorito(clave) ? 'Quitar de favoritos' : 'Agregar a favoritos'}
-                        >
-                            <Image
-                                src="/Imagenes/icon_favoritos.png"
-                                alt=""
-                                width={16}
-                                height={16}
-                                className="object-contain brightness-0 invert shrink-0"
-                            />
-                            {isFavorito(clave) && (
-                                <svg className="w-3 h-3 shrink-0 -mt-0.5 text-white" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true">
-                                    <path d="M10.28 2.28L3.989 8.575 1.695 6.28A1 1 0 00.28 7.695l3 3a1 1 0 001.414 0l7-7A1 1 0 0010.28 2.28z" />
-                                </svg>
-                            )}
-                        </button>
-                    )}
                     {comparar && !modoActivo && (
                         <div
                             className="absolute top-2 right-2 z-10"

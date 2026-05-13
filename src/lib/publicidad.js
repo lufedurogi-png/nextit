@@ -16,17 +16,44 @@ function getBackendBaseUrl() {
 export function resolvePublicidadUrl(url) {
     if (!url || typeof url !== 'string') return ''
     const base = getBackendBaseUrl()
-    // Extraer la ruta /storage/... (relativa o absoluta)
     const storageMatch = url.match(/(\/storage\/[^\s]*)/)
     const path = storageMatch ? storageMatch[1] : (url.startsWith('/') ? url : '/' + url)
     return base + path
 }
 
 /**
- * Obtiene las imágenes de publicidad para el carrusel (ruta pública).
+ * Normaliza la respuesta del API (objeto con slides o array legacy).
+ */
+export function normalizePublicidadPayload(raw) {
+    if (!raw) {
+        return { carrusel_activo: true, slides: [] }
+    }
+    if (Array.isArray(raw)) {
+        return {
+            carrusel_activo: true,
+            slides: raw.map((p) => ({
+                ...p,
+                url: typeof p.url === 'string' ? resolvePublicidadUrl(p.url) : p.url,
+                enlace: p.enlace ?? null,
+            })),
+        }
+    }
+    const slides = Array.isArray(raw.slides) ? raw.slides : []
+    return {
+        carrusel_activo: raw.carrusel_activo !== false && raw.carrusel_activo !== 0,
+        slides: slides.map((p) => ({
+            ...p,
+            url: typeof p.url === 'string' ? resolvePublicidadUrl(p.url) : p.url,
+            enlace: p.enlace ?? null,
+        })),
+    }
+}
+
+/**
+ * Obtiene datos del carrusel (ruta pública).
+ * @returns {Promise<{ carrusel_activo: boolean, slides: array }>}
  */
 export async function getPublicidad() {
     const res = await axios.get('/publicidad')
-    const items = Array.isArray(res.data) ? res.data : []
-    return items.map((p) => ({ ...p, url: resolvePublicidadUrl(p.url) }))
+    return normalizePublicidadPayload(res.data)
 }

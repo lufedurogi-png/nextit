@@ -85,16 +85,22 @@ export default function TiendaClient({ initialData = {} }) {
     const [loadingInicial, setLoadingInicial] = useState(false)
 
     // Imágenes del carrusel promocional: SSR (inmediato) + SWR (revalidar en cliente)
-    const { data: imagenesPromocionalesData } = useSWR(
+    const { data: publicidadSwr } = useSWR(
         'publicidad',
         getPublicidad,
         {
             revalidateOnFocus: false,
             dedupingInterval: 60000,
-            fallbackData: initialData?.publicidad ?? [],
+            fallbackData: initialData?.publicidad
+                ? {
+                      carrusel_activo: initialData.publicidad.carrusel_activo !== false,
+                      slides: Array.isArray(initialData.publicidad.slides) ? initialData.publicidad.slides : [],
+                  }
+                : { carrusel_activo: true, slides: [] },
         }
     )
-    const imagenesPromocionales = Array.isArray(imagenesPromocionalesData) ? imagenesPromocionalesData : (initialData?.publicidad ?? [])
+    const carruselActivo = publicidadSwr?.carrusel_activo !== false
+    const imagenesPromocionales = Array.isArray(publicidadSwr?.slides) ? publicidadSwr.slides : []
 
     /** Carga inicial: estado del catálogo + todos los datos de tienda de una vez; solo entonces se muestra la página */
     const refetchTienda = useCallback(async () => {
@@ -178,11 +184,12 @@ export default function TiendaClient({ initialData = {} }) {
 
     // Auto-avanzar el carrusel
     useEffect(() => {
+        if (!carruselActivo || imagenesPromocionales.length === 0) return undefined
         const interval = setInterval(() => {
             setCurrentSlide((prev) => (prev + 1) % imagenesPromocionales.length)
         }, 5000)
         return () => clearInterval(interval)
-    }, [imagenesPromocionales?.length ?? 0])
+    }, [carruselActivo, imagenesPromocionales.length])
 
     const iconoPorCategoria = {
         todos: '/Imagenes/icon_producto.png',
@@ -664,14 +671,6 @@ export default function TiendaClient({ initialData = {} }) {
                 {/* Contenido Principal (misma fila de grid que el sidebar; el footer va después, ancho completo) */}
                 <main className="min-h-0 min-w-0 flex-1 p-4 md:min-w-0 md:p-8">
                     <div className="max-w-7xl mx-auto">
-                        <div className="flex flex-wrap items-baseline gap-3 mb-8">
-                            <h1 className={`text-3xl font-bold ${
-                                darkMode ? 'text-white' : 'text-gray-900'
-                            }`}>
-                                Tienda
-                            </h1>
-                        </div>
-
                         {!catalogDisponible && (
                             <div className={`mb-8 rounded-lg border p-6 ${
                                 darkMode ? 'border-amber-900/45 bg-tienda-elevated' : 'border-amber-200 bg-amber-50'
@@ -693,23 +692,53 @@ export default function TiendaClient({ initialData = {} }) {
                         )}
 
                         {/* Carrusel Promocional */}
+                        {carruselActivo && (
                         <div className="relative mb-8 rounded-lg overflow-hidden">
                             <div className="relative h-64 md:h-80 lg:h-96">
                                 {imagenesPromocionales.length > 0 ? (
-                                    imagenesPromocionales.map((imagen, index) => (
+                                    imagenesPromocionales.map((imagen, index) => {
+                                        const slide = (
+                                            <img
+                                                src={resolvePublicidadUrl(imagen.url)}
+                                                alt={imagen.titulo || `Promoción ${index + 1}`}
+                                                className={`absolute inset-0 w-full h-full object-cover ${imagen.enlace ? 'cursor-pointer' : ''}`}
+                                            />
+                                        )
+                                        const inner =
+                                            imagen.enlace && String(imagen.enlace).trim() !== '' ? (
+                                                /^https?:\/\//i.test(imagen.enlace) ? (
+                                                    <a
+                                                        href={imagen.enlace}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="absolute inset-0 block"
+                                                        aria-label={imagen.titulo || 'Abrir enlace'}
+                                                    >
+                                                        {slide}
+                                                    </a>
+                                                ) : (
+                                                    <Link
+                                                        href={imagen.enlace.startsWith('/') ? imagen.enlace : `/${imagen.enlace}`}
+                                                        className="absolute inset-0 block"
+                                                        aria-label={imagen.titulo || 'Ir a la promoción'}
+                                                    >
+                                                        {slide}
+                                                    </Link>
+                                                )
+                                            ) : (
+                                                <div className="absolute inset-0">{slide}</div>
+                                            )
+                                        return (
                                         <div
                                             key={imagen.id ?? index}
                                             className={`absolute inset-0 transition-opacity duration-500 ${
                                                 index === currentSlide ? 'opacity-100' : 'opacity-0'
                                             }`}
                                         >
-                                            <img
-                                                src={resolvePublicidadUrl(imagen.url)}
-                                                alt={imagen.titulo || `Promoción ${index + 1}`}
-                                                className="absolute inset-0 w-full h-full object-cover"
-                                            />
+                                            {inner}
                                         </div>
-                                    ))
+                                        )
+                                    })
                                 ) : (
                                     <div className={`absolute inset-0 flex items-center justify-center ${darkMode ? 'bg-tienda-elevated' : 'bg-gray-100'}`}>
                                         <span className={`text-sm ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>Sin imágenes de publicidad</span>
@@ -753,6 +782,7 @@ export default function TiendaClient({ initialData = {} }) {
                                 </>
                             )}
                         </div>
+                        )}
 
                         {catalogDisponible && (
                             <>
