@@ -200,6 +200,14 @@ class ProductoController extends Controller
             $cvaQuery->where('marca', $request->input('marca'));
             $manualQuery->where('marca', $request->input('marca'));
         }
+        if ($request->boolean('solo_con_stock')) {
+            $cvaQuery->where(function ($q) {
+                $q->where('disponible', '>', 0)->orWhere('disponible_cd', '>', 0);
+            });
+            $manualQuery->where(function ($q) {
+                $q->where('disponible', '>', 0)->orWhere('disponible_cd', '>', 0);
+            });
+        }
         if ($request->filled('precio_min')) {
             $min = (float) $request->input('precio_min');
             $cvaQuery->where('precio', '>=', $min);
@@ -604,7 +612,7 @@ class ProductoController extends Controller
             return response()->json(['success' => true, 'data' => []]);
         }
 
-        $cacheKey = 'filtros_dinamicos_'.md5(serialize($request->only(['grupo', 'categoria_principal', 'marca', 'precio_min', 'precio_max', 'filtros', 'q'])));
+        $cacheKey = 'filtros_dinamicos_'.md5(serialize($request->only(['grupo', 'categoria_principal', 'marca', 'precio_min', 'precio_max', 'filtros', 'q', 'solo_con_stock'])));
         $data = Cache::remember($cacheKey, self::CACHE_TTL, function () use ($request) {
             return $this->computeFiltrosDinamicos($request);
         });
@@ -665,6 +673,14 @@ class ProductoController extends Controller
         if ($precioMax !== null) {
             $cvaQuery->where('precio', '<=', $precioMax);
             $manualQuery->where('precio', '<=', $precioMax);
+        }
+        if ($request->boolean('solo_con_stock')) {
+            $cvaQuery->where(function ($q) {
+                $q->where('disponible', '>', 0)->orWhere('disponible_cd', '>', 0);
+            });
+            $manualQuery->where(function ($q) {
+                $q->where('disponible', '>', 0)->orWhere('disponible_cd', '>', 0);
+            });
         }
 
         // Sin límite artificial: se cargan todos los productos que ya filtra el query (grupo / categoría / búsqueda).

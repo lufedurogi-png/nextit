@@ -13,6 +13,7 @@ class Publicidad extends Model
         'path',
         'orden',
         'titulo',
+        'enlace',
         'activo',
     ];
 

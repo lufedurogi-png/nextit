@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\V1\Admin\DesarrolladorAdminController;
 use App\Http\Controllers\Api\V1\Admin\ManagerUserController;
 use App\Http\Controllers\Api\V1\Admin\PedidoAdminController;
 use App\Http\Controllers\Api\V1\Admin\ProductoManualAdminController;
+use App\Http\Controllers\Api\V1\Admin\PromocionAdminController;
 use App\Http\Controllers\Api\V1\Admin\PublicidadAdminController;
 use App\Http\Controllers\Api\V1\Auth\AuthController as ApiAuthController;
 use App\Http\Controllers\Api\V1\BusquedaController;
@@ -29,6 +30,7 @@ use App\Http\Controllers\Api\V1\PayPalController;
 use App\Http\Controllers\Api\V1\PedidoController;
 use App\Http\Controllers\Api\V1\ProductoController;
 use App\Http\Controllers\Api\V1\PruebaPedidoController;
+use App\Http\Controllers\Api\V1\PromocionController;
 use App\Http\Controllers\Api\V1\PublicidadController;
 use App\Http\Controllers\Api\V1\TarjetaGuardadaController;
 use App\Http\Controllers\Api\V1\Ventas\VentasAuthController;
@@ -85,6 +87,9 @@ Route::prefix('v1')->group(function () {
 
     // Publicidad (carrusel) - público
     Route::get('/publicidad', [PublicidadController::class, 'index'])->name('publicidad.index');
+    Route::get('/promociones/{slug}', [PromocionController::class, 'show'])
+        ->where('slug', '[a-z0-9\-]+')
+        ->name('promociones.show');
     Route::get('/desarrolladores', [DesarrolladorController::class, 'index'])->name('desarrolladores.index');
 
     // Cotización sin cuenta: envío por correo + registro para administración
@@ -200,8 +205,17 @@ Route::prefix('v1')->group(function () {
             Route::post('/usuarios/{usuarioId}/permisos/revocar', [ManagerUserController::class, 'revokePermission'])->name('usuarios.permisos.revoke');
 
             Route::get('/publicidad', [PublicidadAdminController::class, 'index'])->name('publicidad.admin.index');
+            Route::patch('/publicidad/carrusel', [PublicidadAdminController::class, 'updateCarrusel'])->name('publicidad.admin.carrusel');
             Route::post('/publicidad', [PublicidadAdminController::class, 'store'])->name('publicidad.admin.store');
             Route::delete('/publicidad/{id}', [PublicidadAdminController::class, 'destroy'])->name('publicidad.admin.destroy');
+
+            Route::get('/promociones', [PromocionAdminController::class, 'index'])->name('promociones.admin.index');
+            Route::get('/promociones/{id}', [PromocionAdminController::class, 'show'])->name('promociones.admin.show');
+            Route::post('/promociones', [PromocionAdminController::class, 'store'])->name('promociones.admin.store');
+            Route::put('/promociones/{id}', [PromocionAdminController::class, 'update'])->name('promociones.admin.update');
+            Route::delete('/promociones/{id}', [PromocionAdminController::class, 'destroy'])->name('promociones.admin.destroy');
+            Route::post('/promociones/{id}/items', [PromocionAdminController::class, 'agregarItem'])->name('promociones.admin.items.add');
+            Route::post('/promociones/{id}/quitar-item', [PromocionAdminController::class, 'quitarItem'])->name('promociones.admin.items.remove');
             Route::get('/desarrolladores', [DesarrolladorAdminController::class, 'index'])->name('desarrolladores.admin.index');
             Route::post('/desarrolladores', [DesarrolladorAdminController::class, 'store'])->name('desarrolladores.admin.store');
             Route::put('/desarrolladores/{id}', [DesarrolladorAdminController::class, 'update'])->name('desarrolladores.admin.update');
