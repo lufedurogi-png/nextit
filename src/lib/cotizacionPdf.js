@@ -5,8 +5,9 @@ import { celdaCantidadConLetra, celdaMontoConLetra, montoALetrasMx } from '@/lib
  * @param {Array<{ nombre_producto?: string, clave?: string, cantidad?: number, precio_unitario?: number, subtotal?: number }>} items
  * @param {number} total
  * @param {string} [nombreArchivo] - Ej: Cotizacion_2025-01-29_14-30.pdf
+ * @param {string|number} [cotizacionId] - Folio o ID de cotización (opcional). Se usa en el pie del PDF.
  */
-export async function downloadCotizacionPdf(items, total, nombreArchivo) {
+export async function downloadCotizacionPdf(items, total, nombreArchivo, cotizacionId) {
     const fechaStr = new Date().toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' })
     const file = nombreArchivo || `Cotizacion_${new Date().toISOString().slice(0, 16).replace('T', '_')}.pdf`
     const totalStr = typeof total === 'number' ? total.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : String(total)
@@ -119,22 +120,36 @@ export async function downloadCotizacionPdf(items, total, nombreArchivo) {
     doc.setTextColor(...orange)
     doc.text(`$ ${totalStr}`, pageW - margin, finalY + 5, { align: 'right' })
     const totalNum = typeof total === 'number' ? total : Number(total)
+    let leyendaY = finalY + 5
     if (Number.isFinite(totalNum)) {
         doc.setFontSize(8)
         doc.setTextColor(80, 80, 80)
         doc.text(`(${montoALetrasMx(totalNum)})`, pageW - margin, finalY + 10, { align: 'right' })
+        leyendaY = finalY + 10
         doc.setTextColor(0, 0, 0)
     }
 
+    // Leyenda de IVA debajo del total
+    const ivaY = leyendaY + 5
+    doc.setFontSize(9)
+    doc.setFont(undefined, 'italic')
+    doc.setTextColor(107, 114, 128)
+    doc.text('Los precios no incluyen IVA', pageW - margin, ivaY, { align: 'right' })
+    doc.setFont(undefined, 'normal')
+
     // Pie justo después del total
-    const footerY = finalY + 13
+    const folio = cotizacionId != null && cotizacionId !== '' ? String(cotizacionId) : ''
+    const footerY = ivaY + 9
     doc.setDrawColor(...orange)
     doc.setLineWidth(0.4)
     doc.line(margin, footerY - 6, pageW - margin, footerY - 6)
     doc.setFontSize(9)
     doc.setFont(undefined, 'normal')
     doc.setTextColor(156, 163, 175)
-    doc.text(`Cotización · Todo para la oficina · ${fechaStr}`, pageW / 2, footerY, { align: 'center' })
+    const footerTxt = folio
+        ? `Cotización ${folio} · Documento generado por Todo para oficina · ${fechaStr}`
+        : `Cotización · Documento generado por Todo para oficina · ${fechaStr}`
+    doc.text(footerTxt, pageW / 2, footerY, { align: 'center' })
 
     doc.save(file)
 }

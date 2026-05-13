@@ -1873,7 +1873,7 @@ function DashboardInner() {
                                                     return
                                                 }
 
-                                                await downloadCotizacionPdf(items, totalConStock, nombreArchivo)
+                                                await downloadCotizacionPdf(items, totalConStock, nombreArchivo, cot.id)
                                             }
                                             const fechaEditadaStr = cot.fecha_editada ? new Date(cot.fecha_editada).toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' }) : ''
                                             const actualizarCotizacion = (nuevosItems, nuevoTotal) => {
