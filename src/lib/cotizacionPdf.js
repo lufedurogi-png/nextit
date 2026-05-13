@@ -11,6 +11,7 @@ export async function downloadCotizacionPdf(items, total, nombreArchivo, cotizac
     const fechaStr = new Date().toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' })
     const file = nombreArchivo || `Cotizacion_${new Date().toISOString().slice(0, 16).replace('T', '_')}.pdf`
     const totalStr = typeof total === 'number' ? total.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : String(total)
+    const origin = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : ''
 
     const { jsPDF } = await import('jspdf')
     const autoTable = (await import('jspdf-autotable')).default
@@ -79,12 +80,44 @@ export async function downloadCotizacionPdf(items, total, nombreArchivo, cotizac
     doc.text('DETALLE DE LA COTIZACIÓN', margin + 4, 59.5)
     doc.setTextColor(0, 0, 0)
 
-    const tableData = (items || []).map((i) => {
-        const nombre = (i.nombre_producto || i.clave || '').toString().slice(0, 55) + (i.clave ? ` (${i.clave})` : '')
+    // URLs por fila para dibujarlas como segunda línea en la celda Producto
+    const productoUrls = new Map()
+    const tableData = (items || []).map((i, idx) => {
+        const claveStr = i.clave != null ? String(i.clave) : ''
+        const nombre = (i.nombre_producto || claveStr || '').toString().slice(0, 55) + (claveStr ? ` (${claveStr})` : '')
+        if (claveStr && origin) {
+            productoUrls.set(idx, `${origin}/tienda/producto/${encodeURIComponent(claveStr)}`)
+        }
         const pUnit = typeof i.precio_unitario === 'number' ? '$ ' + i.precio_unitario.toLocaleString('es-MX', { minimumFractionDigits: 2 }) : (i.precio_unitario ?? '-')
         const sub = typeof i.subtotal === 'number' ? '$ ' + i.subtotal.toLocaleString('es-MX', { minimumFractionDigits: 2 }) : (i.subtotal ?? '-')
         return [nombre, String(i.cantidad ?? 1), pUnit, sub]
     })
+
+    // Ancho de la columna Producto: el resto del ancho de tabla tras los anchos fijos
+    // Usamos esta estimación TANTO para reservar altura como para dibujar, así garantizamos
+    // que el número de líneas calculado coincida entre didParseCell y didDrawCell.
+    const productoColumnWidth = Math.max(40, (pageW - margin * 2) - (18 + 28 + 28))
+    const enlacePadX = 3
+    const enlaceFontSize = 7
+    const enlaceLineMm = 3
+    const enlaceMaxW = productoColumnWidth - enlacePadX * 2
+    // Cache para no recalcular splitTextToSize por cada hook
+    const enlaceLinesCache = new Map()
+    const getEnlaceLines = (rowIndex) => {
+        if (enlaceLinesCache.has(rowIndex)) return enlaceLinesCache.get(rowIndex)
+        const url = productoUrls.get(rowIndex)
+        if (!url) {
+            enlaceLinesCache.set(rowIndex, null)
+            return null
+        }
+        const prevFontSize = doc.getFontSize()
+        doc.setFontSize(enlaceFontSize)
+        const lines = doc.splitTextToSize(`Enlace: ${url}`, enlaceMaxW)
+        doc.setFontSize(prevFontSize)
+        const result = { url, lines }
+        enlaceLinesCache.set(rowIndex, result)
+        return result
+    }
 
     autoTable(doc, {
         startY: 64,
@@ -105,7 +138,39 @@ export async function downloadCotizacionPdf(items, total, nombreArchivo, cotizac
         },
         margin: { left: margin, right: margin },
         tableLineColor: orangeBorderSoft,
-        tableLineWidth: 0.3
+        tableLineWidth: 0.3,
+        didParseCell: (data) => {
+            if (data.section !== 'body' || data.column.index !== 0) return
+            const enlace = getEnlaceLines(data.row.index)
+            if (!enlace) return
+            const extra = enlace.lines.length * enlaceLineMm + 1.5
+            const base = typeof data.cell.styles.minCellHeight === 'number' ? data.cell.styles.minCellHeight : 0
+            data.cell.styles.minCellHeight = base + extra
+        },
+        didDrawCell: (data) => {
+            if (data.section !== 'body' || data.column.index !== 0) return
+            const enlace = getEnlaceLines(data.row.index)
+            if (!enlace) return
+            const prevFontSize = doc.getFontSize()
+            doc.setFontSize(enlaceFontSize)
+            doc.setTextColor(...orangeDark)
+            const totalH = enlace.lines.length * enlaceLineMm
+            const x = data.cell.x + enlacePadX
+            const yStart = data.cell.y + data.cell.height - totalH + 1
+            const canLink = typeof doc.textWithLink === 'function'
+            enlace.lines.forEach((line, lineIdx) => {
+                const ly = yStart + lineIdx * enlaceLineMm
+                if (canLink) {
+                    try {
+                        doc.textWithLink(line, x, ly, { url: enlace.url })
+                        return
+                    } catch { /* fallback */ }
+                }
+                doc.text(line, x, ly)
+            })
+            doc.setTextColor(0, 0, 0)
+            doc.setFontSize(prevFontSize)
+        }
     })
 
     const finalY = doc.lastAutoTable ? doc.lastAutoTable.finalY + 14 : 90
