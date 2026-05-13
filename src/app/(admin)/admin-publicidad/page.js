@@ -16,19 +16,73 @@ import {
     getFiltrosDinamicosBusqueda,
     getMarcas,
     getProductos,
+    resolveStorageUrl,
 } from '@/lib/productos'
 
 const PUBLICIDAD_KEY = '/admin/publicidad'
 const PROMOCIONES_KEY = '/admin/promociones'
 const swrConfig = { revalidateOnFocus: false, dedupingInterval: 5000 }
 
+function getProductoThumbUrl(pr) {
+    if (!pr || typeof pr !== 'object') return null
+    if (pr.imagen) return resolveStorageUrl(pr.imagen)
+    const imgs = pr.imagenes
+    if (Array.isArray(imgs) && imgs.length > 0) return resolveStorageUrl(imgs[0])
+    return null
+}
+
+function AdminPasswordField({ id, label, value, onChange, darkMode, labelClass, placeholder, autoComplete, className = 'max-w-md' }) {
+    const [show, setShow] = useState(false)
+    const wrap = darkMode
+        ? 'border-gray-600/90 bg-gray-900/40 focus-within:border-violet-500/55 focus-within:ring-violet-500/25'
+        : 'border-gray-300 bg-white focus-within:border-violet-400 focus-within:ring-violet-200'
+    return (
+        <div className={className}>
+            {label ? <Label className={labelClass}>{label}</Label> : null}
+            <div className={`mt-0 flex rounded-lg border shadow-sm overflow-hidden ring-0 focus-within:ring-2 ${wrap}`}>
+                <input
+                    id={id}
+                    type={show ? 'text' : 'password'}
+                    autoComplete={autoComplete}
+                    value={value}
+                    onChange={onChange}
+                    placeholder={placeholder}
+                    className={`flex-1 min-w-0 border-0 bg-transparent px-3 py-2.5 text-sm outline-none ${
+                        darkMode ? 'text-gray-100 placeholder:text-gray-500' : 'text-gray-900 placeholder:text-gray-400'
+                    }`}
+                />
+                <button
+                    type="button"
+                    className={`shrink-0 px-3 text-xs font-semibold tracking-wide border-l transition-colors ${
+                        darkMode
+                            ? 'border-gray-600 text-gray-300 hover:bg-gray-800'
+                            : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                    }`}
+                    onClick={() => setShow((s) => !s)}
+                    aria-pressed={show}
+                    aria-label={show ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                >
+                    {show ? 'Ocultar' : 'Ver'}
+                </button>
+            </div>
+        </div>
+    )
+}
+
 function PasswordModal({ open, title, darkMode, loading, error, onClose, onConfirm }) {
     const [pw, setPw] = useState('')
+    const [showPw, setShowPw] = useState(false)
     useEffect(() => {
-        if (open) setPw('')
+        if (open) {
+            setPw('')
+            setShowPw(false)
+        }
     }, [open])
     if (!open) return null
     const box = darkMode ? 'bg-tienda-elevated border-gray-600 text-gray-100' : 'bg-white border-gray-200 text-gray-900'
+    const wrap = darkMode
+        ? 'border-gray-600/90 bg-gray-800/80 focus-within:border-violet-500/50'
+        : 'border-gray-300 bg-white focus-within:border-violet-400'
     return (
         <div
             className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4"
@@ -41,16 +95,29 @@ function PasswordModal({ open, title, darkMode, loading, error, onClose, onConfi
                 <p className={`text-sm mb-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                     Introduce la contraseña del administrador en sesión para continuar.
                 </p>
-                <input
-                    type="password"
-                    autoComplete="current-password"
-                    value={pw}
-                    onChange={(e) => setPw(e.target.value)}
-                    className={`w-full px-3 py-2 rounded-lg border mb-3 ${
-                        darkMode ? 'bg-gray-800 border-gray-600 text-white' : 'bg-white border-gray-300'
-                    }`}
-                    placeholder="Contraseña"
-                />
+                <div className={`flex rounded-lg border overflow-hidden mb-3 focus-within:ring-2 ${wrap} ${darkMode ? 'ring-violet-500/20' : 'ring-violet-200'}`}>
+                    <input
+                        type={showPw ? 'text' : 'password'}
+                        autoComplete="current-password"
+                        value={pw}
+                        onChange={(e) => setPw(e.target.value)}
+                        className={`flex-1 min-w-0 border-0 bg-transparent px-3 py-2.5 text-sm outline-none ${
+                            darkMode ? 'text-white placeholder:text-gray-500' : 'text-gray-900'
+                        }`}
+                        placeholder="Contraseña"
+                    />
+                    <button
+                        type="button"
+                        className={`shrink-0 px-3 text-xs font-semibold border-l ${
+                            darkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-700/80' : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                        }`}
+                        onClick={() => setShowPw((s) => !s)}
+                        aria-pressed={showPw}
+                        aria-label={showPw ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                    >
+                        {showPw ? 'Ocultar' : 'Ver'}
+                    </button>
+                </div>
                 {error && <p className="text-sm text-red-500 mb-3">{error}</p>}
                 <div className="flex gap-2 justify-end">
                     <button
@@ -98,6 +165,20 @@ export default function AdminPublicidad() {
     }, [pubData?.carrusel_activo])
 
     const { data: promocionesList = [], mutate: mutatePromos } = useSWR(PROMOCIONES_KEY, swrFetcher, swrConfig)
+
+    /** Enlace del banner solo puede ser URL de promoción existente; si no hay lista o desaparece la elegida, se limpia. */
+    useEffect(() => {
+        if (!Array.isArray(promocionesList) || promocionesList.length === 0) {
+            setEnlaceBanner('')
+            return
+        }
+        setEnlaceBanner((prev) => {
+            const p = String(prev || '').trim()
+            if (!p) return ''
+            return promocionesList.some((x) => x.url_tienda === p) ? p : ''
+        })
+    }, [promocionesList])
+
     const [promoNuevaTitulo, setPromoNuevaTitulo] = useState('')
     const [promoNuevaDesc, setPromoNuevaDesc] = useState('')
     const [promoNuevaSlug, setPromoNuevaSlug] = useState('')
@@ -455,6 +536,7 @@ export default function AdminPublicidad() {
                         clave: pr.clave,
                         descripcion: pr.descripcion || '',
                         marca: pr.marca || '',
+                        imagen_url: getProductoThumbUrl(pr),
                     },
                 ]
             })
@@ -563,17 +645,16 @@ export default function AdminPublicidad() {
                             Carrusel de publicidad visible en la tienda
                         </label>
                     </div>
-                    <div className="max-w-md">
-                        <Label className={labelClass}>Contraseña del administrador</Label>
-                        <input
-                            type="password"
-                            autoComplete="current-password"
-                            value={passwordCarrusel}
-                            onChange={(e) => setPasswordCarrusel(e.target.value)}
-                            className={inputClass}
-                            placeholder="Requerida para guardar"
-                        />
-                    </div>
+                    <AdminPasswordField
+                        id="admin-password-carrusel"
+                        label="Contraseña del administrador"
+                        value={passwordCarrusel}
+                        onChange={(e) => setPasswordCarrusel(e.target.value)}
+                        darkMode={darkMode}
+                        labelClass={labelClass}
+                        placeholder="Requerida para guardar"
+                        autoComplete="current-password"
+                    />
                     <InputError messages={errors.carrusel} />
                     <Button
                         type="button"
@@ -728,16 +809,17 @@ export default function AdminPublicidad() {
                             </div>
                         )}
                         {promoSeleccionadaId ? (
-                            <div className="mt-4 max-w-md">
-                                <Label className={labelClass}>Contraseña (solo para agregar a la promoción seleccionada)</Label>
-                                <input
-                                    type="password"
-                                    value={passwordPromoAcciones}
-                                    onChange={(e) => setPasswordPromoAcciones(e.target.value)}
-                                    className={inputClass}
-                                    autoComplete="new-password"
-                                />
-                            </div>
+                            <AdminPasswordField
+                                id="admin-password-promo-items"
+                                className="mt-4 max-w-md"
+                                label="Contraseña (solo para agregar a la promoción seleccionada)"
+                                value={passwordPromoAcciones}
+                                onChange={(e) => setPasswordPromoAcciones(e.target.value)}
+                                darkMode={darkMode}
+                                labelClass={labelClass}
+                                placeholder="Contraseña"
+                                autoComplete="new-password"
+                            />
                         ) : null}
                         {totalBusqueda > 0 ? (
                             <p className={`mt-3 text-sm font-medium ${darkMode ? 'text-violet-300/90' : 'text-violet-800'}`}>
@@ -747,37 +829,54 @@ export default function AdminPublicidad() {
                         {loadingBusqueda ? (
                             <p className="mt-4 text-sm">Cargando…</p>
                         ) : (
-                            <div className="mt-4 overflow-x-auto rounded-lg border border-gray-600/30">
-                                <table className="min-w-full text-sm">
-                                    <thead className={darkMode ? 'bg-gray-800/80' : 'bg-gray-100'}>
-                                        <tr>
-                                            <th className="text-left p-2">Clave</th>
-                                            <th className="text-left p-2">Descripción</th>
-                                            <th className="text-left p-2">Marca</th>
-                                            <th className="p-2" />
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {productosBusqueda.map((pr) => (
-                                            <tr key={pr.clave} className={darkMode ? 'border-t border-gray-700' : 'border-t border-gray-200'}>
-                                                <td className="p-2 font-mono text-xs">{pr.clave}</td>
-                                                <td className="p-2 max-w-xs truncate" title={pr.descripcion}>
-                                                    {pr.descripcion}
-                                                </td>
-                                                <td className="p-2">{pr.marca}</td>
-                                                <td className="p-2">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => agregarProductoDesdeBusqueda(pr)}
-                                                        className="text-xs px-2 py-1 rounded bg-emerald-600 text-white hover:bg-emerald-500"
+                            <div className="mt-4 space-y-3">
+                                {productosBusqueda.map((pr) => {
+                                    const thumb = getProductoThumbUrl(pr)
+                                    return (
+                                        <div
+                                            key={pr.clave}
+                                            className={`flex flex-col gap-3 rounded-xl border p-4 sm:flex-row sm:items-stretch ${
+                                                darkMode ? 'border-gray-600/50 bg-gray-900/25' : 'border-gray-200 bg-white shadow-sm'
+                                            }`}
+                                        >
+                                            <div
+                                                className={`mx-auto shrink-0 overflow-hidden rounded-lg sm:mx-0 w-28 h-28 sm:w-24 sm:h-24 ${
+                                                    darkMode ? 'bg-gray-800 ring-1 ring-gray-600/50' : 'bg-gray-100 ring-1 ring-gray-200'
+                                                }`}
+                                            >
+                                                {thumb ? (
+                                                    <img src={thumb} alt="" className="h-full w-full object-cover" loading="lazy" />
+                                                ) : (
+                                                    <div
+                                                        className={`flex h-full w-full items-center justify-center text-center text-[10px] font-medium uppercase tracking-wide px-1 ${
+                                                            darkMode ? 'text-gray-500' : 'text-gray-400'
+                                                        }`}
                                                     >
-                                                        {promoSeleccionadaId ? 'Agregar a promoción' : 'Agregar a la lista'}
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                                                        Sin imagen
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="min-w-0 flex-1 flex flex-col justify-center">
+                                                <p className={`font-mono text-xs ${darkMode ? 'text-violet-300' : 'text-violet-700'}`}>{pr.clave}</p>
+                                                <p className={`mt-1 text-sm leading-snug line-clamp-3 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                                                    {pr.descripcion}
+                                                </p>
+                                                {pr.marca ? (
+                                                    <p className={`mt-1.5 text-xs ${darkMode ? 'text-gray-500' : 'text-gray-600'}`}>{pr.marca}</p>
+                                                ) : null}
+                                            </div>
+                                            <div className="flex shrink-0 items-center justify-end sm:justify-center sm:self-center">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => agregarProductoDesdeBusqueda(pr)}
+                                                    className="text-xs px-3 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-500 font-semibold whitespace-nowrap"
+                                                >
+                                                    {promoSeleccionadaId ? 'Agregar a promoción' : 'Agregar a la lista'}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )
+                                })}
                             </div>
                         )}
                         {totalBusqueda > 12 && (
@@ -805,55 +904,72 @@ export default function AdminPublicidad() {
                     {/* Lista local antes de crear (solo si ya hay productos) */}
                     {!promoSeleccionadaId && draftLineas.length > 0 && (
                         <div>
-                            <div className="overflow-x-auto rounded-lg border border-gray-600/30">
-                                <table className="min-w-full text-sm">
-                                    <thead className={darkMode ? 'bg-gray-800/80' : 'bg-gray-100'}>
-                                        <tr>
-                                            <th className="text-left p-2 w-10">#</th>
-                                            <th className="text-left p-2">Clave</th>
-                                            <th className="text-left p-2">Descripción</th>
-                                            <th className="text-left p-2">Marca</th>
-                                            <th className="p-2" />
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {draftLineas.map((row, idx) => (
-                                            <tr key={row.clave} className={darkMode ? 'border-t border-gray-700' : 'border-t border-gray-200'}>
-                                                <td className="p-2 text-gray-500">{idx + 1}</td>
-                                                <td className="p-2 font-mono text-xs">{row.clave}</td>
-                                                <td className="p-2 max-w-md truncate" title={row.descripcion}>
-                                                    {row.descripcion}
-                                                </td>
-                                                <td className="p-2">{row.marca}</td>
-                                                <td className="p-2">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => quitarDelBorrador(row.clave)}
-                                                        className="text-xs px-2 py-1 rounded bg-red-600/85 text-white"
+                            <h4 className={`text-sm font-semibold mb-3 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Productos en el borrador</h4>
+                            <div className="space-y-3">
+                                {draftLineas.map((row, idx) => {
+                                    const thumb = row.imagen_url || null
+                                    return (
+                                        <div
+                                            key={row.clave}
+                                            className={`flex flex-col gap-3 rounded-xl border p-4 sm:flex-row sm:items-stretch ${
+                                                darkMode ? 'border-violet-900/40 bg-violet-950/15' : 'border-violet-200 bg-violet-50/40 shadow-sm'
+                                            }`}
+                                        >
+                                            <div
+                                                className={`mx-auto shrink-0 overflow-hidden rounded-lg sm:mx-0 w-28 h-28 sm:w-24 sm:h-24 ${
+                                                    darkMode ? 'bg-gray-800 ring-1 ring-violet-800/50' : 'bg-white ring-1 ring-violet-200'
+                                                }`}
+                                            >
+                                                {thumb ? (
+                                                    <img src={thumb} alt="" className="h-full w-full object-cover" loading="lazy" />
+                                                ) : (
+                                                    <div
+                                                        className={`flex h-full w-full items-center justify-center text-center text-[10px] font-medium uppercase tracking-wide px-1 ${
+                                                            darkMode ? 'text-gray-500' : 'text-gray-400'
+                                                        }`}
                                                     >
-                                                        Quitar
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                                                        Sin imagen
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="min-w-0 flex-1 flex flex-col justify-center">
+                                                <p className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>#{idx + 1}</p>
+                                                <p className={`font-mono text-xs mt-0.5 ${darkMode ? 'text-violet-300' : 'text-violet-800'}`}>{row.clave}</p>
+                                                <p className={`mt-1 text-sm leading-snug line-clamp-3 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                                                    {row.descripcion}
+                                                </p>
+                                                {row.marca ? (
+                                                    <p className={`mt-1.5 text-xs ${darkMode ? 'text-gray-500' : 'text-gray-600'}`}>{row.marca}</p>
+                                                ) : null}
+                                            </div>
+                                            <div className="flex shrink-0 items-center justify-end sm:justify-center sm:self-center">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => quitarDelBorrador(row.clave)}
+                                                    className="text-xs px-3 py-2 rounded-lg bg-red-600/90 text-white hover:bg-red-500 font-semibold"
+                                                >
+                                                    Quitar
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )
+                                })}
                             </div>
                         </div>
                     )}
 
                     {!promoSeleccionadaId && (
                         <div className="space-y-4 max-w-md border-t border-gray-600/30 dark:border-gray-600 pt-6">
-                            <div>
-                                <Label className={labelClass}>Contraseña del administrador</Label>
-                                <input
-                                    type="password"
-                                    value={passwordPromoCrear}
-                                    onChange={(e) => setPasswordPromoCrear(e.target.value)}
-                                    className={inputClass}
-                                    autoComplete="new-password"
-                                />
-                            </div>
+                            <AdminPasswordField
+                                id="admin-password-promo-crear"
+                                label="Contraseña del administrador"
+                                value={passwordPromoCrear}
+                                onChange={(e) => setPasswordPromoCrear(e.target.value)}
+                                darkMode={darkMode}
+                                labelClass={labelClass}
+                                placeholder="Requerida para crear la promoción"
+                                autoComplete="new-password"
+                            />
                             <InputError messages={errors.promo} />
                             <Button
                                 type="button"
@@ -868,44 +984,52 @@ export default function AdminPublicidad() {
 
                     <div>
                         <h3 className={`font-semibold mb-3 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>Promociones existentes</h3>
-                        <div className="overflow-x-auto rounded-lg border border-gray-600/40 dark:border-gray-600">
-                            <table className="min-w-full text-sm">
-                                <thead className={darkMode ? 'bg-gray-800/80' : 'bg-gray-100'}>
-                                    <tr>
-                                        <th className="text-left p-2">Título</th>
-                                        <th className="text-left p-2">URL</th>
-                                        <th className="text-left p-2">Productos</th>
-                                        <th className="p-2">Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {promocionesList.map((p) => (
-                                        <tr key={p.id} className={darkMode ? 'border-t border-gray-700' : 'border-t border-gray-200'}>
-                                            <td className="p-2 font-medium">{p.titulo}</td>
-                                            <td className="p-2">
-                                                <code className="text-xs break-all">{p.url_tienda}</code>
-                                            </td>
-                                            <td className="p-2">{p.items_count}</td>
-                                            <td className="p-2 flex flex-wrap gap-2">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setPromoSeleccionadaId(promoSeleccionadaId === p.id ? null : p.id)}
-                                                    className={`text-xs px-2 py-1 rounded ${promoSeleccionadaId === p.id ? 'bg-emerald-600 text-white' : darkMode ? 'bg-gray-700' : 'bg-gray-200'}`}
-                                                >
-                                                    {promoSeleccionadaId === p.id ? 'Deseleccionar' : 'Editar productos'}
-                                                </button>
-                                                <button type="button" onClick={() => eliminarPromocion(p.id)} className="text-xs px-2 py-1 rounded bg-red-600/90 text-white">
-                                                    Eliminar
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                            {promocionesList.length === 0 && (
-                                <p className={`p-4 text-sm ${darkMode ? 'text-gray-500' : 'text-gray-600'}`}>Aún no hay promociones.</p>
-                            )}
-                        </div>
+                        {promocionesList.length === 0 ? (
+                            <p className={`rounded-xl border px-4 py-6 text-sm ${darkMode ? 'border-gray-600 text-gray-500 bg-gray-900/20' : 'border-gray-200 text-gray-600 bg-gray-50'}`}>
+                                Aún no hay promociones.
+                            </p>
+                        ) : (
+                            <div className="grid gap-3 sm:grid-cols-2">
+                                {promocionesList.map((p) => (
+                                    <div
+                                        key={p.id}
+                                        className={`rounded-xl border p-4 flex flex-col gap-2 ${
+                                            darkMode ? 'border-gray-600/60 bg-gray-900/30' : 'border-gray-200 bg-white shadow-sm'
+                                        }`}
+                                    >
+                                        <p className={`font-semibold ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>{p.titulo}</p>
+                                        <code className={`text-xs break-all block rounded px-2 py-1 ${darkMode ? 'bg-black/25 text-gray-300' : 'bg-gray-100 text-gray-700'}`}>
+                                            {p.url_tienda}
+                                        </code>
+                                        <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                                            {p.items_count} producto{p.items_count !== 1 ? 's' : ''}
+                                        </p>
+                                        <div className="flex flex-wrap gap-2 pt-1 mt-auto">
+                                            <button
+                                                type="button"
+                                                onClick={() => setPromoSeleccionadaId(promoSeleccionadaId === p.id ? null : p.id)}
+                                                className={`text-xs px-3 py-2 rounded-lg font-semibold ${
+                                                    promoSeleccionadaId === p.id
+                                                        ? 'bg-emerald-600 text-white'
+                                                        : darkMode
+                                                          ? 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                                                          : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+                                                }`}
+                                            >
+                                                {promoSeleccionadaId === p.id ? 'Deseleccionar' : 'Editar productos'}
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => eliminarPromocion(p.id)}
+                                                className="text-xs px-3 py-2 rounded-lg font-semibold bg-red-600/90 text-white hover:bg-red-500"
+                                            >
+                                                Eliminar
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
 
                     {promoSeleccionadaId && promoDetalle && (
@@ -967,37 +1091,33 @@ export default function AdminPublicidad() {
                             <Label className={labelClass}>Título (opcional)</Label>
                             <Input value={titulo} onChange={(e) => setTitulo(e.target.value)} className={`${inputClass} ${titulo?.trim() ? '!bg-[#E5EBFD] !text-gray-900' : ''}`} placeholder="Ej: Oferta de temporada" />
                         </div>
-                        <div>
-                            <Label className={labelClass}>Enlace al hacer clic (opcional)</Label>
-                            <Input
-                                value={enlaceBanner}
-                                onChange={(e) => setEnlaceBanner(e.target.value)}
-                                className={inputClass}
-                                placeholder="Ej: /tienda/promocion/mi-slug o https://…"
-                            />
-                            {promocionesList.length > 0 && (
-                                <p className={`text-xs mt-1 ${darkMode ? 'text-gray-500' : 'text-gray-600'}`}>
-                                    Atajo:{' '}
-                                    {promocionesList.slice(0, 6).map((p) => (
-                                        <button
-                                            key={p.id}
-                                            type="button"
-                                            className="underline mr-2 text-emerald-500"
-                                            onClick={() => setEnlaceBanner(p.url_tienda)}
-                                        >
-                                            {p.titulo}
-                                        </button>
+                        {promocionesList.length > 0 && (
+                            <div>
+                                <Label className={labelClass}>Enlace al hacer clic (opcional)</Label>
+                                <select
+                                    value={enlaceBanner}
+                                    onChange={(e) => setEnlaceBanner(e.target.value)}
+                                    className={inputClass}
+                                    aria-label="Enlace al hacer clic en el banner"
+                                >
+                                    <option value="">— Sin enlace —</option>
+                                    {promocionesList.map((p) => (
+                                        <option key={p.id} value={p.url_tienda}>
+                                            {p.titulo} ({p.url_tienda})
+                                        </option>
                                     ))}
-                                </p>
-                            )}
-                        </div>
+                                </select>
+                            </div>
+                        )}
                         <div className="max-w-md">
-                            <Label className={labelClass}>Contraseña del administrador</Label>
-                            <input
-                                type="password"
+                            <AdminPasswordField
+                                id="admin-password-banner"
+                                label="Contraseña del administrador"
                                 value={passwordBanner}
                                 onChange={(e) => setPasswordBanner(e.target.value)}
-                                className={inputClass}
+                                darkMode={darkMode}
+                                labelClass={labelClass}
+                                placeholder="Requerida para subir"
                                 autoComplete="new-password"
                             />
                             <InputError messages={errors.admin_password} />
