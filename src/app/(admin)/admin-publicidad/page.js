@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import useSWR from 'swr'
+import Link from 'next/link'
 import axios from '@/lib/axios'
 import { resolvePublicidadUrl } from '@/lib/publicidad'
 import Button from '@/components/Button'
@@ -15,6 +16,7 @@ import {
     getFiltrosDinamicos,
     getFiltrosDinamicosBusqueda,
     getMarcas,
+    getPorClaves,
     getProductos,
     resolveStorageUrl,
 } from '@/lib/productos'
@@ -23,12 +25,85 @@ const PUBLICIDAD_KEY = '/admin/publicidad'
 const PROMOCIONES_KEY = '/admin/promociones'
 const swrConfig = { revalidateOnFocus: false, dedupingInterval: 5000 }
 
-function getProductoThumbUrl(pr) {
-    if (!pr || typeof pr !== 'object') return null
-    if (pr.imagen) return resolveStorageUrl(pr.imagen)
-    const imgs = pr.imagenes
-    if (Array.isArray(imgs) && imgs.length > 0) return resolveStorageUrl(imgs[0])
-    return null
+/** URLs de imágenes del producto (principal + galería), sin duplicados. */
+function getProductoImagenesUrls(pr) {
+    if (!pr || typeof pr !== 'object') return []
+    const seen = new Set()
+    const out = []
+    const push = (raw) => {
+        if (raw == null || raw === '') return
+        const u = typeof raw === 'string' ? resolveStorageUrl(raw) : ''
+        if (u && !seen.has(u)) {
+            seen.add(u)
+            out.push(u)
+        }
+    }
+    if (pr.imagen) push(pr.imagen)
+    if (Array.isArray(pr.imagenes)) pr.imagenes.forEach(push)
+    if (Array.isArray(pr.imagenes_urls)) pr.imagenes_urls.forEach(push)
+    return out
+}
+
+function urlsFromDraftRow(row) {
+    if (Array.isArray(row?.imagenes_urls) && row.imagenes_urls.length) return row.imagenes_urls
+    if (row?.imagen_url) return [row.imagen_url]
+    return []
+}
+
+/** Mini vista de galería: una imagen y pestañas 1…n si hay varias. */
+function ProductoImagenesCelda({ urls, darkMode, rowKey }) {
+    const list = (Array.isArray(urls) ? urls : []).filter(Boolean)
+    const listKey = list.join('|')
+    const [idx, setIdx] = useState(0)
+    useEffect(() => {
+        setIdx(0)
+    }, [rowKey, listKey])
+    const safe = list.length ? Math.min(idx, list.length - 1) : 0
+    if (list.length === 0) {
+        return (
+            <span className={`inline-flex min-h-[4.5rem] min-w-[4.5rem] items-center justify-center rounded-lg border text-[10px] font-medium uppercase leading-tight px-1 text-center ${
+                darkMode ? 'border-gray-600 bg-gray-800/80 text-gray-500' : 'border-gray-200 bg-gray-50 text-gray-400'
+            }`}>
+                Sin imagen
+            </span>
+        )
+    }
+    const cur = list[safe]
+    return (
+        <div className="flex w-[5.75rem] shrink-0 flex-col items-stretch gap-1">
+            <div
+                className={`aspect-square overflow-hidden rounded-lg border ${
+                    darkMode ? 'border-gray-600 bg-gray-900' : 'border-gray-200 bg-gray-100'
+                }`}
+            >
+                <img src={cur} alt="" className="h-full w-full object-cover" loading="lazy" />
+            </div>
+            {list.length > 1 ? (
+                <div className="flex flex-wrap justify-center gap-0.5" role="tablist" aria-label="Imágenes del producto">
+                    {list.map((_, i) => (
+                        <button
+                            key={i}
+                            type="button"
+                            role="tab"
+                            aria-selected={i === safe}
+                            onClick={() => setIdx(i)}
+                            className={`min-w-[1.25rem] rounded px-1 py-0.5 text-[10px] font-bold leading-none transition-colors ${
+                                i === safe
+                                    ? darkMode
+                                        ? 'bg-violet-600 text-white ring-1 ring-violet-400/60'
+                                        : 'bg-violet-600 text-white shadow-sm'
+                                    : darkMode
+                                      ? 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                                      : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                            }`}
+                        >
+                            {i + 1}
+                        </button>
+                    ))}
+                </div>
+            ) : null}
+        </div>
+    )
 }
 
 function AdminPasswordField({ id, label, value, onChange, darkMode, labelClass, placeholder, autoComplete, className = 'max-w-md' }) {
@@ -194,6 +269,26 @@ export default function AdminPublicidad() {
         swrFetcher,
         swrConfig
     )
+
+    const clavesPromoOrden = Array.isArray(promoDetalle?.claves) ? promoDetalle.claves : []
+    const promoItemsProductosKey =
+        promoSeleccionadaId && clavesPromoOrden.length > 0
+            ? ['promo-items-prods', promoSeleccionadaId, JSON.stringify(clavesPromoOrden)]
+            : null
+
+    const { data: promoItemsProductos = [], isLoading: loadingPromoItemsProductos } = useSWR(
+        promoItemsProductosKey,
+        () => getPorClaves([...clavesPromoOrden]),
+        swrConfig
+    )
+
+    const productoPromoPorClave = useMemo(() => {
+        const m = {}
+        for (const p of promoItemsProductos || []) {
+            if (p?.clave) m[p.clave] = p
+        }
+        return m
+    }, [promoItemsProductos])
 
     const [categorias, setCategorias] = useState([])
     const [catPrincipal, setCatPrincipal] = useState('')
@@ -536,7 +631,7 @@ export default function AdminPublicidad() {
                         clave: pr.clave,
                         descripcion: pr.descripcion || '',
                         marca: pr.marca || '',
-                        imagen_url: getProductoThumbUrl(pr),
+                        imagenes_urls: getProductoImagenesUrls(pr),
                     },
                 ]
             })
@@ -828,57 +923,68 @@ export default function AdminPublicidad() {
                         ) : null}
                         {loadingBusqueda ? (
                             <p className="mt-4 text-sm">Cargando…</p>
-                        ) : (
-                            <div className="mt-4 space-y-3">
-                                {productosBusqueda.map((pr) => {
-                                    const thumb = getProductoThumbUrl(pr)
-                                    return (
-                                        <div
-                                            key={pr.clave}
-                                            className={`flex flex-col gap-3 rounded-xl border p-4 sm:flex-row sm:items-stretch ${
-                                                darkMode ? 'border-gray-600/50 bg-gray-900/25' : 'border-gray-200 bg-white shadow-sm'
-                                            }`}
+                        ) : productosBusqueda.length > 0 ? (
+                            <div
+                                className={`mt-4 overflow-x-auto rounded-xl border shadow-sm ${
+                                    darkMode ? 'border-gray-600/60 bg-gray-950/25' : 'border-gray-200 bg-white'
+                                }`}
+                            >
+                                <table className="w-full min-w-[720px] border-collapse text-sm">
+                                    <thead>
+                                        <tr
+                                            className={
+                                                darkMode
+                                                    ? 'border-b border-gray-600 bg-gray-800/95 text-left text-gray-200'
+                                                    : 'border-b border-violet-200 bg-violet-50/90 text-left text-violet-950'
+                                            }
                                         >
-                                            <div
-                                                className={`mx-auto shrink-0 overflow-hidden rounded-lg sm:mx-0 w-28 h-28 sm:w-24 sm:h-24 ${
-                                                    darkMode ? 'bg-gray-800 ring-1 ring-gray-600/50' : 'bg-gray-100 ring-1 ring-gray-200'
-                                                }`}
-                                            >
-                                                {thumb ? (
-                                                    <img src={thumb} alt="" className="h-full w-full object-cover" loading="lazy" />
-                                                ) : (
-                                                    <div
-                                                        className={`flex h-full w-full items-center justify-center text-center text-[10px] font-medium uppercase tracking-wide px-1 ${
-                                                            darkMode ? 'text-gray-500' : 'text-gray-400'
-                                                        }`}
-                                                    >
-                                                        Sin imagen
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <div className="min-w-0 flex-1 flex flex-col justify-center">
-                                                <p className={`font-mono text-xs ${darkMode ? 'text-violet-300' : 'text-violet-700'}`}>{pr.clave}</p>
-                                                <p className={`mt-1 text-sm leading-snug line-clamp-3 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
-                                                    {pr.descripcion}
-                                                </p>
-                                                {pr.marca ? (
-                                                    <p className={`mt-1.5 text-xs ${darkMode ? 'text-gray-500' : 'text-gray-600'}`}>{pr.marca}</p>
-                                                ) : null}
-                                            </div>
-                                            <div className="flex shrink-0 items-center justify-end sm:justify-center sm:self-center">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => agregarProductoDesdeBusqueda(pr)}
-                                                    className="text-xs px-3 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-500 font-semibold whitespace-nowrap"
+                                            <th className="whitespace-nowrap p-3 pl-4 font-semibold">Imagen</th>
+                                            <th className="whitespace-nowrap p-3 font-semibold">Clave</th>
+                                            <th className="min-w-[12rem] p-3 font-semibold">Descripción</th>
+                                            <th className="whitespace-nowrap p-3 font-semibold">Marca</th>
+                                            <th className="p-3 pr-4 text-right font-semibold">Acción</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {productosBusqueda.map((pr) => {
+                                            const imgUrls = getProductoImagenesUrls(pr)
+                                            return (
+                                                <tr
+                                                    key={pr.clave}
+                                                    className={
+                                                        darkMode
+                                                            ? 'border-t border-gray-700/70 transition-colors hover:bg-gray-800/50'
+                                                            : 'border-t border-gray-100 transition-colors hover:bg-violet-50/40'
+                                                    }
                                                 >
-                                                    {promoSeleccionadaId ? 'Agregar a promoción' : 'Agregar a la lista'}
-                                                </button>
-                                            </div>
-                                        </div>
-                                    )
-                                })}
+                                                    <td className="align-middle p-3 pl-4">
+                                                        <ProductoImagenesCelda urls={imgUrls} darkMode={darkMode} rowKey={pr.clave} />
+                                                    </td>
+                                                    <td className="align-middle p-3 font-mono text-xs text-violet-600 dark:text-violet-300">
+                                                        {pr.clave}
+                                                    </td>
+                                                    <td className="align-middle p-3">
+                                                        <span className="line-clamp-2" title={pr.descripcion}>
+                                                            {pr.descripcion}
+                                                        </span>
+                                                    </td>
+                                                    <td className="align-middle p-3 text-gray-600 dark:text-gray-400">{pr.marca}</td>
+                                                    <td className="align-middle p-3 pr-4 text-right">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => agregarProductoDesdeBusqueda(pr)}
+                                                            className="inline-flex rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-500"
+                                                        >
+                                                            {promoSeleccionadaId ? 'Agregar a promoción' : 'Agregar a la lista'}
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            )
+                                        })}
+                                    </tbody>
+                                </table>
                             </div>
-                        )}
+                        ) : null}
                         {totalBusqueda > 12 && (
                             <div className="mt-2 flex gap-2">
                                 <button
@@ -904,56 +1010,66 @@ export default function AdminPublicidad() {
                     {/* Lista local antes de crear (solo si ya hay productos) */}
                     {!promoSeleccionadaId && draftLineas.length > 0 && (
                         <div>
-                            <h4 className={`text-sm font-semibold mb-3 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Productos en el borrador</h4>
-                            <div className="space-y-3">
-                                {draftLineas.map((row, idx) => {
-                                    const thumb = row.imagen_url || null
-                                    return (
-                                        <div
-                                            key={row.clave}
-                                            className={`flex flex-col gap-3 rounded-xl border p-4 sm:flex-row sm:items-stretch ${
-                                                darkMode ? 'border-violet-900/40 bg-violet-950/15' : 'border-violet-200 bg-violet-50/40 shadow-sm'
-                                            }`}
+                            <h4 className={`mb-3 text-sm font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Productos en el borrador</h4>
+                            <div
+                                className={`overflow-x-auto rounded-xl border shadow-sm ${
+                                    darkMode ? 'border-violet-900/40 bg-violet-950/10' : 'border-violet-200 bg-violet-50/30'
+                                }`}
+                            >
+                                <table className="w-full min-w-[720px] border-collapse text-sm">
+                                    <thead>
+                                        <tr
+                                            className={
+                                                darkMode
+                                                    ? 'border-b border-violet-800/50 bg-violet-950/40 text-left text-violet-100'
+                                                    : 'border-b border-violet-200 bg-violet-100/80 text-left text-violet-950'
+                                            }
                                         >
-                                            <div
-                                                className={`mx-auto shrink-0 overflow-hidden rounded-lg sm:mx-0 w-28 h-28 sm:w-24 sm:h-24 ${
-                                                    darkMode ? 'bg-gray-800 ring-1 ring-violet-800/50' : 'bg-white ring-1 ring-violet-200'
-                                                }`}
-                                            >
-                                                {thumb ? (
-                                                    <img src={thumb} alt="" className="h-full w-full object-cover" loading="lazy" />
-                                                ) : (
-                                                    <div
-                                                        className={`flex h-full w-full items-center justify-center text-center text-[10px] font-medium uppercase tracking-wide px-1 ${
-                                                            darkMode ? 'text-gray-500' : 'text-gray-400'
-                                                        }`}
-                                                    >
-                                                        Sin imagen
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <div className="min-w-0 flex-1 flex flex-col justify-center">
-                                                <p className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>#{idx + 1}</p>
-                                                <p className={`font-mono text-xs mt-0.5 ${darkMode ? 'text-violet-300' : 'text-violet-800'}`}>{row.clave}</p>
-                                                <p className={`mt-1 text-sm leading-snug line-clamp-3 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
-                                                    {row.descripcion}
-                                                </p>
-                                                {row.marca ? (
-                                                    <p className={`mt-1.5 text-xs ${darkMode ? 'text-gray-500' : 'text-gray-600'}`}>{row.marca}</p>
-                                                ) : null}
-                                            </div>
-                                            <div className="flex shrink-0 items-center justify-end sm:justify-center sm:self-center">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => quitarDelBorrador(row.clave)}
-                                                    className="text-xs px-3 py-2 rounded-lg bg-red-600/90 text-white hover:bg-red-500 font-semibold"
+                                            <th className="whitespace-nowrap p-3 pl-4 font-semibold">Imagen</th>
+                                            <th className="whitespace-nowrap p-3 font-semibold">#</th>
+                                            <th className="whitespace-nowrap p-3 font-semibold">Clave</th>
+                                            <th className="min-w-[12rem] p-3 font-semibold">Descripción</th>
+                                            <th className="whitespace-nowrap p-3 font-semibold">Marca</th>
+                                            <th className="p-3 pr-4 text-right font-semibold">Acción</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {draftLineas.map((row, idx) => {
+                                            const imgUrls = urlsFromDraftRow(row)
+                                            return (
+                                                <tr
+                                                    key={row.clave}
+                                                    className={
+                                                        darkMode
+                                                            ? 'border-t border-violet-900/30 hover:bg-violet-950/25'
+                                                            : 'border-t border-violet-100 hover:bg-white/80'
+                                                    }
                                                 >
-                                                    Quitar
-                                                </button>
-                                            </div>
-                                        </div>
-                                    )
-                                })}
+                                                    <td className="align-middle p-3 pl-4">
+                                                        <ProductoImagenesCelda urls={imgUrls} darkMode={darkMode} rowKey={row.clave} />
+                                                    </td>
+                                                    <td className="align-middle p-3 text-gray-500">{idx + 1}</td>
+                                                    <td className="align-middle p-3 font-mono text-xs text-violet-700 dark:text-violet-300">{row.clave}</td>
+                                                    <td className="align-middle p-3">
+                                                        <span className="line-clamp-2" title={row.descripcion}>
+                                                            {row.descripcion}
+                                                        </span>
+                                                    </td>
+                                                    <td className="align-middle p-3 text-gray-600 dark:text-gray-400">{row.marca}</td>
+                                                    <td className="align-middle p-3 pr-4 text-right">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => quitarDelBorrador(row.clave)}
+                                                            className="inline-flex rounded-lg bg-red-600/90 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-500"
+                                                        >
+                                                            Quitar
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            )
+                                        })}
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     )}
@@ -983,71 +1099,184 @@ export default function AdminPublicidad() {
                     )}
 
                     <div>
-                        <h3 className={`font-semibold mb-3 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>Promociones existentes</h3>
+                        <h3 className={`mb-3 font-semibold ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>Promociones existentes</h3>
                         {promocionesList.length === 0 ? (
-                            <p className={`rounded-xl border px-4 py-6 text-sm ${darkMode ? 'border-gray-600 text-gray-500 bg-gray-900/20' : 'border-gray-200 text-gray-600 bg-gray-50'}`}>
+                            <p
+                                className={`rounded-xl border px-4 py-6 text-sm ${
+                                    darkMode ? 'border-gray-600 bg-gray-900/20 text-gray-500' : 'border-gray-200 bg-gray-50 text-gray-600'
+                                }`}
+                            >
                                 Aún no hay promociones.
                             </p>
                         ) : (
-                            <div className="grid gap-3 sm:grid-cols-2">
-                                {promocionesList.map((p) => (
-                                    <div
-                                        key={p.id}
-                                        className={`rounded-xl border p-4 flex flex-col gap-2 ${
-                                            darkMode ? 'border-gray-600/60 bg-gray-900/30' : 'border-gray-200 bg-white shadow-sm'
-                                        }`}
-                                    >
-                                        <p className={`font-semibold ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>{p.titulo}</p>
-                                        <code className={`text-xs break-all block rounded px-2 py-1 ${darkMode ? 'bg-black/25 text-gray-300' : 'bg-gray-100 text-gray-700'}`}>
-                                            {p.url_tienda}
-                                        </code>
-                                        <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                                            {p.items_count} producto{p.items_count !== 1 ? 's' : ''}
-                                        </p>
-                                        <div className="flex flex-wrap gap-2 pt-1 mt-auto">
-                                            <button
-                                                type="button"
-                                                onClick={() => setPromoSeleccionadaId(promoSeleccionadaId === p.id ? null : p.id)}
-                                                className={`text-xs px-3 py-2 rounded-lg font-semibold ${
-                                                    promoSeleccionadaId === p.id
-                                                        ? 'bg-emerald-600 text-white'
-                                                        : darkMode
-                                                          ? 'bg-gray-700 text-gray-200 hover:bg-gray-600'
-                                                          : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
-                                                }`}
+                            <div
+                                className={`overflow-x-auto rounded-xl border shadow-sm ${
+                                    darkMode ? 'border-gray-600/60 bg-gray-950/25' : 'border-gray-200 bg-white'
+                                }`}
+                            >
+                                <table className="w-full min-w-[560px] border-collapse text-sm">
+                                    <thead>
+                                        <tr
+                                            className={
+                                                darkMode
+                                                    ? 'border-b border-gray-600 bg-gray-800/95 text-left text-gray-200'
+                                                    : 'border-b border-gray-200 bg-gray-50 text-left text-gray-900'
+                                            }
+                                        >
+                                            <th className="p-3 pl-4 font-semibold">Título</th>
+                                            <th className="min-w-[10rem] p-3 font-semibold">URL</th>
+                                            <th className="whitespace-nowrap p-3 font-semibold">Productos</th>
+                                            <th className="p-3 pr-4 text-right font-semibold">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {promocionesList.map((p) => (
+                                            <tr
+                                                key={p.id}
+                                                className={
+                                                    darkMode
+                                                        ? 'border-t border-gray-700/70 hover:bg-gray-800/45'
+                                                        : 'border-t border-gray-100 hover:bg-gray-50/90'
+                                                }
                                             >
-                                                {promoSeleccionadaId === p.id ? 'Deseleccionar' : 'Editar productos'}
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => eliminarPromocion(p.id)}
-                                                className="text-xs px-3 py-2 rounded-lg font-semibold bg-red-600/90 text-white hover:bg-red-500"
-                                            >
-                                                Eliminar
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))}
+                                                <td className="align-middle p-3 pl-4 font-medium">{p.titulo}</td>
+                                                <td className="align-middle p-3">
+                                                    <code
+                                                        className={`block max-w-md break-all rounded px-2 py-1 text-xs ${
+                                                            darkMode ? 'bg-black/30 text-gray-300' : 'bg-gray-100 text-gray-700'
+                                                        }`}
+                                                    >
+                                                        {p.url_tienda}
+                                                    </code>
+                                                </td>
+                                                <td className="align-middle p-3 whitespace-nowrap text-gray-600 dark:text-gray-400">
+                                                    {p.items_count} producto{p.items_count !== 1 ? 's' : ''}
+                                                </td>
+                                                <td className="align-middle p-3 pr-4 text-right">
+                                                    <div className="inline-flex flex-wrap justify-end gap-2">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setPromoSeleccionadaId(promoSeleccionadaId === p.id ? null : p.id)}
+                                                            className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${
+                                                                promoSeleccionadaId === p.id
+                                                                    ? 'bg-emerald-600 text-white'
+                                                                    : darkMode
+                                                                      ? 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                                                                      : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+                                                            }`}
+                                                        >
+                                                            {promoSeleccionadaId === p.id ? 'Deseleccionar' : 'Editar productos'}
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => eliminarPromocion(p.id)}
+                                                            className="rounded-lg bg-red-600/90 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-500"
+                                                        >
+                                                            Eliminar
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
                             </div>
                         )}
                     </div>
 
                     {promoSeleccionadaId && promoDetalle && (
-                        <div className={`rounded-lg p-4 ${darkMode ? 'bg-gray-800/50' : 'bg-gray-50'}`}>
-                            <h4 className="font-semibold mb-2">Productos en «{promoDetalle.titulo}»</h4>
-                            <p className="text-xs mb-3 opacity-80 break-all">{promoDetalle.url_tienda}</p>
-                            <ul className="flex flex-wrap gap-2">
-                                {(promoDetalle.claves || []).map((c) => (
-                                    <li key={c} className="flex items-center gap-1 rounded-full bg-black/10 px-2 py-1 text-xs">
-                                        <span className="max-w-[12rem] truncate">{c}</span>
-                                        <button type="button" className="text-red-500 font-bold" onClick={() => quitarDePromocion(c)} title="Quitar">
-                                            ×
-                                        </button>
-                                    </li>
-                                ))}
-                            </ul>
-                            {(promoDetalle.claves || []).length === 0 && (
+                        <div className={`rounded-xl border p-4 ${darkMode ? 'border-gray-600/60 bg-gray-800/40' : 'border-gray-200 bg-gray-50'}`}>
+                            <h4 className={`font-semibold ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>Productos en «{promoDetalle.titulo}»</h4>
+                            <p className="mt-1 mb-4 text-xs break-all opacity-80">{promoDetalle.url_tienda}</p>
+                            {clavesPromoOrden.length === 0 ? (
                                 <p className="text-sm opacity-70">Sin productos. Usa el buscador de arriba con contraseña para agregar.</p>
+                            ) : loadingPromoItemsProductos ? (
+                                <p className="text-sm">Cargando datos de productos…</p>
+                            ) : (
+                                <div
+                                    className={`overflow-x-auto rounded-lg border ${
+                                        darkMode ? 'border-gray-600/50 bg-gray-950/20' : 'border-gray-200 bg-white'
+                                    }`}
+                                >
+                                    <table className="w-full min-w-[760px] border-collapse text-sm">
+                                        <thead>
+                                            <tr
+                                                className={
+                                                    darkMode
+                                                        ? 'border-b border-gray-600 bg-gray-800/95 text-left text-gray-200'
+                                                        : 'border-b border-gray-200 bg-gray-100 text-left text-gray-900'
+                                                }
+                                            >
+                                                <th className="whitespace-nowrap p-3 pl-4 font-semibold">Imagen</th>
+                                                <th className="whitespace-nowrap p-3 font-semibold">Clave</th>
+                                                <th className="min-w-[10rem] p-3 font-semibold">Descripción</th>
+                                                <th className="whitespace-nowrap p-3 font-semibold">Marca</th>
+                                                <th className="whitespace-nowrap p-3 font-semibold">Vista tienda</th>
+                                                <th className="p-3 pr-4 text-right font-semibold">Quitar</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {clavesPromoOrden.map((c) => {
+                                                const pr = productoPromoPorClave[c]
+                                                const imgUrls = pr ? getProductoImagenesUrls(pr) : []
+                                                return (
+                                                    <tr
+                                                        key={c}
+                                                        className={
+                                                            darkMode
+                                                                ? 'border-t border-gray-700/70 hover:bg-gray-800/45'
+                                                                : 'border-t border-gray-100 hover:bg-gray-50/90'
+                                                        }
+                                                    >
+                                                        <td className="align-middle p-3 pl-4">
+                                                            {pr ? (
+                                                                <ProductoImagenesCelda urls={imgUrls} darkMode={darkMode} rowKey={`promo-${c}`} />
+                                                            ) : (
+                                                                <span
+                                                                    className={`inline-flex min-h-[4.5rem] min-w-[4.5rem] items-center justify-center rounded-lg border text-[10px] font-medium uppercase leading-tight px-1 text-center ${
+                                                                        darkMode
+                                                                            ? 'border-amber-900/50 bg-amber-950/30 text-amber-400/90'
+                                                                            : 'border-amber-200 bg-amber-50 text-amber-800'
+                                                                    }`}
+                                                                >
+                                                                    No en catálogo
+                                                                </span>
+                                                            )}
+                                                        </td>
+                                                        <td className="align-middle p-3 font-mono text-xs text-violet-600 dark:text-violet-300">{c}</td>
+                                                        <td className="align-middle p-3">
+                                                            <span className="line-clamp-2" title={pr?.descripcion || ''}>
+                                                                {pr?.descripcion || '—'}
+                                                            </span>
+                                                        </td>
+                                                        <td className="align-middle p-3 text-gray-600 dark:text-gray-400">{pr?.marca || '—'}</td>
+                                                        <td className="align-middle p-3">
+                                                            <Link
+                                                                href={`/tienda/producto/${encodeURIComponent(c)}`}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className={`inline-flex text-xs font-semibold underline decoration-2 underline-offset-2 ${
+                                                                    darkMode ? 'text-sky-400 hover:text-sky-300' : 'text-sky-700 hover:text-sky-900'
+                                                                }`}
+                                                            >
+                                                                Ver ficha
+                                                            </Link>
+                                                        </td>
+                                                        <td className="align-middle p-3 pr-4 text-right">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => quitarDePromocion(c)}
+                                                                className="inline-flex rounded-lg bg-red-600/90 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-500"
+                                                            >
+                                                                Quitar
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                )
+                                            })}
+                                        </tbody>
+                                    </table>
+                                </div>
                             )}
                         </div>
                     )}
