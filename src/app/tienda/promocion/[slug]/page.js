@@ -1,8 +1,10 @@
 import { Suspense } from 'react'
+import { getServerBackendApiBase } from '@/lib/serverBackendUrl'
 import PromocionTiendaClient from './PromocionTiendaClient'
 
 async function fetchPromocion(slug) {
-    const base = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000/api/v1'
+    const base = getServerBackendApiBase()
+    if (!base) return null
     try {
         const res = await fetch(`${base}/promociones/${encodeURIComponent(slug)}`, { next: { revalidate: 60 } })
         const json = await res.json()

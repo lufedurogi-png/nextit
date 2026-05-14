@@ -1,10 +1,16 @@
 import axios from '@/lib/axios'
+import { getServerBackendOrigin } from '@/lib/serverBackendUrl'
 
 /**
  * Obtiene la base URL del backend (sin /api/v1).
  */
 function getBackendBaseUrl() {
-    return (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000/api/v1').replace(/\/api\/v1\/?$/, '')
+    const o = getServerBackendOrigin()
+    if (o) return o
+    if (process.env.NEXT_PHASE === 'phase-production-build' || process.env.npm_lifecycle_event === 'build') {
+        return ''
+    }
+    return 'http://127.0.0.1:8000'
 }
 
 /**

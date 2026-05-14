@@ -1,9 +1,7 @@
 import axios from '@/lib/axios'
+import { getServerBackendApiBase } from '@/lib/serverBackendUrl'
 
 const SESSION_ID_KEY = 'busqueda_session_id'
-
-/** Base URL para llamadas desde el servidor (SSR). */
-const BASE = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000/api/v1'
 
 /**
  * Búsqueda desde el servidor (Server Components). No usa session_id.
@@ -16,6 +14,16 @@ export async function getBusquedaForSSR(q) {
             busqueda_id: 0,
             texto_original: '',
             texto_normalizado: '',
+            correccion_aplicada: false,
+            productos: [],
+        }
+    }
+    const BASE = getServerBackendApiBase()
+    if (!BASE) {
+        return {
+            busqueda_id: 0,
+            texto_original: query,
+            texto_normalizado: query,
             correccion_aplicada: false,
             productos: [],
         }

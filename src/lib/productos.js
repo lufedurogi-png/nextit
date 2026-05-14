@@ -1,4 +1,5 @@
 import axios from '@/lib/axios'
+import { getServerBackendApiBase, getServerBackendOrigin } from '@/lib/serverBackendUrl'
 
 const VISTOS_RECIENTES_PREFIX = 'tienda_vistos_recientes_'
 
@@ -9,23 +10,35 @@ const VISTOS_RECIENTES_PREFIX = 'tienda_vistos_recientes_'
 export function resolveStorageUrl(url) {
     if (!url || typeof url !== 'string') return url
     if (!url.includes('/storage/')) return url
-    const base = (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000/api/v1').replace(/\/api\/v1\/?$/, '')
+    const base = getServerBackendOrigin()
     const m = url.match(/(\/storage\/[^\s]*)/)
     const path = m ? m[1] : (url.startsWith('/') ? url : '/' + url)
+    if (!base) return path
     return base + path
 }
 
 function resolvePublicidadUrlForSSR(url) {
     if (!url || typeof url !== 'string') return ''
-    const base = (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000/api/v1').replace(/\/api\/v1\/?$/, '')
+    const base = getServerBackendOrigin()
     const m = url.match(/(\/storage\/[^\s]*)/)
     const path = m ? m[1] : (url.startsWith('/') ? url : '/' + url)
+    if (!base) return path
     return base + path
 }
 
 /** Fetch de datos de tienda en el servidor (SSR) para que la página cargue al instante con datos de la BD */
 export async function getTiendaDataForSSR() {
-    const base = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000/api/v1'
+    const base = getServerBackendApiBase()
+    if (!base) {
+        return {
+            catalogDisponible: false,
+            destacados: [],
+            ultimos: [],
+            categoriasPrincipales: [],
+            marcas: [],
+            publicidad: { carrusel_activo: true, slides: [] },
+        }
+    }
     try {
         const opts = { next: { revalidate: 60 } }
         const [estadoRes, destRes, ultRes, catRes, marcasRes, publicidadRes] = await Promise.all([
@@ -85,8 +98,11 @@ export async function getTiendaDataForSSR() {
 
 /** Fetch de productos y marcas para vista de subcategoría (SSR) - carga al instante */
 export async function getSubcategoriaDataForSSR(categoria, subcategoria) {
-    const base = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000/api/v1'
+    const base = getServerBackendApiBase()
     if (!categoria || !subcategoria) {
+        return { catalogDisponible: false, productos: [], marcas: [] }
+    }
+    if (!base) {
         return { catalogDisponible: false, productos: [], marcas: [] }
     }
     try {
