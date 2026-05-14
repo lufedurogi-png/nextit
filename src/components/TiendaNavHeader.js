@@ -8,8 +8,96 @@ import { useAuth } from '@/hooks/auth'
 import SearchBar from '@/components/SearchBar'
 import { useCarrito } from '@/lib/carrito'
 import { useFavoritos } from '@/lib/favoritos'
+import { useCotizacion } from '@/lib/cotizaciones'
 import { useProductosByClaves } from '@/hooks/useProductosChunked'
 import IconoNavegacion from '@/components/IconoNavegacion'
+
+/**
+ * Fila «Modo cotización»: ayuda al pasar el ratón (desktop) o con «?» (móvil). Sin recuadro extra; texto y viñetas esmeralda / aviso ámbar.
+ */
+function CotizacionModoConAyuda({ darkMode, modoActivo, onToggle, showTapHintButton }) {
+    const [hoverAyuda, setHoverAyuda] = useState(false)
+    const [ayudaTap, setAyudaTap] = useState(false)
+    const mostrarAyuda = showTapHintButton ? ayudaTap : hoverAyuda
+
+    const filaBtn = `min-w-0 flex-1 flex items-center justify-between px-4 py-2 text-sm transition-colors text-left ${
+        darkMode ? 'text-gray-300 hover:bg-gray-700 hover:text-brand' : 'text-gray-700 hover:bg-gray-100 hover:text-brand'
+    }`
+
+    return (
+        <div
+            className={`relative border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}
+            onMouseEnter={() => {
+                if (!showTapHintButton) setHoverAyuda(true)
+            }}
+            onMouseLeave={() => {
+                if (!showTapHintButton) setHoverAyuda(false)
+            }}
+        >
+            <div className="flex w-full items-stretch">
+                <button type="button" onClick={onToggle} className={filaBtn}>
+                    <span>Modo cotización</span>
+                    <span className={`shrink-0 pl-2 ${modoActivo ? 'text-brand font-medium' : darkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+                        {modoActivo ? 'Activado' : 'Desactivado'}
+                    </span>
+                </button>
+                {showTapHintButton && (
+                    <button
+                        type="button"
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            setAyudaTap((v) => !v)
+                        }}
+                        aria-expanded={ayudaTap}
+                        aria-label={ayudaTap ? 'Ocultar ayuda del modo cotización' : 'Ver ayuda del modo cotización'}
+                        className={`shrink-0 px-3 text-sm font-bold tabular-nums border-l transition-colors ${
+                            darkMode
+                                ? 'border-gray-600 text-emerald-400 hover:bg-gray-700'
+                                : 'border-gray-200 text-emerald-700 hover:bg-gray-100'
+                        }`}
+                    >
+                        ?
+                    </button>
+                )}
+            </div>
+            {mostrarAyuda && (
+                <div className={`px-3 py-2.5 border-t ${darkMode ? 'border-gray-600/70' : 'border-gray-200'}`}>
+                    {!modoActivo ? (
+                        <>
+                            <p className={`text-xs font-semibold mb-1.5 ${darkMode ? 'text-emerald-400' : 'text-emerald-700'}`}>Cómo funciona</p>
+                            <ul className="space-y-1.5">
+                                <li className={`flex gap-2 text-[11px] leading-snug ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-sm bg-emerald-500" aria-hidden />
+                                    <span>
+                                        Abre la <strong className={darkMode ? 'text-gray-100' : 'text-gray-900'}>ficha del producto</strong>, elige cantidad y pulsa{' '}
+                                        <span className="font-semibold text-brand">Cotizar</span>.
+                                    </span>
+                                </li>
+                                <li className={`flex gap-2 text-[11px] leading-snug ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-sm bg-emerald-500" aria-hidden />
+                                    <span>
+                                        Revisa lo agregado en <strong className={darkMode ? 'text-gray-100' : 'text-gray-900'}>Mis cotizaciones</strong> (enlace abajo).
+                                    </span>
+                                </li>
+                                <li className={`flex gap-2 text-[11px] leading-snug ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-sm bg-emerald-500" aria-hidden />
+                                    <span>Con el modo activo, comparar en rejillas queda desactivado.</span>
+                                </li>
+                            </ul>
+                        </>
+                    ) : (
+                        <>
+                            <p className={`text-xs font-semibold mb-1 ${darkMode ? 'text-amber-400' : 'text-amber-700'}`}>Si lo desactivas</p>
+                            <p className={`text-[11px] leading-snug ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                                Ya no verás el botón <span className="font-semibold text-brand">Cotizar</span> en las fichas de producto hasta que vuelvas a activar el modo.
+                            </p>
+                        </>
+                    )}
+                </div>
+            )}
+        </div>
+    )
+}
 
 /**
  * Barra de navegación de la tienda: logo, toggle oscuro, Favoritos, Carrito; enlaces Tienda/Inicio según ruta.
@@ -24,6 +112,8 @@ export default function TiendaNavHeader({ darkMode, setDarkMode, onToggleLeftSid
     const mobileStickyNavRef = useRef(null)
     const { user, logout } = useAuth({ middleware: 'guest' })
     const [userDropdownOpen, setUserDropdownOpen] = useState(false)
+    const [cotizacionesMenuOpen, setCotizacionesMenuOpen] = useState(false)
+    const { modoActivo: modoCotizacionActivo, toggleModo: toggleModoCotizacion } = useCotizacion(user)
     const [hasToken, setHasToken] = useState(false)
     useEffect(() => {
         setHasToken(typeof window !== 'undefined' && !!localStorage.getItem('auth_token'))
@@ -67,10 +157,22 @@ export default function TiendaNavHeader({ darkMode, setDarkMode, onToggleLeftSid
             if (userDropdownOpen && !e.target.closest('.tienda-nav-user-dropdown')) {
                 setUserDropdownOpen(false)
             }
+            if (cotizacionesMenuOpen && !e.target.closest('[data-cotiz-menu-root]')) {
+                setCotizacionesMenuOpen(false)
+            }
         }
         document.addEventListener('click', handleClickOutside)
         return () => document.removeEventListener('click', handleClickOutside)
-    }, [userDropdownOpen])
+    }, [userDropdownOpen, cotizacionesMenuOpen])
+
+    useEffect(() => {
+        if (!cotizacionesMenuOpen) return undefined
+        const onKey = (e) => {
+            if (e.key === 'Escape') setCotizacionesMenuOpen(false)
+        }
+        window.addEventListener('keydown', onKey)
+        return () => window.removeEventListener('keydown', onKey)
+    }, [cotizacionesMenuOpen])
 
     const toggleDark = () => {
         const next = !darkMode
@@ -168,6 +270,70 @@ export default function TiendaNavHeader({ darkMode, setDarkMode, onToggleLeftSid
                                 </span>
                             )}
                         </Link>
+                        <div className="relative hidden md:block" data-cotiz-menu-root>
+                            <button
+                                type="button"
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    setCotizacionesMenuOpen((o) => {
+                                        const next = !o
+                                        if (next) setUserDropdownOpen(false)
+                                        return next
+                                    })
+                                }}
+                                className={`inline-flex items-center gap-1.5 transition-colors font-medium ${darkMode ? 'text-gray-300 hover:text-brand' : 'text-gray-700 hover:text-brand'}`}
+                                aria-expanded={cotizacionesMenuOpen}
+                                aria-haspopup="true"
+                                aria-label="Menú de cotizaciones"
+                            >
+                                <Image
+                                    src="/Imagenes/icon_pedidos.png"
+                                    alt=""
+                                    width={22}
+                                    height={22}
+                                    className={`object-contain ${darkMode ? 'brightness-0 invert' : ''}`}
+                                />
+                                <span>Mis cotizaciones</span>
+                                <svg className={`w-4 h-4 transition-transform ${cotizacionesMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                            {cotizacionesMenuOpen && (
+                                <>
+                                    <div className="fixed inset-0 z-[25]" onClick={() => setCotizacionesMenuOpen(false)} aria-hidden />
+                                    <div
+                                        role="menu"
+                                        className={`absolute right-0 mt-2 w-56 overflow-visible rounded-lg shadow-lg border z-[30] py-0 ${darkMode ? 'bg-tienda-elevated border-gray-700' : 'bg-white border-gray-200'}`}
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        <CotizacionModoConAyuda
+                                            darkMode={darkMode}
+                                            modoActivo={modoCotizacionActivo}
+                                            onToggle={toggleModoCotizacion}
+                                            showTapHintButton={false}
+                                        />
+                                        <Link
+                                            href="/tienda/cotizaciones"
+                                            onClick={() => setCotizacionesMenuOpen(false)}
+                                            className={`flex items-center px-4 py-2 text-sm transition-colors ${darkMode ? 'text-gray-300 hover:bg-gray-700 hover:text-brand' : 'text-gray-700 hover:bg-gray-100 hover:text-brand'}`}
+                                            role="menuitem"
+                                        >
+                                            <Image src="/Imagenes/icon_pedidos.png" alt="" width={20} height={20} className={`mr-3 object-contain shrink-0 ${darkMode ? 'brightness-0 invert' : ''}`} />
+                                            Mis cotizaciones
+                                        </Link>
+                                        <Link
+                                            href="/dashboard?tab=cotizaciones"
+                                            onClick={() => setCotizacionesMenuOpen(false)}
+                                            className={`flex items-center px-4 py-2 text-sm transition-colors ${darkMode ? 'text-gray-300 hover:bg-gray-700 hover:text-brand' : 'text-gray-700 hover:bg-gray-100 hover:text-brand'}`}
+                                            role="menuitem"
+                                        >
+                                            <Image src="/Imagenes/icon_historia.webp" alt="" width={20} height={20} className={`mr-3 object-contain shrink-0 ${darkMode ? 'brightness-0 invert' : ''}`} />
+                                            Historial de cotizaciones
+                                        </Link>
+                                    </div>
+                                </>
+                            )}
+                        </div>
                         {mostrarLinkTiendaBarra && (
                             <Link href="/" className={`transition-colors font-medium ${darkMode ? 'text-gray-300 hover:text-brand' : 'text-gray-700 hover:text-brand'}`}>
                                 Tienda
@@ -181,7 +347,11 @@ export default function TiendaNavHeader({ darkMode, setDarkMode, onToggleLeftSid
                         {user ? (
                             <div className="relative tienda-nav-user-dropdown">
                                 <button
-                                    onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                                    type="button"
+                                    onClick={() => {
+                                        setUserDropdownOpen(!userDropdownOpen)
+                                        if (!userDropdownOpen) setCotizacionesMenuOpen(false)
+                                    }}
                                     className={`flex items-center space-x-2 transition-colors font-medium ${darkMode ? 'text-gray-300 hover:text-brand' : 'text-gray-700 hover:text-brand'}`}
                                 >
                                     <span>Tienda: {user?.name || user?.email}</span>
@@ -343,6 +513,20 @@ export default function TiendaNavHeader({ darkMode, setDarkMode, onToggleLeftSid
                                             </span>
                                         )}
                                     </Link>
+                                    <button
+                                        type="button"
+                                        data-cotiz-menu-root
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            setCotizacionesMenuOpen((o) => !o)
+                                        }}
+                                        className={pillSm}
+                                        aria-expanded={cotizacionesMenuOpen}
+                                        aria-label="Cotizaciones"
+                                    >
+                                        <Image src="/Imagenes/icon_pedidos.png" alt="" width={14} height={14} className={`object-contain ${darkMode ? 'brightness-0 invert' : ''}`} />
+                                        Cotizaciones
+                                    </button>
                                 </div>
                             </>
                         )}
@@ -358,6 +542,20 @@ export default function TiendaNavHeader({ darkMode, setDarkMode, onToggleLeftSid
                                         </span>
                                     )}
                                 </Link>
+                                <button
+                                    type="button"
+                                    data-cotiz-menu-root
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        setCotizacionesMenuOpen((o) => !o)
+                                    }}
+                                    className={pillSm}
+                                    aria-expanded={cotizacionesMenuOpen}
+                                    aria-label="Cotizaciones"
+                                >
+                                    <Image src="/Imagenes/icon_pedidos.png" alt="" width={14} height={14} className={`object-contain ${darkMode ? 'brightness-0 invert' : ''}`} />
+                                    Cotizaciones
+                                </button>
                                 <Link href="/login" className={pillSm}>
                                     Iniciar sesión
                                 </Link>
@@ -369,6 +567,42 @@ export default function TiendaNavHeader({ darkMode, setDarkMode, onToggleLeftSid
                     </div>
                 </div>
             </div>
+            {cotizacionesMenuOpen && (
+                <div className="md:hidden">
+                    <div className="fixed inset-0 z-[61] bg-black/40" onClick={() => setCotizacionesMenuOpen(false)} aria-hidden />
+                    <div
+                        data-cotiz-menu-root
+                        role="menu"
+                        className={`fixed z-[62] left-1/2 top-[calc(var(--tienda-header-height,88px)+8px)] w-56 max-w-[calc(100vw-2rem)] max-h-[min(78dvh,22rem)] -translate-x-1/2 overflow-y-auto overscroll-contain rounded-lg shadow-lg border py-1 ${darkMode ? 'bg-tienda-elevated border-gray-700' : 'bg-white border-gray-200'}`}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <CotizacionModoConAyuda
+                            darkMode={darkMode}
+                            modoActivo={modoCotizacionActivo}
+                            onToggle={toggleModoCotizacion}
+                            showTapHintButton
+                        />
+                        <Link
+                            href="/tienda/cotizaciones"
+                            onClick={() => setCotizacionesMenuOpen(false)}
+                            className={`flex items-center px-4 py-2 text-sm transition-colors ${darkMode ? 'text-gray-300 hover:bg-gray-700 hover:text-brand' : 'text-gray-700 hover:bg-gray-100 hover:text-brand'}`}
+                            role="menuitem"
+                        >
+                            <Image src="/Imagenes/icon_pedidos.png" alt="" width={20} height={20} className={`mr-3 object-contain shrink-0 ${darkMode ? 'brightness-0 invert' : ''}`} />
+                            Mis cotizaciones
+                        </Link>
+                        <Link
+                            href="/dashboard?tab=cotizaciones"
+                            onClick={() => setCotizacionesMenuOpen(false)}
+                            className={`flex items-center px-4 py-2 text-sm transition-colors ${darkMode ? 'text-gray-300 hover:bg-gray-700 hover:text-brand' : 'text-gray-700 hover:bg-gray-100 hover:text-brand'}`}
+                            role="menuitem"
+                        >
+                            <Image src="/Imagenes/icon_historia.webp" alt="" width={20} height={20} className={`mr-3 object-contain shrink-0 ${darkMode ? 'brightness-0 invert' : ''}`} />
+                            Historial de cotizaciones
+                        </Link>
+                    </div>
+                </div>
+            )}
         </header>
         {/* Reserva espacio en el flujo: el header es fixed en móvil y no ocupa altura */}
         <div

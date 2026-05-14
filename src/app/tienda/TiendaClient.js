@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import useSWR from 'swr'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -26,7 +26,6 @@ import { getPublicidad, resolvePublicidadUrl } from '@/lib/publicidad'
 import TiendaNavHeader from '@/components/TiendaNavHeader'
 import { useCarritoCount } from '@/lib/carrito'
 import { useFavoritos } from '@/lib/favoritos'
-import { useCotizacion } from '@/lib/cotizaciones'
 import { getOrCreateGuestId } from '@/lib/guestId'
 import { useMobileLeftDrawerSwipe } from '@/hooks/useMobileLeftDrawerSwipe'
 
@@ -47,10 +46,6 @@ export default function TiendaClient({ initialData = {} }) {
     const [selectedCategory, setSelectedCategory] = useState('todos')
     const [selectedMarca, setSelectedMarca] = useState('')
     const [openSubcategoryPanel, setOpenSubcategoryPanel] = useState(null)
-    const [openCotizacionesPanel, setOpenCotizacionesPanel] = useState(false)
-    const [tooltipModoCotizacion, setTooltipModoCotizacion] = useState(false)
-    const [tooltipModoCotizacionRect, setTooltipModoCotizacionRect] = useState(null)
-    const refModoCotizacionRow = useRef(null)
     const [subcategorias, setSubcategorias] = useState({})
     const [sidebarRetraido, setSidebarRetraido] = usePersistedBoolean('sidebarRetraido', false)
     const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
@@ -59,8 +54,6 @@ export default function TiendaClient({ initialData = {} }) {
     const { count: cartCount } = useCarritoCount(!!user)
     const { claves: favoritosClaves } = useFavoritos(!!user)
     const favoritosCount = favoritosClaves?.length ?? 0
-    const { modoActivo: modoCotizacionActivo, toggleModo: toggleModoCotizacion } = useCotizacion(user)
-
     const [catalogDisponible, setCatalogDisponible] = useState(() => initialData?.catalogDisponible ?? false)
     const [destacados, setDestacados] = useState(() => initialData?.destacados ?? [])
     const [ultimos, setUltimos] = useState(() => initialData?.ultimos ?? [])
@@ -224,7 +217,7 @@ export default function TiendaClient({ initialData = {} }) {
             }`}
             style={darkMode ? { '--sidebar-bg': 'rgb(32 32 32)' } : undefined}
         >
-            {/* Header: TiendaNavHeader incluye Cotizaciones (dropdown) y Chat con proveedor */}
+            {/* Header: barra superior (Mis cotizaciones en menú desplegable) */}
             <TiendaNavHeader darkMode={darkMode} setDarkMode={setDarkMode} onToggleLeftSidebar={toggleMobileDrawer} />
             <div
                 className={`relative flex min-h-0 w-full flex-1 md:grid md:items-stretch md:gap-0 md:min-h-0 ${
@@ -254,14 +247,6 @@ export default function TiendaClient({ initialData = {} }) {
                         aria-hidden
                     />
                 )}
-                {openCotizacionesPanel && (
-                    <div
-                        className="fixed inset-0 bg-black/50 z-40 md:hidden"
-                        onClick={() => setOpenCotizacionesPanel(false)}
-                        aria-hidden
-                    />
-                )}
-
                 {/* Columna sidebar + flyouts. En md: grid alinea altura con main (sin fixed = no tapa el footer). */}
                 <div
                     className={`max-md:contents md:relative md:flex md:min-h-0 md:h-full md:w-full md:flex-col md:self-stretch md:border-r md:transition-all md:duration-300 ${
@@ -285,9 +270,8 @@ export default function TiendaClient({ initialData = {} }) {
                             setSidebarRetraido(newState)
                             localStorage.setItem('sidebarRetraido', JSON.stringify(newState))
                             if (newState) {
-                            setOpenSubcategoryPanel(null)
-                            setOpenCotizacionesPanel(false)
-                        }
+                                setOpenSubcategoryPanel(null)
+                            }
                         }}
                         className={`hidden md:flex absolute -right-3 top-4 z-30 w-6 h-6 rounded-full items-center justify-center transition-colors ${
                             darkMode 
@@ -350,45 +334,6 @@ export default function TiendaClient({ initialData = {} }) {
                             </div>
                         )}
 
-                            {/* Cotizaciones — título igual que Categorías */}
-                            {!sidebarRetraido && (
-                                <h4 className={`text-sm font-medium mb-3 ${
-                                    darkMode ? 'text-gray-400' : 'text-gray-600'
-                                }`}>
-                                    Cotizaciones
-                                </h4>
-                            )}
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setOpenSubcategoryPanel(null)
-                                    setOpenCotizacionesPanel(!openCotizacionesPanel)
-                                }}
-                                className={`w-full ${sidebarRetraido ? 'justify-center px-2' : 'text-left px-3'} py-2 rounded-lg text-sm transition-colors flex items-center ${sidebarRetraido ? '' : 'justify-between'} ${
-                                    openCotizacionesPanel
-                                        ? darkMode ? 'bg-brand text-white' : 'bg-brand text-white'
-                                        : darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-100'
-                                }`}
-                                title="Mis cotizaciones"
-                            >
-                                <div className={`flex items-center ${sidebarRetraido ? '' : 'space-x-3 flex-1 min-w-0'}`}>
-                                    <div className="relative w-5 h-5 flex-shrink-0">
-                                        <Image
-                                            src="/Imagenes/icon_pedidos.png"
-                                            alt=""
-                                            fill
-                                            className={`object-contain ${darkMode ? 'brightness-0 invert' : ''}`}
-                                        />
-                                    </div>
-                                    {!sidebarRetraido && <span>Mis cotizaciones</span>}
-                                </div>
-                                {!sidebarRetraido && (
-                                    <svg className={`w-4 h-4 flex-shrink-0 transition-transform ${openCotizacionesPanel ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7 7" />
-                                    </svg>
-                                )}
-                            </button>
-
                             {/* Categorías */}
                             <div>
                                 {!sidebarRetraido && (
@@ -403,7 +348,6 @@ export default function TiendaClient({ initialData = {} }) {
                                         <button
                                             key={cat.id}
                                             onClick={() => {
-                                                setOpenCotizacionesPanel(false)
                                                 if (cat.id === 'todos') {
                                                     setSelectedCategory('todos')
                                                     setOpenSubcategoryPanel(null)
@@ -533,139 +477,6 @@ export default function TiendaClient({ initialData = {} }) {
                     </div>
                 )}
 
-                {/* Panel COTIZACIONES — misma lógica que panel de subcategorías: al lado del sidebar */}
-                {openCotizacionesPanel && !sidebarRetraido && (
-                    <>
-                    <div
-                        className={`max-md:fixed max-md:inset-x-4 max-md:top-[var(--tienda-header-height)] max-md:mt-4 max-md:z-50 max-md:max-h-[min(85dvh,28rem)] max-md:overflow-hidden max-md:rounded-xl max-md:shadow-2xl md:absolute md:left-full md:top-0 md:ml-0 md:z-50 md:w-72 md:max-h-[calc(100vh-2rem)] md:overflow-hidden md:rounded-r-xl md:rounded-l-none md:border md:border-l-0 md:shadow-2xl transition-all duration-300 ease-in-out ${
-                            darkMode ? 'max-md:border max-md:border-gray-700/45 bg-tienda-elevated md:border-gray-700/45' : 'max-md:border max-md:border-gray-200 bg-white md:border-gray-200'
-                        }`}
-                        style={darkMode ? { backgroundColor: 'var(--sidebar-bg)' } : undefined}
-                    >
-                        <div className={`flex items-center justify-between px-4 py-3 border-b shrink-0 ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-                            <h2 className={`text-lg font-bold uppercase tracking-wide truncate pr-2 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                                Cotizaciones
-                            </h2>
-                            <button
-                                type="button"
-                                onClick={() => setOpenCotizacionesPanel(false)}
-                                className={`p-1.5 rounded-lg transition-colors shrink-0 ${darkMode ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-100 text-gray-600'}`}
-                                aria-label="Cerrar"
-                            >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
-                        </div>
-                        <div className="p-4 space-y-1">
-                            <div
-                                ref={refModoCotizacionRow}
-                                onMouseEnter={() => {
-                                    if (refModoCotizacionRow.current) {
-                                        setTooltipModoCotizacionRect(refModoCotizacionRow.current.getBoundingClientRect())
-                                        setTooltipModoCotizacion(true)
-                                    }
-                                }}
-                                onMouseLeave={() => { setTooltipModoCotizacion(false); setTooltipModoCotizacionRect(null) }}
-                            >
-                                <button
-                                    type="button"
-                                    onClick={() => toggleModoCotizacion()}
-                                    className={`w-full text-left px-4 py-3 rounded-lg text-sm flex items-center justify-between transition-colors ${
-                                        darkMode ? 'text-white hover:bg-gray-700' : 'text-gray-900 hover:bg-gray-100'
-                                    }`}
-                                >
-                                    <span>Modo cotización</span>
-                                    <span className={modoCotizacionActivo ? 'text-brand font-medium' : darkMode ? 'text-gray-400' : 'text-gray-500'}>
-                                        {modoCotizacionActivo ? 'Activado' : 'Desactivado'}
-                                    </span>
-                                </button>
-                            </div>
-                            <Link
-                                href="/tienda/cotizaciones"
-                                onClick={() => setOpenCotizacionesPanel(false)}
-                                className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-colors ${
-                                    darkMode ? 'text-white hover:bg-gray-700 hover:text-brand' : 'text-gray-900 hover:bg-gray-100 hover:text-brand'
-                                }`}
-                            >
-                                <div className="relative w-5 h-5 flex-shrink-0">
-                                    <Image
-                                        src="/Imagenes/icon_pedidos.png"
-                                        alt=""
-                                        fill
-                                        className={`object-contain ${darkMode ? 'brightness-0 invert' : ''}`}
-                                    />
-                                </div>
-                                Mis cotizaciones
-                            </Link>
-                            <Link
-                                href="/dashboard?tab=cotizaciones"
-                                onClick={() => setOpenCotizacionesPanel(false)}
-                                className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-colors ${
-                                    darkMode ? 'text-white hover:bg-gray-700 hover:text-brand' : 'text-gray-900 hover:bg-gray-100 hover:text-brand'
-                                }`}
-                            >
-                                <div className="relative w-5 h-5 flex-shrink-0">
-                                    <Image
-                                        src="/Imagenes/icon_historia.webp"
-                                        alt=""
-                                        fill
-                                        className={`object-contain ${darkMode ? 'brightness-0 invert' : ''}`}
-                                    />
-                                </div>
-                                Historial de cotizaciones
-                            </Link>
-                        </div>
-                    </div>
-                    {/* Tooltip fuera del panel: cuando está Desactivado (verde) */}
-                    {!modoCotizacionActivo && tooltipModoCotizacion && tooltipModoCotizacionRect && (
-                        <div
-                            className={`fixed z-[70] w-56 rounded-xl border-2 shadow-xl p-3 ${
-                                darkMode ? 'border-emerald-600/50 bg-tienda-elevated' : 'border-emerald-500/60 bg-white'
-                            }`}
-                            style={{
-                                left: tooltipModoCotizacionRect.right + 8,
-                                top: tooltipModoCotizacionRect.top + tooltipModoCotizacionRect.height / 2 - 40,
-                            }}
-                            role="tooltip"
-                        >
-                            <p className={`text-xs font-semibold mb-2 ${darkMode ? 'text-emerald-400' : 'text-emerald-700'}`}>Cómo funciona</p>
-                            <ul className="space-y-1.5 text-xs">
-                                <li className={`flex gap-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                                    <span className="text-emerald-500 shrink-0 mt-0.5">•</span>
-                                    <span>Al activarlo aparece un campo en la esquina superior derecha: márcalo en cada producto para elegir cantidad a cotizar.</span>
-                                </li>
-                                <li className={`flex gap-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                                    <span className="text-emerald-500 shrink-0 mt-0.5">•</span>
-                                    <span>Para ver lo cotizado, vuelve aquí y entra a &quot;Mis cotizaciones&quot;.</span>
-                                </li>
-                                <li className={`flex gap-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                                    <span className="text-emerald-500 shrink-0 mt-0.5">•</span>
-                                    <span>Con el modo activo, las comparaciones en subcategorías quedan desactivadas.</span>
-                                </li>
-                            </ul>
-                        </div>
-                    )}
-                    {/* Tooltip cuando está Activado (amarillo/ámbar, advertencia suave) */}
-                    {modoCotizacionActivo && tooltipModoCotizacion && tooltipModoCotizacionRect && (
-                        <div
-                            className={`fixed z-[70] w-52 rounded-xl border-2 shadow-xl p-3 ${
-                                darkMode ? 'border-amber-500/50 bg-tienda-elevated' : 'border-amber-400/70 bg-white'
-                            }`}
-                            style={{
-                                left: tooltipModoCotizacionRect.right + 8,
-                                top: tooltipModoCotizacionRect.top + tooltipModoCotizacionRect.height / 2 - 28,
-                            }}
-                            role="tooltip"
-                        >
-                            <p className={`text-xs font-semibold mb-1.5 ${darkMode ? 'text-amber-400' : 'text-amber-700'}`}>Ten en cuenta</p>
-                            <p className={`text-xs ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                                Si desactivas el modo, ya no podrás agregar productos a la cotización desde la tienda hasta que lo vuelvas a activar.
-                            </p>
-                        </div>
-                    )}
-                    </>
-                )}
                 </div>
 
                 {/* Contenido Principal (misma fila de grid que el sidebar; el footer va después, ancho completo) */}

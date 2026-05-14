@@ -9,6 +9,7 @@ import TiendaNavHeader from '@/components/TiendaNavHeader'
 import { addVistoReciente, formatPrecio, getRecomendados, resolveStorageUrl } from '@/lib/productos'
 import { useCarrito } from '@/lib/carrito'
 import { useFavoritos } from '@/lib/favoritos'
+import { useCotizacion } from '@/lib/cotizaciones'
 import { getOrCreateGuestId } from '@/lib/guestId'
 import { useTiendaDarkMode } from '@/hooks/useTiendaDarkMode'
 
@@ -36,6 +37,8 @@ export default function ProductoDetalleClient({ clave, initialProducto = null, e
     const isLogged = !!user || hasToken
     const { isFavorito, toggle: toggleFavorito } = useFavoritos(isLogged)
     const { add: addToCarrito, isInCart } = useCarrito(isLogged)
+    const { modoActivo: modoCotizacionActivo, items: itemsCotizacion, toggleItem, setCantidad: setCantidadCotizacion, isInQuote, removeItem } = useCotizacion(user)
+    const [qtyCotizar, setQtyCotizar] = useState(1)
     const { darkMode, setDarkMode } = useTiendaDarkMode()
     const [selectedImageIndex, setSelectedImageIndex] = useState(0)
     const [imgErrors, setImgErrors] = useState({})
@@ -61,6 +64,18 @@ export default function ProductoDetalleClient({ clave, initialProducto = null, e
             })
             .catch(() => setSugeridos([]))
     }, [clave])
+
+    useEffect(() => {
+        if (!producto || !modoCotizacionActivo || !clave) return
+        const tu = (producto.disponible ?? 0) + (producto.disponible_cd ?? 0)
+        if (tu <= 0) return
+        const row = itemsCotizacion.find((i) => i.clave === clave)
+        if (row) {
+            setQtyCotizar(Math.min(tu, Math.max(1, Number(row.cantidad) || 1)))
+        } else {
+            setQtyCotizar((q) => Math.min(tu, Math.max(1, q)))
+        }
+    }, [producto, modoCotizacionActivo, clave, itemsCotizacion])
 
     const totalUnidades = (producto?.disponible ?? 0) + (producto?.disponible_cd ?? 0)
     useEffect(() => {
@@ -422,6 +437,101 @@ export default function ProductoDetalleClient({ clave, initialProducto = null, e
                                     </div>
                                 </div>
                             </div>
+                            {modoCotizacionActivo && enStock && (
+                                <div className={`mt-4 pt-4 border-t w-full ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+                                    <p className="text-sm font-semibold text-brand mb-3">Cotización</p>
+                                    <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3">
+                                        <label className={`text-sm font-medium shrink-0 ${textMuted}`} htmlFor="qty-cotizar-producto">
+                                            Cantidad a cotizar
+                                        </label>
+                                        <div
+                                            className={`relative flex items-center gap-0 overflow-hidden rounded-lg border border-l-[3px] border-l-brand ${
+                                                darkMode ? 'border-gray-600/50 bg-black/20' : 'border-gray-300 bg-gray-100'
+                                            }`}
+                                        >
+                                            <span className="shrink-0 pl-2.5 text-sm font-semibold text-brand" aria-hidden>
+                                                #
+                                            </span>
+                                            <input
+                                                id="qty-cotizar-producto"
+                                                type="number"
+                                                min={1}
+                                                max={Math.max(1, totalUnidades)}
+                                                value={Math.min(Math.max(1, qtyCotizar), Math.max(1, totalUnidades))}
+                                                onChange={(e) => {
+                                                    const raw = e.target.value
+                                                    if (raw === '' || raw == null) {
+                                                        setQtyCotizar(1)
+                                                        return
+                                                    }
+                                                    const v = Math.max(1, Math.min(totalUnidades, Number(raw) || 1))
+                                                    setQtyCotizar(v)
+                                                }}
+                                                onBlur={(e) => {
+                                                    const raw = e.target.value
+                                                    if (raw === '' || Number(raw) < 1 || Number.isNaN(Number(raw))) {
+                                                        setQtyCotizar(1)
+                                                        return
+                                                    }
+                                                    const v = Math.max(1, Math.min(totalUnidades, Number(raw)))
+                                                    setQtyCotizar(v)
+                                                }}
+                                                className={`w-14 py-2 pr-0 text-sm font-semibold text-center bg-transparent border-0 focus:ring-0 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                                                    darkMode ? 'text-white' : 'text-gray-900'
+                                                }`}
+                                            />
+                                            <div className={`flex flex-col shrink-0 border-l ${darkMode ? 'border-gray-600' : 'border-gray-400'}`}>
+                                                <button
+                                                    type="button"
+                                                    aria-label="Aumentar cantidad a cotizar"
+                                                    onClick={() => setQtyCotizar((q) => Math.min(totalUnidades, Math.max(1, q) + 1))}
+                                                    className={`p-1 flex items-center justify-center ${darkMode ? 'hover:bg-gray-600 text-gray-300' : 'hover:bg-gray-300 text-gray-600'}`}
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    aria-label="Disminuir cantidad a cotizar"
+                                                    onClick={() => setQtyCotizar((q) => Math.max(1, q - 1))}
+                                                    className={`p-1 flex items-center justify-center border-t ${darkMode ? 'border-gray-600 hover:bg-gray-600 text-gray-300' : 'border-gray-400 hover:bg-gray-300 text-gray-600'}`}
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                if (!clave) return
+                                                const q = Math.max(1, Math.min(totalUnidades, qtyCotizar))
+                                                setQtyCotizar(q)
+                                                if (isInQuote(clave)) setCantidadCotizacion(clave, q)
+                                                else toggleItem(clave, true, q)
+                                            }}
+                                            className={`py-2.5 px-4 rounded-lg font-semibold text-sm transition-colors whitespace-nowrap ${
+                                                darkMode ? 'bg-amber-600 hover:bg-amber-500 text-white' : 'bg-amber-500 hover:bg-amber-600 text-white'
+                                            }`}
+                                        >
+                                            {isInQuote(clave) ? 'Actualizar en cotización' : 'Cotizar'}
+                                        </button>
+                                        {isInQuote(clave) && (
+                                            <button
+                                                type="button"
+                                                onClick={() => removeItem(clave)}
+                                                className={`text-sm font-medium underline-offset-2 hover:underline ${darkMode ? 'text-red-400 hover:text-red-300' : 'text-red-600 hover:text-red-700'}`}
+                                            >
+                                                Quitar de la cotización
+                                            </button>
+                                        )}
+                                        <Link
+                                            href="/tienda/cotizaciones"
+                                            className={`text-sm font-medium ${darkMode ? 'text-brand hover:text-brand-hover' : 'text-brand hover:text-brand-hover'}`}
+                                        >
+                                            Ver mi cotización actual →
+                                        </Link>
+                                    </div>
+                                </div>
+                            )}
                             {(producto.garantia || producto.codigo_fabricante) && (
                                 <div className={`flex flex-col gap-1 pt-3 mt-3 border-t ${darkMode ? 'border-gray-700' : 'border-gray-200'} xl:flex-row xl:items-center xl:gap-4`}>
                                     {producto.garantia && (

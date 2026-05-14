@@ -445,7 +445,7 @@ export default function CotizacionesClient() {
                 {isEmpty ? (
                     <div className={`rounded-lg border p-8 ${darkMode ? 'bg-tienda-elevated border-gray-700' : 'bg-white border-gray-200'}`}>
                         <p className={darkMode ? 'text-gray-300' : 'text-gray-700'}>No tienes productos en la cotización.</p>
-                        <p className={`mt-2 text-sm ${textMuted}`}>Activa el modo cotización en el menú Cotizaciones y selecciona productos en la tienda.</p>
+                        <p className={`mt-2 text-sm ${textMuted}`}>Activa el modo arriba (Mis cotizaciones) y en la ficha de cada producto pulsa Cotizar.</p>
                         <Link href="/" className="inline-block mt-4 text-[#FF8000] hover:underline font-medium">
                             Ir a la tienda
                         </Link>

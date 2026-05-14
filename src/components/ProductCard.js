@@ -37,7 +37,7 @@ export default function ProductCard({
     const [imgError, setImgError] = useState(false)
     const isLogged = !!user || hasToken
     const { isInCart } = useCarrito(isLogged)
-    const { modoActivo, isInQuote, cantidad: quoteCantidad, toggleItem, setCantidad } = useCotizacion(user)
+    const { modoActivo } = useCotizacion(user)
     const imageUrl = getFirstImageUrl(producto)
     const titulo = producto?.descripcion || ''
     const precioFormateado = formatPrecio(producto?.precio, producto?.moneda)
@@ -86,21 +86,6 @@ export default function ProductCard({
                                 onClick={(e) => e.stopPropagation()}
                                 className="h-5 w-5 rounded border-2 border-gray-400 bg-white/90 text-brand focus:ring-2 focus:ring-brand focus:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50"
                                 aria-label={`Comparar ${titulo.slice(0, 40)}`}
-                            />
-                        </div>
-                    )}
-                    {modoActivo && (
-                        <div
-                            className="absolute top-2 right-2 z-10"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <input
-                                type="checkbox"
-                                checked={isInQuote(clave)}
-                                onChange={(e) => toggleItem(clave, e.target.checked, quoteCantidad(clave) || 1)}
-                                onClick={(e) => e.stopPropagation()}
-                                className="h-5 w-5 rounded border-2 border-gray-400 bg-white/90 text-brand focus:ring-2 focus:ring-brand focus:ring-offset-0"
-                                aria-label={`Cotizar ${titulo.slice(0, 40)}`}
                             />
                         </div>
                     )}
@@ -183,82 +168,6 @@ export default function ProductCard({
                     >
                         Ver carrito →
                     </Link>
-                </div>
-            )}
-            {modoActivo && isInQuote(clave) && (
-                <div
-                    className={`flex items-center gap-2 px-4 py-2 ${cuadricula ? 'border-t border-gray-200/70 dark:border-white/[0.08]' : ''}`}
-                    onClick={(e) => e.stopPropagation()}
-                >
-                    <label className="shrink-0 text-sm font-medium text-brand" htmlFor={`qty-quote-${clave}`}>
-                        Cantidad a cotizar:
-                    </label>
-                    <div
-                        className={`relative flex items-center gap-0 overflow-hidden rounded-lg border border-l-[3px] border-l-brand ${
-                            darkMode ? 'border-gray-600/50 bg-black/20' : 'border-gray-300 bg-gray-100'
-                        }`}
-                    >
-                        <span className="shrink-0 pl-2.5 text-sm font-semibold text-brand" aria-hidden>
-                            #
-                        </span>
-                        <input
-                            id={`qty-quote-${clave}`}
-                            type="number"
-                            min={1}
-                            max={Math.max(1, totalStock)}
-                            value={Math.min(Math.max(1, quoteCantidad(clave) || 1), Math.max(1, totalStock))}
-                            onChange={(e) => {
-                                const raw = e.target.value
-                                if (raw === '' || raw === null || raw === undefined) {
-                                    setCantidad(clave, 1)
-                                    return
-                                }
-                                const v = Math.max(1, Math.min(totalStock, Number(raw) || 1))
-                                setCantidad(clave, v)
-                            }}
-                            onBlur={(e) => {
-                                const raw = e.target.value
-                                if (raw === '' || Number(raw) < 1 || Number.isNaN(Number(raw))) {
-                                    setCantidad(clave, 1)
-                                    return
-                                }
-                                const v = Math.max(1, Math.min(totalStock, Number(raw)))
-                                setCantidad(clave, v)
-                            }}
-                            className={`w-14 py-2 pr-0 text-sm font-semibold text-center bg-transparent border-0 focus:ring-0 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
-                                darkMode ? 'text-white' : 'text-gray-900'
-                            }`}
-                        />
-                        <div className={`flex flex-col shrink-0 border-l ${darkMode ? 'border-gray-600' : 'border-gray-400'}`}>
-                            <button
-                                type="button"
-                                aria-label="Aumentar cantidad a cotizar"
-                                onClick={(e) => {
-                                    e.preventDefault()
-                                    e.stopPropagation()
-                                    const q = quoteCantidad(clave) || 1
-                                    const maxQ = Math.max(1, totalStock)
-                                    setCantidad(clave, Math.min(maxQ, q + 1))
-                                }}
-                                className={`p-1 flex items-center justify-center ${darkMode ? 'hover:bg-gray-600 text-gray-300' : 'hover:bg-gray-300 text-gray-600'}`}
-                            >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
-                            </button>
-                            <button
-                                type="button"
-                                aria-label="Disminuir cantidad a cotizar"
-                                onClick={(e) => {
-                                    e.preventDefault()
-                                    e.stopPropagation()
-                                    const q = quoteCantidad(clave) || 1
-                                    setCantidad(clave, Math.max(1, q - 1))
-                                }}
-                                className={`p-1 flex items-center justify-center border-t ${darkMode ? 'border-gray-600 hover:bg-gray-600 text-gray-300' : 'border-gray-400 hover:bg-gray-300 text-gray-600'}`}
-                            >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-                            </button>
-                        </div>
-                    </div>
                 </div>
             )}
         </div>
