@@ -2016,25 +2016,56 @@ function DashboardInner() {
                                                                     const subtotal = eff.subtotal
                                                                     const sinStock = eff.sinStock
                                                                     const calcTotalConStock = (list) => list.reduce((s, i) => s + getEffective(i).subtotal, 0)
+                                                                    const claveTrim = item.clave != null ? String(item.clave).trim() : ''
+                                                                    const hrefDetalleProducto = claveTrim
+                                                                        ? `/tienda/producto/${encodeURIComponent(claveTrim)}`
+                                                                        : null
+                                                                    const etiquetaProducto =
+                                                                        item.nombre_producto?.trim() || claveTrim || 'Producto'
                                                                     return (
                                                                         <div
                                                                             key={item.clave + String(idx)}
                                                                             className={`flex flex-col sm:flex-row gap-3 p-3 rounded-lg ${darkMode ? 'bg-tienda-elevated/50' : 'bg-gray-50'}`}
                                                                         >
                                                                             {item.imagen && (
-                                                                                <div className="relative w-full sm:w-20 h-20 shrink-0 rounded overflow-hidden bg-gray-200 dark:bg-gray-700">
-                                                                                    <Image
-                                                                                        src={item.imagen}
-                                                                                        alt={item.nombre_producto?.slice(0, 40) || item.clave || 'Producto'}
-                                                                                        fill
-                                                                                        className="object-contain"
-                                                                                        unoptimized={item.imagen?.startsWith?.('http')}
-                                                                                    />
-                                                                                </div>
+                                                                                hrefDetalleProducto ? (
+                                                                                    <Link
+                                                                                        href={hrefDetalleProducto}
+                                                                                        className={`relative w-full sm:w-20 h-20 shrink-0 rounded overflow-hidden bg-gray-200 dark:bg-gray-700 block focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF8000] focus-visible:ring-offset-2 ${darkMode ? 'focus-visible:ring-offset-gray-900' : 'focus-visible:ring-offset-white'}`}
+                                                                                        aria-label={`Ver producto: ${etiquetaProducto}`}
+                                                                                    >
+                                                                                        <Image
+                                                                                            src={item.imagen}
+                                                                                            alt={etiquetaProducto.slice(0, 120)}
+                                                                                            fill
+                                                                                            className="object-contain"
+                                                                                            unoptimized={item.imagen?.startsWith?.('http')}
+                                                                                        />
+                                                                                    </Link>
+                                                                                ) : (
+                                                                                    <div className="relative w-full sm:w-20 h-20 shrink-0 rounded overflow-hidden bg-gray-200 dark:bg-gray-700">
+                                                                                        <Image
+                                                                                            src={item.imagen}
+                                                                                            alt={etiquetaProducto.slice(0, 120)}
+                                                                                            fill
+                                                                                            className="object-contain"
+                                                                                            unoptimized={item.imagen?.startsWith?.('http')}
+                                                                                        />
+                                                                                    </div>
+                                                                                )
                                                                             )}
                                                                             <div className="flex-1 min-w-0">
                                                                                 <p className={`font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                                                                                    {item.nombre_producto || item.clave || 'Producto'}
+                                                                                    {hrefDetalleProducto ? (
+                                                                                        <Link
+                                                                                            href={hrefDetalleProducto}
+                                                                                            className={`hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF8000] focus-visible:ring-offset-2 rounded ${darkMode ? 'text-white focus-visible:ring-offset-gray-900' : 'text-gray-900 focus-visible:ring-offset-white'}`}
+                                                                                        >
+                                                                                            {etiquetaProducto}
+                                                                                        </Link>
+                                                                                    ) : (
+                                                                                        etiquetaProducto
+                                                                                    )}
                                                                                 </p>
                                                                                 <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                                                                                     Clave: {item.clave}
