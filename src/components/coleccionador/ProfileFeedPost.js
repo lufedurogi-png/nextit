@@ -7,9 +7,12 @@ import axios from '@/lib/axios'
 import { storageUrl } from '@/lib/storageUrl'
 import { profileHref } from '@/lib/profileUrl'
 import { buildFeedPostShareUrl, shareNativeOrClipboard } from '@/lib/sharePost'
+import { scrollAncestorsToBottom } from '@/lib/scrollAncestorsToBottom'
 import { emitVikuChanSignal } from '@/lib/vikuChanSignals'
 import ReactionLikeIcon from '@/components/coleccionador/ReactionLikeIcon'
 import ShareLinkIcon from '@/components/coleccionador/ShareLinkIcon'
+import AmbientPostImage from '@/components/coleccionador/AmbientPostImage'
+import PostMediaLightbox from '@/components/coleccionador/PostMediaLightbox'
 
 function formatFeedDate(iso) {
     if (!iso) return ''
@@ -102,7 +105,7 @@ const FEED_MODAL_BACKDROP =
     'fixed inset-0 z-[200] flex items-end justify-center bg-transparent p-0 md:items-center md:justify-center md:pl-72 md:pr-6 md:py-6'
 
 const THREAD_MODAL_BACKDROP =
-    'fixed inset-0 z-[210] flex items-end justify-center bg-transparent p-0 md:items-center md:justify-center md:pl-72 md:pr-6 md:py-6'
+    'fixed inset-0 z-[270] flex items-end justify-center bg-transparent p-0 md:items-center md:justify-center md:pl-72 md:pr-6 md:py-6'
 
 function findCommentByIdInForest(tree, id) {
     if (!Array.isArray(tree) || id == null) return null
@@ -194,64 +197,109 @@ function ProfileFeedComment({
     replyCount = 0,
     inReplyToLabel,
     onOpenThread,
+    onLightboxThread,
     onThreadReply,
     onReact,
     onStartEdit,
     onSaveEdit,
     onCancelEdit,
     onDelete,
+    onOpenCommentImages,
 }) {
     const mine = Number(c.user_id) === Number(currentUserId)
+    const commentProfileHref =
+        c.user_id != null && String(c.user_id).trim() !== ''
+            ? profileHref({ id: c.user_id, name: c.user?.name, currentUserId })
+            : null
+    const commentAuthorNameClass =
+        'text-sm font-bold text-[var(--app-text)] hover:text-[var(--app-accent)] hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--app-card)] rounded-sm'
     const isEditing = editingCommentId === c.id
     const ov = reactionOverrides?.[c.id]
     const likeN = ov?.likes ?? c.likes_count ?? 0
     const dislikeN = ov?.dislikes ?? c.dislikes_count ?? 0
     const isMain = variant === 'main'
+    const showThreadLine = variant === 'thread' || Boolean(inReplyToLabel)
+    const cardClass =
+        'overflow-hidden rounded-[18px] shadow-sm ring-1 ring-[var(--app-accent)]/30 ' +
+        (isMain
+            ? 'bg-[color-mix(in_srgb,var(--app-card)_94%,var(--app-accent)_6%)]'
+            : 'bg-[color-mix(in_srgb,var(--app-card)_90%,var(--app-accent)_10%)]') +
+        ' text-[var(--app-text)]'
+
+    const actionsRowClass =
+        'mt-1.5 flex min-h-[2.25rem] w-full min-w-0 flex-wrap items-center gap-x-0 divide-x divide-[var(--app-subtle)]/40 overflow-x-auto rounded-lg'
 
     return (
-        <div>
-            <div
-                className={`rounded-2xl border px-3 py-2.5 ${
-                    isMain
-                        ? 'border-slate-200/80 bg-white dark:border-slate-700 dark:bg-slate-900/70'
-                        : 'border-slate-100 bg-slate-50/90 dark:border-slate-700/80 dark:bg-slate-900/50'
-                }`}
-            >
-                {inReplyToLabel ? (
-                    <p className="mb-1.5 text-[0.65rem] font-semibold text-indigo-600 dark:text-indigo-400">
-                        En respuesta a <span className="font-bold">{inReplyToLabel}</span>
-                    </p>
-                ) : null}
-                <div className="flex gap-2">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
+        <div className="flex min-w-0 items-stretch gap-1.5 sm:gap-2">
+            <div className="relative flex w-9 shrink-0 flex-col items-center self-stretch sm:w-10">
+                {commentProfileHref ? (
+                    <Link
+                        href={commentProfileHref}
+                        className="relative z-[1] mt-0.5 shrink-0 rounded-full ring-1 ring-[var(--app-accent)]/25 ring-offset-2 ring-offset-[var(--app-bg)] transition hover:ring-[var(--app-accent)]/45"
+                        title={`Perfil de ${c.user?.name || 'usuario'}`}
+                    >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                            src={storageUrl(c.user?.avatar_path)}
+                            alt=""
+                            className="h-8 w-8 rounded-full border-2 border-[var(--app-card)] object-cover shadow-sm sm:h-9 sm:w-9"
+                        />
+                    </Link>
+                ) : (
+                    /* eslint-disable-next-line @next/next/no-img-element */
                     <img
                         src={storageUrl(c.user?.avatar_path)}
                         alt=""
-                        className="mt-0.5 h-9 w-9 shrink-0 rounded-full border border-slate-200 object-cover dark:border-slate-600"
+                        className="relative z-[1] mt-0.5 h-8 w-8 shrink-0 rounded-full border-2 border-[var(--app-card)] object-cover shadow-sm ring-1 ring-[var(--app-accent)]/25 sm:h-9 sm:w-9"
                     />
-                    <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0">
-                            <span className="text-sm font-bold text-slate-900 dark:text-slate-50">{c.user?.name || 'Usuario'}</span>
-                            <span className="text-[0.7rem] text-slate-500 dark:text-slate-400">
-                                {formatFeedDate(c.created_at)}
-                                {c.edited_at ? ' · editado' : ''}
-                            </span>
-                        </div>
-                        {isEditing ? (
+                )}
+                {showThreadLine ? (
+                    <div
+                        className="pointer-events-none absolute bottom-0 left-1/2 top-[2.125rem] w-px -translate-x-1/2 bg-[var(--app-accent)]/40 sm:top-[2.375rem]"
+                        aria-hidden
+                    />
+                ) : null}
+            </div>
+            <div className="min-w-0 flex-1 pb-0.5">
+                {isEditing ? (
+                    <div className={cardClass}>
+                        <div className="px-3 pt-2.5 pb-2">
+                            {inReplyToLabel ? (
+                                <p className="mb-1.5 text-[0.65rem] font-semibold text-[var(--app-accent)]">
+                                    En respuesta a <span className="font-bold">{inReplyToLabel}</span>
+                                </p>
+                            ) : null}
+                            <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0">
+                                {commentProfileHref ? (
+                                    <Link href={commentProfileHref} className={commentAuthorNameClass}>
+                                        {c.user?.name || 'Usuario'}
+                                    </Link>
+                                ) : (
+                                    <span className="text-sm font-bold text-[var(--app-text)]">{c.user?.name || 'Usuario'}</span>
+                                )}
+                                <span className="text-[0.72rem] text-[var(--app-subtle)]">
+                                    {formatFeedDate(c.created_at)}
+                                    {c.edited_at ? ' · editado' : ''}
+                                </span>
+                            </div>
                             <div className="mt-2 space-y-2">
                                 <textarea
                                     value={editingCommentBody}
                                     onChange={(e) => setEditingCommentBody(e.target.value)}
                                     rows={3}
                                     maxLength={3000}
-                                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-2 text-sm dark:border-slate-600 dark:bg-slate-950 dark:text-slate-50"
+                                    className="w-full rounded-xl border border-[var(--app-subtle)]/45 bg-[var(--app-card)] px-2.5 py-2 text-sm text-[var(--app-text)] placeholder:text-[var(--app-subtle)]"
                                 />
                                 {editingKeptPaths.length > 0 ? (
                                     <div className="flex flex-wrap gap-1.5">
                                         {editingKeptPaths.map((path, i) => (
                                             <div key={path + i} className="group relative">
                                                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                <img src={storageUrl(path)} alt="" className="h-16 w-16 rounded-lg object-cover ring-1 ring-slate-200 dark:ring-slate-600" />
+                                                <img
+                                                    src={storageUrl(path)}
+                                                    alt=""
+                                                    className="h-16 w-16 rounded-lg object-contain ring-1 ring-[var(--app-accent)]/25 bg-[var(--app-card)]"
+                                                />
                                                 <button
                                                     type="button"
                                                     title="Quitar imagen"
@@ -270,7 +318,7 @@ function ProfileFeedComment({
                                         type="file"
                                         accept="image/*"
                                         multiple
-                                        className="max-w-full text-[0.7rem] file:mr-2 file:rounded-lg file:border-0 file:bg-slate-200 file:px-2 file:py-1 file:text-[0.65rem] file:font-bold dark:file:bg-slate-700"
+                                        className="max-w-full text-[0.7rem] file:mr-2 file:rounded-lg file:border-0 file:bg-[var(--app-primary)]/15 file:px-2 file:py-1 file:text-[0.65rem] file:font-bold file:text-[var(--app-text)]"
                                         onChange={(e) => {
                                             onAppendEditingNewFiles(e.target.files)
                                             const input = e.target
@@ -280,7 +328,7 @@ function ProfileFeedComment({
                                         }}
                                     />
                                     {editingNewEntries.length > 0 ? (
-                                        <span className="text-[0.65rem] text-slate-500">+{editingNewEntries.length} nueva(s)</span>
+                                        <span className="text-[0.65rem] text-[var(--app-subtle)]">+{editingNewEntries.length} nueva(s)</span>
                                     ) : null}
                                 </div>
                                 {editingNewEntries.length > 0 ? (
@@ -291,7 +339,7 @@ function ProfileFeedComment({
                                                 <img
                                                     src={e.previewUrl}
                                                     alt=""
-                                                    className="h-16 w-16 rounded-lg border border-slate-200 bg-white object-contain dark:border-slate-600 dark:bg-slate-950"
+                                                    className="h-16 w-16 rounded-lg border border-[var(--app-subtle)]/35 bg-[var(--app-card)] object-contain"
                                                 />
                                                 <button
                                                     type="button"
@@ -305,103 +353,153 @@ function ProfileFeedComment({
                                         ))}
                                     </div>
                                 ) : null}
-                                <div className="flex flex-wrap gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={onSaveEdit}
-                                        className="rounded-lg bg-[var(--app-accent)] px-3 py-1.5 text-xs font-bold text-white"
-                                    >
-                                        Guardar
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={onCancelEdit}
-                                        className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-bold dark:border-slate-600"
-                                    >
-                                        Cancelar
-                                    </button>
-                                </div>
                             </div>
-                        ) : (
-                            <>
-                                {displayBody(c.body) ? (
-                                    <p className="mt-1 whitespace-pre-wrap text-sm text-slate-800 dark:text-slate-100">{displayBody(c.body)}</p>
+                        </div>
+                        <div className="flex flex-wrap gap-2 border-t border-[var(--app-subtle)]/30 px-3 py-2.5">
+                            <button
+                                type="button"
+                                onClick={onSaveEdit}
+                                className="rounded-lg bg-[var(--app-accent)] px-3 py-1.5 text-xs font-bold text-white"
+                            >
+                                Guardar
+                            </button>
+                            <button
+                                type="button"
+                                onClick={onCancelEdit}
+                                className="rounded-lg border border-[var(--app-subtle)]/50 px-3 py-1.5 text-xs font-bold text-[var(--app-text)]"
+                            >
+                                Cancelar
+                            </button>
+                        </div>
+                    </div>
+                ) : (
+                    <>
+                        <div className={cardClass}>
+                            <div className="px-3 pt-2.5 pb-2">
+                                {inReplyToLabel ? (
+                                    <p className="mb-1.5 text-[0.65rem] font-semibold text-[var(--app-accent)]">
+                                        En respuesta a <span className="font-bold">{inReplyToLabel}</span>
+                                    </p>
                                 ) : null}
-                                {Array.isArray(c.images) && c.images.length > 0 ? (
-                                    <div className="mt-2 flex flex-wrap gap-1.5">
+                                {commentProfileHref ? (
+                                    <Link href={commentProfileHref} className={`inline-block ${commentAuthorNameClass}`}>
+                                        {c.user?.name || 'Usuario'}
+                                    </Link>
+                                ) : (
+                                    <div className="text-sm font-bold text-[var(--app-text)]">{c.user?.name || 'Usuario'}</div>
+                                )}
+                                {displayBody(c.body) ? (
+                                    <p className="mt-1.5 whitespace-pre-wrap text-sm leading-snug text-[var(--app-text)]">
+                                        {displayBody(c.body)}
+                                    </p>
+                                ) : null}
+                            </div>
+                            {Array.isArray(c.images) && c.images.length > 0 ? (
+                                <div className="px-3 pb-2.5">
+                                    <div
+                                        className={
+                                            c.images.length === 1
+                                                ? 'overflow-hidden rounded-xl ring-1 ring-[var(--app-accent)]/30'
+                                                : 'grid grid-cols-2 gap-1.5'
+                                        }
+                                    >
                                         {c.images.map((path, i) => (
-                                            // eslint-disable-next-line @next/next/no-img-element
-                                            <img
-                                                key={i}
-                                                src={storageUrl(path)}
-                                                alt=""
-                                                className="h-24 max-w-[140px] rounded-lg border border-slate-200 bg-white object-contain dark:border-slate-700 dark:bg-slate-950"
-                                            />
+                                            <div
+                                                key={`${path}-${i}`}
+                                                className={
+                                                    c.images.length === 1
+                                                        ? ''
+                                                        : 'overflow-hidden rounded-xl ring-1 ring-[var(--app-accent)]/25'
+                                                }
+                                            >
+                                                <AmbientPostImage
+                                                    src={storageUrl(path)}
+                                                    alt={`Adjunto ${i + 1}`}
+                                                    containerClassName="rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--app-card)]"
+                                                    innerClassName="min-h-[120px] w-full bg-[var(--app-bg)]/20 sm:min-h-[140px]"
+                                                    foregroundClassName={
+                                                        c.images.length === 1
+                                                            ? 'max-h-72 w-full object-contain'
+                                                            : 'max-h-52 w-full object-contain sm:max-h-56'
+                                                    }
+                                                    onOpen={
+                                                        onOpenCommentImages
+                                                            ? () => onOpenCommentImages(c.images, i)
+                                                            : undefined
+                                                    }
+                                                />
+                                            </div>
                                         ))}
                                     </div>
-                                ) : null}
-                            </>
-                        )}
-                        {!isEditing ? (
-                            <div className="mt-2 flex min-h-[36px] flex-wrap items-stretch divide-x divide-slate-200 rounded-lg border border-slate-100 bg-slate-50/80 dark:divide-slate-600 dark:border-slate-700/80 dark:bg-slate-900/40">
+                                </div>
+                            ) : null}
+                        </div>
+                        <div className={actionsRowClass}>
+                            <span className="inline-flex items-center px-2 py-1.5 text-[0.7rem] font-semibold text-[var(--app-subtle)]">
+                                {formatFeedDate(c.created_at)}
+                                {c.edited_at ? ' · editado' : ''}
+                            </span>
+                            <button
+                                type="button"
+                                onClick={() => onReact(c.id, 'like')}
+                                className="inline-flex min-w-[3rem] flex-1 items-center justify-center gap-1 px-2 py-1.5 text-[0.68rem] font-bold text-emerald-600 transition hover:underline"
+                            >
+                                <ReactionLikeIcon className="h-3.5 w-3.5 shrink-0" />
+                                <span className="tabular-nums">{likeN}</span>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => onReact(c.id, 'dislike')}
+                                className="inline-flex min-w-[3rem] flex-1 items-center justify-center gap-1 px-2 py-1.5 text-[0.68rem] font-bold text-[var(--app-subtle)] transition hover:underline"
+                            >
+                                <ReactionLikeIcon flipped className="h-3.5 w-3.5 shrink-0" />
+                                <span className="tabular-nums">{dislikeN}</span>
+                            </button>
+                            {isMain && replyCount > 0 ? (
                                 <button
                                     type="button"
-                                    onClick={() => onReact(c.id, 'like')}
-                                    className="inline-flex flex-1 items-center justify-center gap-1 px-2 py-1.5 text-[0.7rem] font-bold text-emerald-700 transition hover:bg-white/80 dark:text-emerald-400 dark:hover:bg-slate-800/80"
+                                    onClick={() => (onLightboxThread ? onLightboxThread(c, 'toggle') : onOpenThread?.(c))}
+                                    className="inline-flex min-w-[4.5rem] flex-1 items-center justify-center px-2 py-1.5 text-[0.68rem] font-bold text-[var(--app-text)] transition hover:underline"
                                 >
-                                    <ReactionLikeIcon className="h-3.5 w-3.5" />
-                                    <span className="tabular-nums">{likeN}</span>
+                                    Respuestas ({replyCount})
                                 </button>
-                                <button
-                                    type="button"
-                                    onClick={() => onReact(c.id, 'dislike')}
-                                    className="inline-flex flex-1 items-center justify-center gap-1 px-2 py-1.5 text-[0.7rem] font-bold text-slate-600 transition hover:bg-white/80 dark:text-slate-300 dark:hover:bg-slate-800/80"
-                                >
-                                    <ReactionLikeIcon flipped className="h-3.5 w-3.5" />
-                                    <span className="tabular-nums">{dislikeN}</span>
-                                </button>
-                                {isMain && replyCount > 0 ? (
+                            ) : null}
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    isMain
+                                        ? onLightboxThread
+                                            ? onLightboxThread(c, 'expand')
+                                            : onOpenThread?.(c)
+                                        : onThreadReply?.(c.id, c.user?.name || 'Usuario')
+                                }
+                                className="inline-flex min-w-[3.5rem] flex-1 items-center justify-center px-2 py-1.5 text-[0.68rem] font-bold text-[var(--app-accent)] transition hover:underline"
+                            >
+                                Responder
+                            </button>
+                            {mine ? (
+                                <>
                                     <button
                                         type="button"
-                                        onClick={() => onOpenThread?.(c)}
-                                        className="inline-flex flex-1 items-center justify-center px-2 py-1.5 text-[0.7rem] font-bold text-slate-700 transition hover:bg-white/80 dark:text-slate-200 dark:hover:bg-slate-800/80"
+                                        onClick={() => onStartEdit(c)}
+                                        className="inline-flex min-w-[4rem] flex-1 items-center justify-center gap-0.5 px-2 py-1.5 text-[0.68rem] font-bold text-[var(--app-subtle)] transition hover:underline"
                                     >
-                                        Respuestas ({replyCount})
+                                        <IconPencil className="h-3.5 w-3.5 shrink-0" />
+                                        Editar
                                     </button>
-                                ) : null}
-                                <button
-                                    type="button"
-                                    onClick={() =>
-                                        isMain ? onOpenThread?.(c) : onThreadReply?.(c.id, c.user?.name || 'Usuario')
-                                    }
-                                    className="inline-flex flex-1 items-center justify-center px-2 py-1.5 text-[0.7rem] font-bold text-[var(--app-accent)] transition hover:bg-white/80 dark:hover:bg-slate-800/80"
-                                >
-                                    Responder
-                                </button>
-                                {mine ? (
-                                    <>
-                                        <button
-                                            type="button"
-                                            onClick={() => onStartEdit(c)}
-                                            className="inline-flex flex-1 items-center justify-center gap-0.5 px-2 py-1.5 text-[0.7rem] font-bold text-slate-600 transition hover:bg-white/80 dark:text-slate-300 dark:hover:bg-slate-800/80"
-                                        >
-                                            <IconPencil className="h-3.5 w-3.5" />
-                                            Editar
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => onDelete(c.id)}
-                                            className="inline-flex flex-1 items-center justify-center gap-0.5 px-2 py-1.5 text-[0.7rem] font-bold text-red-600 transition hover:bg-red-50/80 dark:text-red-400 dark:hover:bg-red-950/20"
-                                        >
-                                            <IconTrash className="h-3.5 w-3.5" />
-                                            Eliminar
-                                        </button>
-                                    </>
-                                ) : null}
-                            </div>
-                        ) : null}
-                    </div>
-                </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => onDelete(c.id)}
+                                        className="inline-flex min-w-[4rem] flex-1 items-center justify-center gap-0.5 px-2 py-1.5 text-[0.68rem] font-bold text-red-500 transition hover:underline"
+                                    >
+                                        <IconTrash className="h-3.5 w-3.5 shrink-0" />
+                                        Eliminar
+                                    </button>
+                                </>
+                            ) : null}
+                        </div>
+                    </>
+                )}
             </div>
         </div>
     )
@@ -418,6 +516,12 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
     /** Archivos nuevos con URL de vista previa estable (no revocar en cada render). */
     const [editPostNewEntries, setEditPostNewEntries] = useState([])
     const [commentsModalOpen, setCommentsModalOpen] = useState(false)
+    const [mediaLightboxOpen, setMediaLightboxOpen] = useState(false)
+    const [mediaLightboxStart, setMediaLightboxStart] = useState(0)
+    const [commentImageViewerOpen, setCommentImageViewerOpen] = useState(false)
+    const [commentImageViewerUrls, setCommentImageViewerUrls] = useState([])
+    const [commentImageViewerStart, setCommentImageViewerStart] = useState(0)
+    const [lightboxInlineThreadRootId, setLightboxInlineThreadRootId] = useState(null)
     const [commentText, setCommentText] = useState('')
     const [commentFileEntries, setCommentFileEntries] = useState([])
     const [threadModalOpen, setThreadModalOpen] = useState(false)
@@ -438,8 +542,10 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
     const commentFileRef = useRef(null)
     const editPostNewInputRef = useRef(null)
     const modalCommentFileRef = useRef(null)
+    const lightboxCommentFileRef = useRef(null)
     const threadModalFileRef = useRef(null)
     const commentsListRef = useRef(null)
+    const lightboxCommentsListRef = useRef(null)
     const threadListRef = useRef(null)
     const postMenuRef = useRef(null)
 
@@ -652,10 +758,46 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
         setThreadModalOpen(true)
     }, [clearThreadFileEntries])
 
+    /** En el visor de imagen: hilo debajo del comentario (sin modal). */
+    const handleLightboxThreadInteraction = useCallback(
+        (c, mode) => {
+            if (!c?.id) return
+            if (mode === 'toggle' && lightboxInlineThreadRootId === c.id) {
+                setLightboxInlineThreadRootId(null)
+                setThreadRootId(null)
+                clearThreadReply()
+                setThreadText('')
+                clearThreadFileEntries()
+                if (threadModalFileRef.current) threadModalFileRef.current.value = ''
+                return
+            }
+            setLightboxInlineThreadRootId(c.id)
+            setThreadRootId(c.id)
+            clearThreadReply()
+            setThreadText('')
+            clearThreadFileEntries()
+            if (threadModalFileRef.current) threadModalFileRef.current.value = ''
+        },
+        [lightboxInlineThreadRootId, clearThreadFileEntries, clearThreadReply]
+    )
+
+    const closeMediaLightbox = useCallback(() => {
+        setMediaLightboxOpen(false)
+        setLightboxInlineThreadRootId(null)
+        if (!threadModalOpen) {
+            setThreadRootId(null)
+            clearThreadReply()
+            setThreadText('')
+            clearThreadFileEntries()
+            if (threadModalFileRef.current) threadModalFileRef.current.value = ''
+        }
+    }, [threadModalOpen, clearThreadFileEntries, clearThreadReply])
+
     const closeCommentsModal = useCallback(() => {
         setCommentsModalOpen(false)
         clearCommentFileEntries()
         if (modalCommentFileRef.current) modalCommentFileRef.current.value = ''
+        if (lightboxCommentFileRef.current) lightboxCommentFileRef.current.value = ''
         closeThreadModal()
     }, [clearCommentFileEntries, closeThreadModal])
 
@@ -703,14 +845,15 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
             if (e.key !== 'Escape') return
             if (threadModalOpen) {
                 closeThreadModal()
+                e.stopImmediatePropagation()
                 return
             }
             clearEditNewEntries()
             setEditPostModalOpen(false)
             closeCommentsModal()
         }
-        window.addEventListener('keydown', onKey)
-        return () => window.removeEventListener('keydown', onKey)
+        window.addEventListener('keydown', onKey, true)
+        return () => window.removeEventListener('keydown', onKey, true)
     }, [commentsModalOpen, editPostModalOpen, threadModalOpen, closeCommentsModal, closeThreadModal, clearEditNewEntries])
 
     const openEditPostModal = () => {
@@ -782,6 +925,28 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
         emitVikuChanSignal('share')
     }, [onSharePost, localPost.id])
 
+    const openMediaLightbox = useCallback((i) => {
+        const imgs = Array.isArray(localPost.images) ? localPost.images : []
+        if (imgs.length === 0) return
+        const safe = Math.min(Math.max(0, i), imgs.length - 1)
+        setActivePostImageIndex(safe)
+        setMediaLightboxStart(safe)
+        setMediaLightboxOpen(true)
+    }, [localPost.images])
+
+    const openCommentImageViewer = useCallback((paths, startIdx = 0) => {
+        if (!Array.isArray(paths) || paths.length === 0) return
+        const safe = Math.min(Math.max(0, startIdx), paths.length - 1)
+        setCommentImageViewerUrls(paths.map((p) => storageUrl(p)))
+        setCommentImageViewerStart(safe)
+        setCommentImageViewerOpen(true)
+    }, [])
+
+    const closeCommentImageViewer = useCallback(() => {
+        setCommentImageViewerOpen(false)
+        setCommentImageViewerUrls([])
+    }, [])
+
     const reactComment = async (commentId, reaction) => {
         try {
             const { data } = await axios.post(`/feed/comments/${commentId}/react`, { reaction })
@@ -812,8 +977,10 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
             setCommentText('')
             clearCommentFileEntries()
             if (modalCommentFileRef.current) modalCommentFileRef.current.value = ''
+            if (lightboxCommentFileRef.current) lightboxCommentFileRef.current.value = ''
             window.setTimeout(() => {
                 commentsListRef.current?.scrollTo({ top: commentsListRef.current.scrollHeight, behavior: 'smooth' })
+                scrollAncestorsToBottom(lightboxCommentsListRef.current, { behavior: 'smooth' })
             }, 50)
         } catch {
             // ignorar
@@ -841,6 +1008,7 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
             if (threadModalFileRef.current) threadModalFileRef.current.value = ''
             window.setTimeout(() => {
                 threadListRef.current?.scrollTo({ top: threadListRef.current.scrollHeight, behavior: 'smooth' })
+                scrollAncestorsToBottom(lightboxCommentsListRef.current, { behavior: 'smooth' })
             }, 50)
         } catch {
             // ignorar
@@ -912,27 +1080,27 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
     const authorHref = profileHref({ id: localPost.user_id, name: localPost.user?.name, currentUserId })
 
     const actionCell =
-        'flex min-h-[56px] min-w-0 flex-col items-center justify-center gap-1 px-1 py-2.5 text-slate-700 transition-colors duration-150 hover:bg-slate-100/90 active:bg-slate-200/60 sm:flex-row sm:gap-1.5 sm:px-2 dark:text-slate-200 dark:hover:bg-white/[0.06] dark:active:bg-white/[0.1]'
+        'flex min-h-[56px] min-w-0 flex-col items-center justify-center gap-1 px-1 py-2.5 text-[var(--app-subtle)] transition-colors duration-150 hover:bg-[var(--app-accent)]/12 active:bg-[var(--app-accent)]/18 sm:flex-row sm:gap-1.5 sm:px-2'
 
     return (
-        <article className="relative z-[1] isolate overflow-hidden rounded-3xl border border-slate-200/70 bg-white text-[15px] shadow-md shadow-slate-200/50 ring-1 ring-slate-900/[0.03] transition-shadow duration-200 hover:shadow-lg hover:shadow-slate-200/60 pointer-events-auto dark:border-slate-700/50 dark:bg-slate-900/95 dark:shadow-none dark:ring-white/[0.06] dark:hover:shadow-md dark:hover:shadow-black/20">
+        <article className="relative z-[1] isolate overflow-hidden rounded-3xl border border-[var(--app-subtle)]/20 bg-[var(--app-card)] text-[15px] text-[var(--app-text)] shadow-sm pointer-events-auto">
             <div className="px-4 pt-4 pb-2">
                 <div className="flex gap-3.5">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <Link href={authorHref} className="shrink-0 rounded-full ring-2 ring-slate-200/80 ring-offset-2 ring-offset-white transition hover:ring-[var(--app-accent)]/35 dark:ring-slate-600 dark:ring-offset-slate-900 dark:hover:ring-[var(--app-accent)]/40">
+                    <Link href={authorHref} className="shrink-0 rounded-full ring-2 ring-[var(--app-subtle)]/45 ring-offset-2 ring-offset-[var(--app-card)] transition hover:ring-[var(--app-accent)]/45">
                         <img
                             src={storageUrl(localPost.user?.avatar_path)}
                             alt=""
-                            className="h-11 w-11 rounded-full border border-slate-200/80 object-cover dark:border-slate-600/80"
+                            className="h-11 w-11 rounded-full border border-[var(--app-subtle)]/35 object-cover"
                         />
                     </Link>
                     <div className="min-w-0 flex-1">
                         <div className="flex items-start justify-between gap-2">
                             <div>
-                                <Link href={authorHref} className="text-[15px] font-extrabold leading-tight tracking-tight text-slate-900 transition hover:text-[var(--app-accent)] dark:text-slate-50 dark:hover:text-[var(--app-accent)]">
+                                <Link href={authorHref} className="text-[15px] font-extrabold leading-tight tracking-tight text-[var(--app-text)] transition hover:text-[var(--app-accent)]">
                                     {localPost.user?.name || 'Usuario'}
                                 </Link>
-                                <p className="mt-1 text-[11px] font-medium uppercase tracking-[0.14em] text-slate-500 dark:text-slate-500">
+                                <p className="mt-1 text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--app-subtle)]">
                                     {formatFeedDate(localPost.created_at)}
                                     {localPost.edited_at ? ' · editado' : ''}
                                 </p>
@@ -948,7 +1116,7 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
                                                 return next
                                             })
                                         }
-                                        className="flex h-10 w-10 min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-transparent text-slate-500 transition hover:border-slate-200 hover:bg-slate-100 active:bg-slate-200 dark:text-slate-400 dark:hover:border-slate-600 dark:hover:bg-slate-800 dark:active:bg-slate-700"
+                                        className="flex h-10 w-10 min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-transparent text-[var(--app-subtle)] transition hover:border-[var(--app-subtle)]/40 hover:bg-[var(--app-accent)]/10 active:bg-[var(--app-accent)]/16"
                                         aria-expanded={postMenuOpen}
                                         aria-haspopup="true"
                                         aria-label="Opciones de la publicación"
@@ -956,13 +1124,13 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
                                         <IconDotsVertical className="h-5 w-5" />
                                     </button>
                                     {postMenuOpen ? (
-                                        <div className="absolute right-0 z-[80] mt-1 min-w-[11rem] overflow-hidden rounded-xl border border-slate-200 bg-white py-1 text-sm shadow-lg dark:border-slate-600 dark:bg-slate-900">
+                                        <div className="absolute right-0 z-[80] mt-1 min-w-[11rem] overflow-hidden rounded-xl border border-[var(--app-subtle)]/40 bg-[var(--app-card)] py-1 text-sm text-[var(--app-text)] shadow-lg">
                                             {!postDeleteConfirmOpen ? (
                                                 <>
                                                     <button
                                                         type="button"
                                                         onClick={openEditPostModal}
-                                                        className="flex w-full items-center gap-2 px-3 py-2 text-left font-semibold text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                                                        className="flex w-full items-center gap-2 px-3 py-2 text-left font-semibold text-[var(--app-text)] hover:bg-[var(--app-accent)]/12"
                                                     >
                                                         <IconPencil className="h-4 w-4 shrink-0" />
                                                         Editar publicación
@@ -970,7 +1138,7 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
                                                     <button
                                                         type="button"
                                                         onClick={() => setPostDeleteConfirmOpen(true)}
-                                                        className="flex w-full items-center gap-2 px-3 py-2 text-left font-semibold text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
+                                                        className="flex w-full items-center gap-2 px-3 py-2 text-left font-semibold text-red-600 hover:bg-red-500/10"
                                                     >
                                                         <IconTrash className="h-4 w-4 shrink-0" />
                                                         Eliminar
@@ -978,7 +1146,7 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
                                                 </>
                                             ) : (
                                                 <div className="px-3 py-2">
-                                                    <p className="text-xs font-semibold text-slate-600 dark:text-slate-300">¿Eliminar esta publicación?</p>
+                                                    <p className="text-xs font-semibold text-[var(--app-subtle)]">¿Eliminar esta publicación?</p>
                                                     <div className="mt-2 flex gap-2">
                                                         <button
                                                             type="button"
@@ -990,7 +1158,7 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
                                                         <button
                                                             type="button"
                                                             onClick={() => setPostDeleteConfirmOpen(false)}
-                                                            className="flex-1 rounded-lg border border-slate-200 px-2 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
+                                                            className="flex-1 rounded-lg border border-[var(--app-subtle)]/45 px-2 py-1.5 text-xs font-bold text-[var(--app-text)] hover:bg-[var(--app-accent)]/10"
                                                         >
                                                             Cancelar
                                                         </button>
@@ -1008,20 +1176,23 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
 
             {textContent ? (
                 <div className="px-4 pb-3 pt-0.5">
-                    <p className="whitespace-pre-wrap leading-relaxed text-slate-800 dark:text-slate-100">{textContent}</p>
+                    <p className="whitespace-pre-wrap leading-relaxed text-[var(--app-text)]">{textContent}</p>
                 </div>
             ) : null}
 
             {postImages.length > 0 ? (
                 <div className="px-4 pb-4">
                     {postImages.length === 1 ? (
-                        <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-100 shadow-inner shadow-slate-900/5 ring-1 ring-slate-900/[0.04] dark:border-slate-700/60 dark:bg-slate-950/60 dark:ring-white/[0.05]">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={storageUrl(postImages[0])} alt="" className="max-h-[min(70vh,520px)] w-full object-contain" />
+                        <div className="overflow-hidden rounded-2xl border border-[var(--app-subtle)]/20 bg-[var(--app-card)]">
+                            <AmbientPostImage
+                                src={storageUrl(postImages[0])}
+                                foregroundClassName="max-h-[min(70vh,520px)] w-full object-contain"
+                                onOpen={() => openMediaLightbox(0)}
+                            />
                         </div>
                     ) : (
-                        <div className="rounded-2xl border border-slate-200/80 bg-slate-50/90 p-2 shadow-inner shadow-slate-900/[0.03] dark:border-slate-700/60 dark:bg-slate-950/40">
-                            <div className="flex flex-col gap-2 sm:flex-row">
+                        <div className="rounded-2xl border border-[var(--app-subtle)]/20 bg-[var(--app-card)] p-2">
+                            <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
                                 <div className="order-2 sm:order-1 sm:w-20">
                                     <div className="flex gap-2 overflow-x-auto pb-1 sm:max-h-[420px] sm:flex-col sm:overflow-y-auto sm:overflow-x-hidden sm:pb-0">
                                         {postImages.map((path, i) => {
@@ -1033,22 +1204,29 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
                                                     onClick={() => setActivePostImageIndex(i)}
                                                     className={`h-16 w-16 shrink-0 overflow-hidden rounded-lg border transition ${
                                                         selected
-                                                            ? 'border-[var(--app-accent)] ring-2 ring-[var(--app-accent)]/35'
-                                                            : 'border-slate-200 hover:border-slate-400 dark:border-slate-700 dark:hover:border-slate-500'
+                                                            ? 'border-[var(--app-accent)] ring-2 ring-[var(--app-accent)]/30'
+                                                            : 'border-[var(--app-subtle)]/25 hover:border-[var(--app-accent)]/35'
                                                     }`}
                                                     aria-label={`Ver imagen ${i + 1}`}
                                                 >
                                                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                    <img src={storageUrl(path)} alt="" className="h-full w-full object-contain bg-white dark:bg-slate-950" />
+                                                    <img
+                                                        src={storageUrl(path)}
+                                                        alt=""
+                                                        className="h-full w-full object-cover"
+                                                    />
                                                 </button>
                                             )
                                         })}
                                     </div>
                                 </div>
-                                <div className="order-1 flex min-h-[220px] flex-1 items-center justify-center overflow-hidden rounded-lg bg-white p-2 dark:bg-slate-950">
+                                <div className="order-1 min-w-0 flex-1 overflow-hidden rounded-xl border border-[var(--app-subtle)]/20 sm:order-2">
                                     {activePostImagePath ? (
-                                        // eslint-disable-next-line @next/next/no-img-element
-                                        <img src={storageUrl(activePostImagePath)} alt="" className="max-h-[min(62vh,460px)] w-full object-contain" />
+                                        <AmbientPostImage
+                                            src={storageUrl(activePostImagePath)}
+                                            foregroundClassName="max-h-[min(70vh,520px)] w-full object-contain"
+                                            onOpen={() => openMediaLightbox(activePostImageIndex)}
+                                        />
                                     ) : null}
                                 </div>
                             </div>
@@ -1058,43 +1236,45 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
             ) : null}
 
             {localPost.parent ? (
-                <div className="mx-4 mb-3 rounded-2xl border border-slate-200/80 bg-gradient-to-br from-slate-50 to-slate-100/80 p-3 text-sm shadow-sm dark:border-slate-700/60 dark:from-slate-900/80 dark:to-slate-950/60">
-                    <p className="text-xs font-bold text-slate-600 dark:text-slate-300">Compartido de {localPost.parent.user?.name}</p>
-                    <p className="mt-1 line-clamp-4 whitespace-pre-wrap text-slate-600 dark:text-slate-400">
+                <div className="mx-4 mb-3 rounded-2xl border border-[var(--app-subtle)]/20 bg-[var(--app-subtle)]/[0.08] p-3 text-sm">
+                    <p className="text-xs font-bold text-[var(--app-subtle)]">Compartido de {localPost.parent.user?.name}</p>
+                    <p className="mt-1 line-clamp-4 whitespace-pre-wrap text-[var(--app-text)]">
                         {displayBody(localPost.parent.body) || '(sin texto)'}
                     </p>
                 </div>
             ) : null}
 
-            <div className="border-t border-slate-200/70 bg-gradient-to-b from-slate-50/95 to-slate-100/70 px-2 pb-2 pt-2 dark:border-slate-700/50 dark:from-slate-950/90 dark:to-slate-900/80">
-                <div className="grid grid-cols-4 gap-1 overflow-hidden rounded-2xl bg-slate-200/50 p-1 dark:bg-slate-800/50">
-                    <button type="button" onClick={() => reactPost('like')} className={`${actionCell} rounded-xl bg-white/95 dark:bg-slate-900/90`}>
+            <div className="border-t border-[var(--app-subtle)]/15 bg-[color-mix(in_srgb,var(--app-card)_88%,var(--app-accent)_12%)] px-2 pb-2 pt-2">
+                <div className="grid grid-cols-4 gap-1 overflow-hidden rounded-2xl p-1">
+                    <button type="button" onClick={() => reactPost('like')} className={`${actionCell} rounded-xl bg-[color-mix(in_srgb,var(--app-card)_94%,var(--app-bg)_6%)]`}>
                         <ReactionLikeIcon className="h-4 w-4 shrink-0 sm:h-[1.125rem] sm:w-[1.125rem]" />
-                        <span className="text-[11px] font-bold tabular-nums text-slate-600 sm:text-xs dark:text-slate-400">{likesCount}</span>
+                        <span className="text-[11px] font-bold tabular-nums text-[var(--app-subtle)] sm:text-xs">{likesCount}</span>
                     </button>
-                    <button type="button" onClick={() => reactPost('dislike')} className={`${actionCell} rounded-xl bg-white/95 dark:bg-slate-900/90`}>
+                    <button type="button" onClick={() => reactPost('dislike')} className={`${actionCell} rounded-xl bg-[color-mix(in_srgb,var(--app-card)_94%,var(--app-bg)_6%)]`}>
                         <ReactionLikeIcon flipped className="h-4 w-4 shrink-0 sm:h-[1.125rem] sm:w-[1.125rem]" />
-                        <span className="text-[11px] font-bold tabular-nums text-slate-600 sm:text-xs dark:text-slate-400">{dislikesCount}</span>
+                        <span className="text-[11px] font-bold tabular-nums text-[var(--app-subtle)] sm:text-xs">{dislikesCount}</span>
                     </button>
-                    <button type="button" onClick={handleSharePost} className={`${actionCell} rounded-xl bg-white/95 text-slate-600 dark:bg-slate-900/90 dark:text-slate-300`}>
+                    <button type="button" onClick={handleSharePost} className={`${actionCell} rounded-xl bg-[color-mix(in_srgb,var(--app-card)_94%,var(--app-bg)_6%)] text-[var(--app-subtle)]`}>
                         <ShareLinkIcon className="h-4 w-4 shrink-0" />
                         <span className="max-w-full truncate text-[10px] font-bold sm:text-[11px]">Compartir</span>
                     </button>
                     <button
                         type="button"
                         onClick={() => setCommentsModalOpen(true)}
-                        className={`${actionCell} rounded-xl bg-white/95 text-[var(--app-accent)] dark:bg-slate-900/90`}
+                        className={`${actionCell} rounded-xl bg-[color-mix(in_srgb,var(--app-card)_94%,var(--app-bg)_6%)] text-[var(--app-accent)]`}
                     >
                         <IconChat className="h-4 w-4 shrink-0 sm:h-[1.125rem] sm:w-[1.125rem]" />
                         <span className="max-w-full truncate text-center text-[10px] font-bold sm:text-[11px]">
                             Comentar
-                            {commentCount > 0 ? <span className="tabular-nums text-slate-500 dark:text-slate-400"> ({commentCount})</span> : null}
+                            {commentCount > 0 ? <span className="tabular-nums text-[var(--app-subtle)]"> ({commentCount})</span> : null}
                         </span>
                     </button>
                 </div>
             </div>
             {Number(localPost.user_id) === Number(currentUserId) ? (
-                <p className="border-t border-slate-200/50 px-4 py-2 text-right text-[0.65rem] font-bold uppercase tracking-wider text-[var(--app-accent)] dark:border-slate-700/40">Tuya</p>
+                <p className="border-t border-[var(--app-subtle)]/15 px-4 py-2 text-right text-[0.65rem] font-bold uppercase tracking-wider text-[var(--app-accent)]">
+                    Tuya
+                </p>
             ) : null}
 
             {/* Modal editar publicación (portal: encima del nav lateral y sin recargar el feed) */}
@@ -1112,9 +1292,9 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
                               }
                           }}
                       >
-                          <div className="pointer-events-auto flex max-h-[min(92vh,640px)] w-full max-w-lg flex-col rounded-t-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-600 dark:bg-slate-900 md:rounded-2xl">
-                        <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-slate-700">
-                            <h2 id={`edit-post-${post.id}`} className="text-base font-bold text-slate-900 dark:text-slate-50">
+                          <div className="pointer-events-auto flex max-h-[min(92vh,640px)] w-full max-w-lg flex-col rounded-t-2xl border border-[var(--app-subtle)]/35 bg-[var(--app-card)] text-[var(--app-text)] shadow-2xl md:rounded-2xl">
+                        <div className="flex items-center justify-between border-b border-[var(--app-subtle)]/20 px-4 py-3">
+                            <h2 id={`edit-post-${post.id}`} className="text-base font-bold text-[var(--app-text)]">
                                 Editar publicación
                             </h2>
                             <button
@@ -1123,7 +1303,7 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
                                     clearEditNewEntries()
                                     setEditPostModalOpen(false)
                                 }}
-                                className="rounded-full p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+                                className="rounded-full p-2 text-[var(--app-subtle)] hover:bg-[var(--app-accent)]/12"
                                 aria-label="Cerrar"
                             >
                                 <IconClose className="h-5 w-5" />
@@ -1136,15 +1316,15 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
                                 rows={4}
                                 maxLength={5000}
                                 placeholder="¿Qué quieres decir?"
-                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm dark:border-slate-600 dark:bg-slate-950 dark:text-slate-50"
+                                className="w-full rounded-xl border border-[var(--app-subtle)]/30 bg-[var(--app-bg)] px-3 py-2.5 text-sm text-[var(--app-text)] placeholder:text-[var(--app-subtle)]/60"
                             />
-                            <p className="mt-2 text-xs font-semibold text-slate-500 dark:text-slate-400">Imágenes actuales</p>
+                            <p className="mt-2 text-xs font-semibold text-[var(--app-subtle)]">Imágenes actuales</p>
                             {editPostKeptImages.length > 0 ? (
                                 <div className="mt-2 flex flex-wrap gap-2">
                                     {editPostKeptImages.map((path) => (
                                         <div key={path} className="relative">
                                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                                            <img src={storageUrl(path)} alt="" className="h-24 w-24 rounded-lg object-cover ring-1 ring-slate-200 dark:ring-slate-600" />
+                                            <img src={storageUrl(path)} alt="" className="h-24 w-24 rounded-lg object-cover ring-1 ring-[var(--app-subtle)]/35" />
                                             <button
                                                 type="button"
                                                 onClick={() => setEditPostKeptImages((prev) => prev.filter((p) => p !== path))}
@@ -1157,7 +1337,7 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
                                     ))}
                                 </div>
                             ) : (
-                                <p className="mt-1 text-xs text-slate-400">Ninguna (puedes añadir nuevas abajo)</p>
+                                <p className="mt-1 text-xs text-[var(--app-subtle)]">Ninguna (puedes añadir nuevas abajo)</p>
                             )}
                             <input
                                 ref={editPostNewInputRef}
@@ -1176,18 +1356,18 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
                             <button
                                 type="button"
                                 onClick={() => editPostNewInputRef.current?.click()}
-                                className="mt-3 w-full rounded-xl border-2 border-dashed border-slate-200 py-2.5 text-sm font-bold text-[var(--app-accent)] dark:border-slate-600"
+                                className="mt-3 w-full rounded-xl border-2 border-dashed border-[var(--app-subtle)]/35 py-2.5 text-sm font-bold text-[var(--app-accent)]"
                             >
                                 Añadir imágenes
                             </button>
                             {editPostNewEntries.length > 0 ? (
                                 <div className="mt-3">
-                                    <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                                    <p className="text-xs font-semibold text-[var(--app-subtle)]">
                                         Nuevas ({editPostNewEntries.length})
                                     </p>
                                     <div className="mt-2 flex flex-wrap gap-2">
                                         {editPostNewEntries.map((e) => (
-                                            <div key={e.id} className="relative h-24 w-24 overflow-hidden rounded-lg border border-slate-200 dark:border-slate-600">
+                                            <div key={e.id} className="relative h-24 w-24 overflow-hidden rounded-lg border border-[var(--app-subtle)]/30">
                                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                                 <img src={e.previewUrl} alt="" className="h-full w-full object-cover" />
                                                 <button
@@ -1204,14 +1384,14 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
                                 </div>
                             ) : null}
                         </div>
-                        <div className="flex gap-2 border-t border-slate-100 p-4 dark:border-slate-700">
+                        <div className="flex gap-2 border-t border-[var(--app-subtle)]/20 p-4">
                             <button
                                 type="button"
                                 onClick={() => {
                                     clearEditNewEntries()
                                     setEditPostModalOpen(false)
                                 }}
-                                className="flex-1 rounded-xl border border-slate-200 py-2.5 text-sm font-bold dark:border-slate-600"
+                                className="flex-1 rounded-xl border border-[var(--app-subtle)]/35 py-2.5 text-sm font-bold text-[var(--app-text)]"
                             >
                                 Cancelar
                             </button>
@@ -1229,6 +1409,301 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
                   )
                 : null}
 
+            {mediaLightboxOpen && postImages.length > 0 && typeof document !== 'undefined' ? (
+                <PostMediaLightbox
+                    open={mediaLightboxOpen}
+                    onClose={closeMediaLightbox}
+                    imageUrls={postImages.map((p) => storageUrl(p))}
+                    startIndex={mediaLightboxStart}
+                    sidebarHeader={
+                        <div className="border-b border-[var(--app-subtle)]/35 px-3 py-3">
+                            <div className="flex gap-2.5">
+                                <Link href={authorHref} className="shrink-0">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img
+                                        src={storageUrl(localPost.user?.avatar_path)}
+                                        alt=""
+                                        className="h-10 w-10 rounded-full border border-[var(--app-subtle)]/40 object-cover"
+                                    />
+                                </Link>
+                                <div className="min-w-0 flex-1">
+                                    <Link href={authorHref} className="text-sm font-bold text-[var(--app-text)] hover:underline">
+                                        {localPost.user?.name || 'Usuario'}
+                                    </Link>
+                                    <p className="text-[11px] text-[var(--app-subtle)]">
+                                        {formatFeedDate(localPost.created_at)}
+                                        {localPost.edited_at ? ' · editado' : ''}
+                                    </p>
+                                </div>
+                            </div>
+                            {textContent ? (
+                                <p className="mt-2 whitespace-pre-wrap text-sm leading-snug text-[var(--app-text)] md:max-h-32 md:overflow-y-auto">{textContent}</p>
+                            ) : null}
+                            <div className="mt-3 flex items-center justify-between gap-2 md:flex-wrap md:justify-start">
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => reactPost('like')}
+                                        className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--app-accent)]/14 px-2.5 py-1.5 text-xs font-bold text-emerald-600 transition hover:bg-[var(--app-accent)]/22"
+                                    >
+                                        <ReactionLikeIcon className="h-4 w-4 shrink-0" />
+                                        <span className="tabular-nums">{likesCount}</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => reactPost('dislike')}
+                                        className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--app-subtle)]/12 px-2.5 py-1.5 text-xs font-bold text-[var(--app-text)] transition hover:bg-[var(--app-subtle)]/20"
+                                    >
+                                        <ReactionLikeIcon flipped className="h-4 w-4 shrink-0" />
+                                        <span className="tabular-nums">{dislikesCount}</span>
+                                    </button>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={handleSharePost}
+                                    className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-[var(--app-subtle)]/12 px-2.5 py-1.5 text-xs font-bold text-[var(--app-text)] transition hover:bg-[var(--app-subtle)]/20"
+                                >
+                                    <ShareLinkIcon className="h-4 w-4 shrink-0" />
+                                    <span>Compartir</span>
+                                </button>
+                            </div>
+                        </div>
+                    }
+                    sidebarBody={
+                        <div ref={lightboxCommentsListRef} className="bg-[var(--app-bg)] px-2 py-2 sm:px-3">
+                            {localComments.length === 0 ? (
+                                <p className="py-6 text-center text-sm text-[var(--app-subtle)]">Sin comentarios aún.</p>
+                            ) : (
+                                <div className="space-y-2.5">
+                                    {localComments.map((c) => {
+                                        const showInlineThread = lightboxInlineThreadRootId === c.id
+                                        const lightboxReplyRows = showInlineThread
+                                            ? flattenDescendantsSorted(c.replies || [], c.user?.name || 'Usuario')
+                                            : []
+                                        return (
+                                            <div key={c.id}>
+                                                <ProfileFeedComment
+                                                    c={c}
+                                                    variant="main"
+                                                    replyCount={countRepliesInSubtree(c.replies || [])}
+                                                    currentUserId={currentUserId}
+                                                    editingCommentId={editingCommentId}
+                                                    editingCommentBody={editingCommentBody}
+                                                    setEditingCommentBody={setEditingCommentBody}
+                                                    editingKeptPaths={editingKeptPaths}
+                                                    setEditingKeptPaths={setEditingKeptPaths}
+                                                    editingNewEntries={editingNewEntries}
+                                                    onAppendEditingNewFiles={appendEditingNewFiles}
+                                                    onRemoveEditingNewEntry={removeEditingNewEntry}
+                                                    commentFileRef={commentFileRef}
+                                                    reactionOverrides={commentReactionOverrides}
+                                                    onLightboxThread={handleLightboxThreadInteraction}
+                                                    onOpenThread={openThreadModal}
+                                                    onReact={reactComment}
+                                                    onStartEdit={startEditComment}
+                                                    onSaveEdit={saveCommentEdit}
+                                                    onCancelEdit={cancelCommentEdit}
+                                                    onDelete={deleteComment}
+                                                    onOpenCommentImages={openCommentImageViewer}
+                                                />
+                                                {showInlineThread ? (
+                                                    <div className="ml-2 mt-2 space-y-2 border-l-2 border-[var(--app-accent)]/35 pl-3 pb-1">
+                                                        {lightboxReplyRows.length === 0 ? (
+                                                            <p className="text-xs text-[var(--app-subtle)]">Aún no hay respuestas en este hilo.</p>
+                                                        ) : (
+                                                            <>
+                                                                <p className="text-[0.65rem] font-bold uppercase tracking-wide text-[var(--app-subtle)]">
+                                                                    Respuestas
+                                                                </p>
+                                                                <div className="space-y-2">
+                                                                    {lightboxReplyRows.map(({ c: rowC, inReplyTo }) => (
+                                                                        <ProfileFeedComment
+                                                                            key={rowC.id}
+                                                                            c={rowC}
+                                                                            variant="thread"
+                                                                            replyCount={0}
+                                                                            inReplyToLabel={inReplyTo || undefined}
+                                                                            currentUserId={currentUserId}
+                                                                            editingCommentId={editingCommentId}
+                                                                            editingCommentBody={editingCommentBody}
+                                                                            setEditingCommentBody={setEditingCommentBody}
+                                                                            editingKeptPaths={editingKeptPaths}
+                                                                            setEditingKeptPaths={setEditingKeptPaths}
+                                                                            editingNewEntries={editingNewEntries}
+                                                                            onAppendEditingNewFiles={appendEditingNewFiles}
+                                                                            onRemoveEditingNewEntry={removeEditingNewEntry}
+                                                                            commentFileRef={commentFileRef}
+                                                                            reactionOverrides={commentReactionOverrides}
+                                                                            onOpenThread={openThreadModal}
+                                                                            onThreadReply={(id, name) => {
+                                                                                setThreadReplyParentId(id)
+                                                                                setThreadReplyToName(name)
+                                                                            }}
+                                                                            onReact={reactComment}
+                                                                            onStartEdit={startEditComment}
+                                                                            onSaveEdit={saveCommentEdit}
+                                                                            onCancelEdit={cancelCommentEdit}
+                                                                            onDelete={deleteComment}
+                                                                            onOpenCommentImages={openCommentImageViewer}
+                                                                        />
+                                                                    ))}
+                                                                </div>
+                                                            </>
+                                                        )}
+                                                        <div className="mt-3 border-t border-[var(--app-subtle)]/35 pt-3">
+                                                            {threadReplyParentId != null ? (
+                                                                <p className="mb-2 text-xs text-[var(--app-accent)]">
+                                                                    Respondiendo a <strong>{threadReplyToName}</strong>{' '}
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={clearThreadReply}
+                                                                        className="font-bold underline"
+                                                                    >
+                                                                        Cancelar
+                                                                    </button>
+                                                                </p>
+                                                            ) : null}
+                                                            <textarea
+                                                                value={threadText}
+                                                                onChange={(e) => setThreadText(e.target.value)}
+                                                                rows={2}
+                                                                maxLength={3000}
+                                                                placeholder="Escribe una respuesta…"
+                                                                className="w-full rounded-xl border border-[var(--app-subtle)]/45 bg-[var(--app-bg)] px-3 py-2 text-sm text-[var(--app-text)] placeholder:text-[var(--app-subtle)]"
+                                                            />
+                                                            <div className="mt-2 flex flex-wrap items-center gap-2">
+                                                                <input
+                                                                    ref={threadModalFileRef}
+                                                                    type="file"
+                                                                    accept="image/*"
+                                                                    multiple
+                                                                    className="max-w-full text-[0.7rem] file:mr-2 file:rounded-lg file:border-0 file:bg-[var(--app-primary)]/15 file:px-2 file:py-1 file:text-[0.65rem] file:font-bold file:text-[var(--app-text)]"
+                                                                    onChange={(e) => {
+                                                                        appendThreadFiles(e.target.files)
+                                                                        const input = e.target
+                                                                        window.queueMicrotask(() => {
+                                                                            input.value = ''
+                                                                        })
+                                                                    }}
+                                                                />
+                                                                {threadFileEntries.length > 0 ? (
+                                                                    <span className="text-[0.7rem] text-[var(--app-subtle)]">
+                                                                        {threadFileEntries.length} imagen(es)
+                                                                    </span>
+                                                                ) : null}
+                                                            </div>
+                                                            {threadFileEntries.length > 0 ? (
+                                                                <div className="mt-2 flex flex-wrap gap-1.5">
+                                                                    {threadFileEntries.map((e) => (
+                                                                        <div key={e.id} className="relative">
+                                                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                                            <img
+                                                                                src={e.previewUrl}
+                                                                                alt=""
+                                                                                className="h-14 w-14 rounded-lg border border-[var(--app-subtle)]/40 object-contain"
+                                                                            />
+                                                                            <button
+                                                                                type="button"
+                                                                                title="Quitar imagen"
+                                                                                onClick={() => removeThreadFileEntry(e.id)}
+                                                                                className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-[var(--app-text)]/85 text-[10px] font-bold text-[var(--app-card)] shadow"
+                                                                            >
+                                                                                ×
+                                                                            </button>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            ) : null}
+                                                            <button
+                                                                type="button"
+                                                                onClick={submitThreadComment}
+                                                                className="mt-2 w-full rounded-xl bg-[var(--app-primary)] py-2.5 text-sm font-bold text-white shadow-sm"
+                                                            >
+                                                                Publicar respuesta
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                ) : null}
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                            )}
+                        </div>
+                    }
+                    sidebarFooter={
+                        <div className="border-t border-[var(--app-subtle)]/35 bg-[color-mix(in_srgb,var(--app-card)_97%,var(--app-bg)_3%)] p-3">
+                            <textarea
+                                value={commentText}
+                                onChange={(e) => setCommentText(e.target.value)}
+                                rows={2}
+                                maxLength={3000}
+                                placeholder="Escribe un comentario…"
+                                className="w-full rounded-xl border border-[var(--app-subtle)]/45 bg-[var(--app-bg)] px-3 py-2 text-sm text-[var(--app-text)] placeholder:text-[var(--app-subtle)]"
+                            />
+                            <div className="mt-2 flex flex-wrap items-center gap-2">
+                                <input
+                                    ref={lightboxCommentFileRef}
+                                    type="file"
+                                    accept="image/*"
+                                    multiple
+                                    className="max-w-full text-[0.7rem] file:mr-2 file:rounded-lg file:border-0 file:bg-[var(--app-primary)]/15 file:px-2 file:py-1 file:text-[0.65rem] file:font-bold file:text-[var(--app-text)]"
+                                    onChange={(e) => {
+                                        appendCommentFiles(e.target.files)
+                                        const input = e.target
+                                        window.queueMicrotask(() => {
+                                            input.value = ''
+                                        })
+                                    }}
+                                />
+                                {commentFileEntries.length > 0 ? (
+                                    <span className="text-[0.7rem] text-[var(--app-subtle)]">{commentFileEntries.length} imagen(es)</span>
+                                ) : null}
+                            </div>
+                            {commentFileEntries.length > 0 ? (
+                                <div className="mt-2 flex flex-wrap gap-1.5">
+                                    {commentFileEntries.map((e) => (
+                                        <div key={e.id} className="relative">
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img
+                                                src={e.previewUrl}
+                                                alt=""
+                                                className="h-14 w-14 rounded-lg border border-[var(--app-subtle)]/40 object-contain"
+                                            />
+                                            <button
+                                                type="button"
+                                                title="Quitar imagen"
+                                                onClick={() => removeCommentFileEntry(e.id)}
+                                                className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-[var(--app-text)]/85 text-[10px] font-bold text-[var(--app-card)] shadow"
+                                            >
+                                                ×
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : null}
+                            <button
+                                type="button"
+                                onClick={submitComment}
+                                className="mt-2 w-full rounded-xl bg-[var(--app-primary)] py-2.5 text-sm font-bold text-white shadow-sm"
+                            >
+                                Publicar comentario
+                            </button>
+                        </div>
+                    }
+                />
+            ) : null}
+
+            {commentImageViewerOpen && commentImageViewerUrls.length > 0 && typeof document !== 'undefined' ? (
+                <PostMediaLightbox
+                    open={commentImageViewerOpen}
+                    onClose={closeCommentImageViewer}
+                    imageUrls={commentImageViewerUrls}
+                    startIndex={commentImageViewerStart}
+                    shellClassName="!z-[280]"
+                />
+            ) : null}
+
             {/* Modal comentarios */}
             {commentsModalOpen && typeof document !== 'undefined'
                 ? createPortal(
@@ -1241,25 +1716,30 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
                               if (e.target === e.currentTarget) closeCommentsModal()
                           }}
                       >
-                          <div className="pointer-events-auto flex max-h-[min(88vh,720px)] w-full max-w-lg flex-col rounded-t-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-600 dark:bg-[#0b1220] md:max-h-[min(85vh,680px)] md:rounded-2xl">
-                        <div className="flex shrink-0 items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-slate-700">
-                            <h2 id={`comments-${post.id}`} className="text-base font-bold text-slate-900 dark:text-slate-50">
+                          <div className="pointer-events-auto flex max-h-[min(88vh,720px)] w-full max-w-lg flex-col rounded-t-2xl border border-[var(--app-subtle)]/40 bg-[var(--app-card)] text-[var(--app-text)] shadow-2xl md:max-h-[min(85vh,680px)] md:rounded-2xl">
+                        <div className="flex shrink-0 items-center justify-between border-b border-[var(--app-subtle)]/30 px-4 py-3">
+                            <h2 id={`comments-${post.id}`} className="text-base font-bold text-[var(--app-text)]">
                                 Comentarios
-                                {commentCount > 0 ? <span className="ml-1 font-semibold text-slate-500">({commentCount})</span> : null}
+                                {commentCount > 0 ? (
+                                    <span className="ml-1 font-semibold text-[var(--app-subtle)]">({commentCount})</span>
+                                ) : null}
                             </h2>
                             <button
                                 type="button"
                                 onClick={closeCommentsModal}
-                                className="rounded-full p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+                                className="rounded-full p-2 text-[var(--app-subtle)] transition hover:bg-[var(--app-accent)]/12 hover:text-[var(--app-text)]"
                                 aria-label="Cerrar"
                             >
                                 <IconClose className="h-5 w-5" />
                             </button>
                         </div>
 
-                        <div ref={commentsListRef} className="min-h-0 flex-1 overflow-y-auto px-3 py-3 sm:px-4">
+                        <div
+                            ref={commentsListRef}
+                            className="min-h-0 flex-1 overflow-y-auto bg-[var(--app-bg)] px-3 py-3 sm:px-4"
+                        >
                             {localComments.length === 0 ? (
-                                <p className="py-8 text-center text-sm text-slate-500 dark:text-slate-400">Sé el primero en comentar.</p>
+                                <p className="py-8 text-center text-sm text-[var(--app-subtle)]">Sé el primero en comentar.</p>
                             ) : (
                                 <div className="space-y-3">
                                     {localComments.map((c) => (
@@ -1285,20 +1765,21 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
                                             onSaveEdit={saveCommentEdit}
                                             onCancelEdit={cancelCommentEdit}
                                             onDelete={deleteComment}
+                                            onOpenCommentImages={openCommentImageViewer}
                                         />
                                     ))}
                                 </div>
                             )}
                         </div>
 
-                        <div className="shrink-0 border-t border-slate-100 bg-slate-50/95 p-3 dark:border-slate-700 dark:bg-slate-900/95 sm:rounded-b-2xl">
+                        <div className="shrink-0 border-t border-[var(--app-subtle)]/30 bg-[color-mix(in_srgb,var(--app-card)_97%,var(--app-bg)_3%)] p-3 sm:rounded-b-2xl">
                             <textarea
                                 value={commentText}
                                 onChange={(e) => setCommentText(e.target.value)}
                                 rows={2}
                                 maxLength={3000}
                                 placeholder="Escribe un comentario…"
-                                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-950 dark:text-slate-50"
+                                className="w-full rounded-xl border border-[var(--app-subtle)]/45 bg-[var(--app-bg)] px-3 py-2 text-sm text-[var(--app-text)] placeholder:text-[var(--app-subtle)]"
                             />
                             <div className="mt-2 flex flex-wrap items-center gap-2">
                                 <input
@@ -1306,7 +1787,7 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
                                     type="file"
                                     accept="image/*"
                                     multiple
-                                    className="max-w-full text-[0.7rem] file:mr-2 file:rounded-lg file:border-0 file:bg-slate-200 file:px-2 file:py-1 file:text-[0.65rem] file:font-bold dark:file:bg-slate-700"
+                                    className="max-w-full text-[0.7rem] file:mr-2 file:rounded-lg file:border-0 file:bg-[var(--app-primary)]/15 file:px-2 file:py-1 file:text-[0.65rem] file:font-bold file:text-[var(--app-text)]"
                                     onChange={(e) => {
                                         appendCommentFiles(e.target.files)
                                         const input = e.target
@@ -1316,7 +1797,7 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
                                     }}
                                 />
                                 {commentFileEntries.length > 0 ? (
-                                    <span className="text-[0.7rem] text-slate-500">{commentFileEntries.length} imagen(es)</span>
+                                    <span className="text-[0.7rem] text-[var(--app-subtle)]">{commentFileEntries.length} imagen(es)</span>
                                 ) : null}
                             </div>
                             {commentFileEntries.length > 0 ? (
@@ -1327,13 +1808,13 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
                                             <img
                                                 src={e.previewUrl}
                                                 alt=""
-                                                className="h-16 w-16 rounded-lg border border-slate-200 bg-white object-contain dark:border-slate-600 dark:bg-slate-950"
+                                                className="h-16 w-16 rounded-lg border border-[var(--app-subtle)]/40 bg-[var(--app-card)] object-contain"
                                             />
                                             <button
                                                 type="button"
                                                 title="Quitar imagen"
                                                 onClick={() => removeCommentFileEntry(e.id)}
-                                                className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/70 text-[10px] font-bold text-white shadow"
+                                                className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-[var(--app-text)]/85 text-[10px] font-bold text-[var(--app-card)] shadow"
                                             >
                                                 ×
                                             </button>
@@ -1355,7 +1836,7 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
                   )
                 : null}
 
-            {threadModalOpen && threadRootComment && typeof document !== 'undefined'
+            {threadModalOpen && !mediaLightboxOpen && !commentImageViewerOpen && threadRootComment && typeof document !== 'undefined'
                 ? createPortal(
                       <div
                           className={THREAD_MODAL_BACKDROP}
@@ -1366,13 +1847,13 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
                               if (e.target === e.currentTarget) closeThreadModal()
                           }}
                       >
-                          <div className="pointer-events-auto flex max-h-[min(88vh,720px)] w-full max-w-lg flex-col rounded-t-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-600 dark:bg-[#0b1220] md:max-h-[min(85vh,680px)] md:rounded-2xl">
-                              <div className="flex shrink-0 items-center border-b border-slate-100 px-2 py-2 dark:border-slate-700 sm:px-3">
+                          <div className="pointer-events-auto flex max-h-[min(88vh,720px)] w-full max-w-lg flex-col rounded-t-2xl border border-[var(--app-subtle)]/40 bg-[var(--app-card)] text-[var(--app-text)] shadow-2xl md:max-h-[min(85vh,680px)] md:rounded-2xl">
+                              <div className="flex shrink-0 items-center border-b border-[var(--app-subtle)]/30 px-2 py-2 sm:px-3">
                                   <div className="flex min-w-0 flex-1 justify-start">
                                       <button
                                           type="button"
                                           onClick={closeThreadModal}
-                                          className="inline-flex min-h-[44px] min-w-[44px] items-center gap-1.5 rounded-xl px-2 py-1.5 text-sm font-bold text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                                          className="inline-flex min-h-[44px] min-w-[44px] items-center gap-1.5 rounded-xl px-2 py-1.5 text-sm font-bold text-[var(--app-text)] transition hover:bg-[var(--app-accent)]/12"
                                           aria-label="Regresar a la lista de comentarios"
                                       >
                                           <IconArrowLeft className="h-5 w-5 shrink-0" />
@@ -1381,18 +1862,18 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
                                   </div>
                                   <h2
                                       id={`thread-${post.id}-${threadRootComment.id}`}
-                                      className="shrink-0 truncate px-1 text-center text-base font-bold text-slate-900 dark:text-slate-50"
+                                      className="shrink-0 truncate px-1 text-center text-base font-bold text-[var(--app-text)]"
                                   >
                                       Respuestas
                                       {threadFlatRows.length > 0 ? (
-                                          <span className="font-semibold text-slate-500"> ({threadFlatRows.length})</span>
+                                          <span className="font-semibold text-[var(--app-subtle)]"> ({threadFlatRows.length})</span>
                                       ) : null}
                                   </h2>
                                   <div className="flex flex-1 justify-end">
                                       <button
                                           type="button"
                                           onClick={closeThreadModal}
-                                          className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+                                          className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full p-2 text-[var(--app-subtle)] transition hover:bg-[var(--app-accent)]/12 hover:text-[var(--app-text)]"
                                           aria-label="Cerrar hilo"
                                       >
                                           <IconClose className="h-5 w-5" />
@@ -1400,7 +1881,10 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
                                   </div>
                               </div>
 
-                              <div ref={threadListRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto px-3 py-3 sm:px-4">
+                              <div
+                                  ref={threadListRef}
+                                  className="min-h-0 flex-1 space-y-3 overflow-y-auto bg-[var(--app-bg)] px-3 py-3 sm:px-4"
+                              >
                                   <ProfileFeedComment
                                       c={threadRootComment}
                                       variant="thread"
@@ -1425,10 +1909,11 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
                                       onSaveEdit={saveCommentEdit}
                                       onCancelEdit={cancelCommentEdit}
                                       onDelete={deleteComment}
+                                      onOpenCommentImages={openCommentImageViewer}
                                   />
                                   {threadFlatRows.length > 0 ? (
                                       <>
-                                          <p className="pt-1 text-[0.65rem] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                                          <p className="pt-1 text-[0.65rem] font-bold uppercase tracking-wide text-[var(--app-subtle)]">
                                               Más en este hilo
                                           </p>
                                           <div className="space-y-2">
@@ -1459,18 +1944,19 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
                                                       onSaveEdit={saveCommentEdit}
                                                       onCancelEdit={cancelCommentEdit}
                                                       onDelete={deleteComment}
+                                                      onOpenCommentImages={openCommentImageViewer}
                                                   />
                                               ))}
                                           </div>
                                       </>
                                   ) : (
-                                      <p className="text-center text-sm text-slate-500 dark:text-slate-400">Aún no hay respuestas en este hilo.</p>
+                                      <p className="text-center text-sm text-[var(--app-subtle)]">Aún no hay respuestas en este hilo.</p>
                                   )}
                               </div>
 
-                              <div className="shrink-0 border-t border-slate-100 bg-slate-50/95 p-3 dark:border-slate-700 dark:bg-slate-900/95 sm:rounded-b-2xl">
+                              <div className="shrink-0 border-t border-[var(--app-subtle)]/30 bg-[color-mix(in_srgb,var(--app-card)_97%,var(--app-bg)_3%)] p-3 sm:rounded-b-2xl">
                                   {threadReplyParentId != null ? (
-                                      <p className="mb-2 text-xs text-indigo-600 dark:text-indigo-400">
+                                      <p className="mb-2 text-xs text-[var(--app-accent)]">
                                           Respondiendo a <strong>{threadReplyToName}</strong>{' '}
                                           <button type="button" onClick={clearThreadReply} className="font-bold underline">
                                               Cancelar
@@ -1483,7 +1969,7 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
                                       rows={2}
                                       maxLength={3000}
                                       placeholder="Escribe una respuesta…"
-                                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-950 dark:text-slate-50"
+                                      className="w-full rounded-xl border border-[var(--app-subtle)]/45 bg-[var(--app-bg)] px-3 py-2 text-sm text-[var(--app-text)] placeholder:text-[var(--app-subtle)]"
                                   />
                                   <div className="mt-2 flex flex-wrap items-center gap-2">
                                       <input
@@ -1491,7 +1977,7 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
                                           type="file"
                                           accept="image/*"
                                           multiple
-                                          className="max-w-full text-[0.7rem] file:mr-2 file:rounded-lg file:border-0 file:bg-slate-200 file:px-2 file:py-1 file:text-[0.65rem] file:font-bold dark:file:bg-slate-700"
+                                          className="max-w-full text-[0.7rem] file:mr-2 file:rounded-lg file:border-0 file:bg-[var(--app-primary)]/15 file:px-2 file:py-1 file:text-[0.65rem] file:font-bold file:text-[var(--app-text)]"
                                           onChange={(e) => {
                                               appendThreadFiles(e.target.files)
                                               const input = e.target
@@ -1501,7 +1987,7 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
                                           }}
                                       />
                                       {threadFileEntries.length > 0 ? (
-                                          <span className="text-[0.7rem] text-slate-500">{threadFileEntries.length} imagen(es)</span>
+                                          <span className="text-[0.7rem] text-[var(--app-subtle)]">{threadFileEntries.length} imagen(es)</span>
                                       ) : null}
                                   </div>
                                   {threadFileEntries.length > 0 ? (
@@ -1512,13 +1998,13 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
                                                   <img
                                                       src={e.previewUrl}
                                                       alt=""
-                                                      className="h-16 w-16 rounded-lg border border-slate-200 bg-white object-contain dark:border-slate-600 dark:bg-slate-950"
+                                                      className="h-16 w-16 rounded-lg border border-[var(--app-subtle)]/40 bg-[var(--app-card)] object-contain"
                                                   />
                                                   <button
                                                       type="button"
                                                       title="Quitar imagen"
                                                       onClick={() => removeThreadFileEntry(e.id)}
-                                                      className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/70 text-[10px] font-bold text-white shadow"
+                                                      className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-[var(--app-text)]/85 text-[10px] font-bold text-[var(--app-card)] shadow"
                                                   >
                                                       ×
                                                   </button>

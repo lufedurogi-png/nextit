@@ -39,9 +39,9 @@ const RootLayout = ({ children }) => {
 export const metadata = {
     title: 'Viku',
     icons: {
-        icon: '/Imagenes/icon_logo_todoparalaoficina.jpeg',
-        shortcut: '/Imagenes/icon_logo_todoparalaoficina.jpeg',
-        apple: '/Imagenes/icon_logo_todoparalaoficina.jpeg',
+        icon: '/Imagenes/logo_viku.png',
+        shortcut: '/Imagenes/logo_viku.png',
+        apple: '/Imagenes/logo_viku.png',
     },
 }
 

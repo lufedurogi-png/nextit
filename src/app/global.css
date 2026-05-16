@@ -111,6 +111,7 @@ body {
         color: var(--app-text) !important;
     }
 
+    /* Con tema UI del cliente, --app-* ya vienen de applyUiTheme() en <html>; aquí solo alineamos utilidades legacy (bg-white, slate…) con ese preset — sin petróleo fijo. */
     .theme-dark .app-card,
     .theme-dark .bg-white,
     .theme-dark .bg-white\/80,
@@ -122,8 +123,8 @@ body {
     .theme-dark .bg-indigo-50,
     .theme-dark .bg-emerald-50,
     .theme-dark .bg-amber-50 {
-        background-color: #252d3f !important;
-        color: #dbe5f2 !important;
+        background-color: var(--app-card) !important;
+        color: var(--app-text) !important;
     }
 
     .theme-dark .app-text,
@@ -133,7 +134,7 @@ body {
     .theme-dark .text-gray-900,
     .theme-dark .text-gray-800,
     .theme-dark .text-blue-950 {
-        color: #e8eef8 !important;
+        color: var(--app-text) !important;
     }
 
     .theme-dark .app-subtle,
@@ -142,7 +143,7 @@ body {
     .theme-dark .text-gray-500,
     .theme-dark .text-slate-600,
     .theme-dark .text-slate-500 {
-        color: #9fb0c8 !important;
+        color: var(--app-subtle) !important;
     }
 
     .theme-dark .border-gray-100,
@@ -150,12 +151,12 @@ body {
     .theme-dark .border-slate-300,
     .theme-dark .border-slate-200,
     .theme-dark .border-blue-100 {
-        border-color: #25324a !important;
+        border-color: color-mix(in srgb, var(--app-subtle) 38%, var(--app-card)) !important;
     }
 
     .theme-dark input::placeholder,
     .theme-dark textarea::placeholder {
-        color: #64748b !important;
+        color: color-mix(in srgb, var(--app-subtle) 75%, transparent) !important;
     }
 
     .theme-dark .icon-adapt {

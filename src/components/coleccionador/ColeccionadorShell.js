@@ -323,20 +323,27 @@ export default function ColeccionadorShell({ children }) {
 
     return (
         <div className="min-h-screen bg-[var(--app-bg)] app-bg-pattern font-sans text-[var(--app-text)]">
-            <header className="hidden md:fixed md:inset-x-0 md:top-0 md:z-[70] md:block md:h-16 md:border-b md:border-slate-200/80 md:bg-white/90 md:backdrop-blur md:dark:border-slate-600/50 md:dark:bg-slate-800/95">
+            <header className="hidden md:fixed md:inset-x-0 md:top-0 md:z-[70] md:block md:h-16 md:border-b md:border-[var(--app-subtle)]/22 md:bg-[color-mix(in_srgb,var(--app-card)_91%,var(--app-bg)_9%)] md:backdrop-blur">
                 <div className="mx-auto flex h-full max-w-[1600px] items-center gap-4 px-4">
                     <div className="flex min-w-0 items-center gap-3">
-                        <div className="grid h-10 w-10 place-items-center rounded-xl bg-[var(--app-accent)] text-lg font-bold text-white shadow-md">V</div>
+                        <Link
+                            href="/inicio"
+                            className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[var(--app-card)] shadow-md ring-1 ring-[var(--app-subtle)]/25"
+                            aria-label="Viku — inicio"
+                        >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src="/Imagenes/logo_viku.png" alt="" className="h-full w-full object-contain p-1" />
+                        </Link>
                         <div className="relative hidden lg:block">
                             <input
                                 readOnly
                                 value="Buscar colecciones, grupos, usuarios..."
-                                className="w-72 rounded-full border border-slate-200 bg-slate-100 px-4 py-2 text-xs font-semibold text-slate-500 outline-none dark:border-slate-600/60 dark:bg-slate-900/80 dark:text-slate-300"
+                                className="w-72 rounded-full border border-[var(--app-subtle)]/30 bg-[color-mix(in_srgb,var(--app-card)_82%,var(--app-bg)_18%)] px-4 py-2 text-xs font-semibold text-[var(--app-subtle)] outline-none"
                             />
                         </div>
                     </div>
 
-                    <nav className="mx-auto flex items-center gap-1 rounded-2xl bg-slate-100/80 px-2 py-1 dark:bg-slate-900/60">
+                    <nav className="mx-auto flex items-center gap-1 rounded-2xl border border-[var(--app-subtle)]/15 bg-[color-mix(in_srgb,var(--app-card)_72%,var(--app-bg)_28%)] px-2 py-1">
                         {nav.slice(0, 5).map(({ href, label, Icon }) => {
                             const active = pathname === href
                             return (
@@ -345,8 +352,8 @@ export default function ColeccionadorShell({ children }) {
                                     href={href}
                                     className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold transition ${
                                         active
-                                            ? 'bg-white text-[var(--app-accent)] shadow-sm dark:bg-slate-900/90 dark:text-[var(--app-accent)] dark:shadow-none'
-                                            : 'text-slate-600 hover:bg-white/80 dark:text-slate-200 dark:hover:bg-slate-700/80'
+                                            ? 'bg-[var(--app-card)] text-[var(--app-accent)] shadow-sm'
+                                            : 'text-[var(--app-subtle)] hover:bg-[color-mix(in_srgb,var(--app-card)_88%,var(--app-bg)_12%)]'
                                     }`}
                                 >
                                     <Icon className="h-4 w-4" />
@@ -357,7 +364,7 @@ export default function ColeccionadorShell({ children }) {
                     </nav>
 
                     <div className="ml-auto flex items-center gap-2">
-                        <Link href="/buscar" className="grid h-9 w-9 place-items-center rounded-full bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                        <Link href="/buscar" className="grid h-9 w-9 place-items-center rounded-full bg-[color-mix(in_srgb,var(--app-card)_78%,var(--app-bg)_22%)] text-[var(--app-text)]">
                             <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
                                 <circle cx="11" cy="11" r="7" />
                                 <path d="M20 20l-3.5-3.5" strokeLinecap="round" />
@@ -368,7 +375,7 @@ export default function ColeccionadorShell({ children }) {
                             onClick={async () => {
                                 setShowNotif((v) => !v)
                             }}
-                            className="relative grid h-9 w-9 place-items-center rounded-full bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                            className="relative grid h-9 w-9 place-items-center rounded-full bg-[color-mix(in_srgb,var(--app-card)_78%,var(--app-bg)_22%)] text-[var(--app-text)]"
                         >
                             <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
                                 <path d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2a2 2 0 01-.6 1.4L4 17h5" strokeLinecap="round" />
@@ -376,13 +383,13 @@ export default function ColeccionadorShell({ children }) {
                             </svg>
                             {unread > 0 ? <span className="absolute -right-1 -top-1 rounded-full bg-red-600 px-1.5 text-[10px] font-bold text-white">{unread}</span> : null}
                         </button>
-                        <Link href="/mensajes" className="grid h-9 w-9 place-items-center rounded-full bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                        <Link href="/mensajes" className="grid h-9 w-9 place-items-center rounded-full bg-[color-mix(in_srgb,var(--app-card)_78%,var(--app-bg)_22%)] text-[var(--app-text)]">
                             <IconChat className="h-4 w-4" />
                         </Link>
                         <button
                             type="button"
                             onClick={() => (accountMenuOpen ? closeAccountMenu() : openAccountMenu())}
-                            className="grid h-9 w-9 place-items-center overflow-hidden rounded-full border border-slate-200 bg-slate-100 ring-offset-2 transition hover:ring-2 hover:ring-[var(--app-accent)]/50 dark:border-slate-700 dark:bg-slate-800"
+                            className="grid h-9 w-9 place-items-center overflow-hidden rounded-full border border-[var(--app-subtle)]/35 bg-[color-mix(in_srgb,var(--app-card)_78%,var(--app-bg)_22%)] ring-offset-2 ring-offset-[var(--app-bg)] transition hover:ring-2 hover:ring-[var(--app-accent)]/50"
                             aria-expanded={accountMenuOpen}
                             aria-haspopup="dialog"
                             aria-label="Menú de tu cuenta"
@@ -393,8 +400,8 @@ export default function ColeccionadorShell({ children }) {
                     </div>
                 </div>
                 {showNotif ? (
-                    <div className="absolute right-4 top-14 z-50 w-80 rounded-2xl border border-slate-200 bg-white p-3 shadow-xl dark:border-slate-600/50 dark:bg-slate-900/98">
-                        <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">Notificaciones</p>
+                    <div className="absolute right-4 top-14 z-50 w-80 rounded-2xl border border-[var(--app-subtle)]/35 bg-[var(--app-card)] p-3 text-[var(--app-text)] shadow-xl">
+                        <p className="text-xs font-black uppercase tracking-[0.14em] text-[var(--app-subtle)]">Notificaciones</p>
                         <div className="mt-2 max-h-80 space-y-2 overflow-y-auto">
                             {notifications.slice(0, 12).map((n) => (
                                 <button
@@ -403,42 +410,42 @@ export default function ColeccionadorShell({ children }) {
                                     onClick={() => openNotification(n)}
                                     className={`w-full rounded-xl border p-2 text-left text-xs transition ${
                                         n.read_at
-                                            ? 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-100'
-                                            : 'border-[var(--app-accent)]/35 bg-indigo-50/60 text-slate-800 hover:bg-indigo-50 dark:border-indigo-500/40 dark:bg-indigo-950/25 dark:text-slate-50'
+                                            ? 'border-[var(--app-subtle)]/25 bg-[color-mix(in_srgb,var(--app-card)_92%,var(--app-bg)_8%)] text-[var(--app-text)] hover:border-[var(--app-subtle)]/40'
+                                            : 'border-[var(--app-accent)]/40 bg-[color-mix(in_srgb,var(--app-accent)_16%,var(--app-card)_84%)] text-[var(--app-text)] hover:bg-[color-mix(in_srgb,var(--app-accent)_22%,var(--app-card)_78%)]'
                                     }`}
                                 >
                                     <p className="font-semibold">{n.message}</p>
-                                    <p className="mt-1 text-[10px] text-slate-400">{new Date(n.created_at).toLocaleString()}</p>
+                                    <p className="mt-1 text-[10px] text-[var(--app-subtle)]">{new Date(n.created_at).toLocaleString()}</p>
                                 </button>
                             ))}
-                            {notifications.length === 0 ? <p className="text-xs text-slate-500">Sin notificaciones nuevas.</p> : null}
+                            {notifications.length === 0 ? <p className="text-xs text-[var(--app-subtle)]">Sin notificaciones nuevas.</p> : null}
                         </div>
                     </div>
                 ) : null}
             </header>
 
-            <main ref={mainContentRef} className="relative z-0 pb-24 md:ml-72 md:pt-16 xl:mr-[22rem]">
+            <main ref={mainContentRef} className="relative z-0 min-h-0 bg-[var(--app-bg)] pb-24 md:ml-72 md:pt-16 xl:mr-[22rem]">
                 {children}
                 <VikuChanLayer mainRef={mainContentRef} userId={user?.id} active={vikuLayerActive} />
             </main>
 
             <aside
-                className="hidden md:flex md:fixed md:inset-y-0 md:left-0 md:top-16 md:z-[60] md:w-72 md:flex-col md:border-r md:border-slate-200/80 md:bg-white/85 md:backdrop-blur md:px-3 md:py-4 md:dark:border-slate-600/50 md:dark:bg-slate-800/95"
+                className="hidden md:flex md:fixed md:inset-y-0 md:left-0 md:top-16 md:z-[60] md:w-72 md:flex-col md:border-r md:border-[var(--app-subtle)]/22 md:bg-[color-mix(in_srgb,var(--app-card)_90%,var(--app-bg)_10%)] md:backdrop-blur md:px-3 md:py-4"
                 aria-label="Navegación principal"
             >
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-600/50 dark:bg-slate-900/70">
+                <div className="rounded-2xl border border-[var(--app-subtle)]/25 bg-[color-mix(in_srgb,var(--app-card)_88%,var(--app-bg)_12%)] p-3">
                     <button
                         type="button"
                         onClick={openAccountMenu}
-                        className="flex w-full items-center gap-2 rounded-xl text-left transition hover:bg-white/80 dark:hover:bg-slate-800/80"
+                        className="flex w-full items-center gap-2 rounded-xl text-left transition hover:bg-[color-mix(in_srgb,var(--app-card)_94%,var(--app-accent)_6%)]"
                     >
                         <div className="h-10 w-10 shrink-0 overflow-hidden rounded-xl">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={storageUrl(user?.avatar_path)} alt="" className="h-full w-full object-cover" />
                         </div>
                         <div className="min-w-0">
-                            <p className="text-sm font-extrabold text-slate-900 dark:text-slate-50">{user?.name || 'Coleccionista'}</p>
-                            <p className="text-xs text-slate-500 dark:text-slate-400">Tu panel social</p>
+                            <p className="text-sm font-extrabold text-[var(--app-text)]">{user?.name || 'Coleccionista'}</p>
+                            <p className="text-xs text-[var(--app-subtle)]">Tu panel social</p>
                         </div>
                     </button>
                 </div>
@@ -451,8 +458,8 @@ export default function ColeccionadorShell({ children }) {
                                 href={href}
                                 className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition md:duration-200 ${
                                     active
-                                        ? 'bg-[var(--app-accent)] text-white shadow-[0_8px_18px_rgba(99,102,241,0.35)]'
-                                        : 'text-slate-600 hover:bg-slate-200/80 hover:text-slate-900 dark:text-slate-200 dark:hover:bg-slate-700/70 dark:hover:text-white'
+                                        ? 'bg-[var(--app-accent)] text-white shadow-lg'
+                                        : 'text-[var(--app-subtle)] hover:bg-[color-mix(in_srgb,var(--app-card)_82%,var(--app-bg)_18%)] hover:text-[var(--app-text)]'
                                 }`}
                             >
                                 <Icon className="h-4 w-4 shrink-0" />
@@ -464,25 +471,25 @@ export default function ColeccionadorShell({ children }) {
                 </nav>
             </aside>
 
-            <aside className="viku-exclude-rail hidden xl:fixed xl:inset-y-0 xl:right-0 xl:top-16 xl:z-[55] xl:block xl:w-[22rem] xl:border-l xl:border-slate-200/80 xl:bg-white/80 xl:px-4 xl:py-4 xl:backdrop-blur xl:dark:border-slate-600/50 xl:dark:bg-slate-800/95">
+            <aside className="viku-exclude-rail hidden xl:fixed xl:inset-y-0 xl:right-0 xl:top-16 xl:z-[55] xl:block xl:w-[22rem] xl:border-l xl:border-[var(--app-subtle)]/22 xl:bg-[color-mix(in_srgb,var(--app-card)_90%,var(--app-bg)_10%)] xl:px-4 xl:py-4 xl:backdrop-blur">
                 <div className="space-y-3">
-                    <section className="rounded-2xl border border-slate-200 bg-white/90 p-3 dark:border-slate-600/50 dark:bg-slate-900/75">
-                        <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">Actividad</p>
-                        <p className="mt-2 text-sm font-semibold text-slate-700 dark:text-slate-200">Comparte un faltante o un nuevo hallazgo desde Inicio y Perfil.</p>
+                    <section className="rounded-2xl border border-[var(--app-subtle)]/25 bg-[color-mix(in_srgb,var(--app-card)_94%,var(--app-bg)_6%)] p-3">
+                        <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--app-subtle)]">Actividad</p>
+                        <p className="mt-2 text-sm font-semibold text-[var(--app-text)]">Comparte un faltante o un nuevo hallazgo desde Inicio y Perfil.</p>
                     </section>
-                    <section className="rounded-2xl border border-slate-200 bg-white/90 p-3 dark:border-slate-600/50 dark:bg-slate-900/75">
-                        <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">Accesos rápidos</p>
+                    <section className="rounded-2xl border border-[var(--app-subtle)]/25 bg-[color-mix(in_srgb,var(--app-card)_94%,var(--app-bg)_6%)] p-3">
+                        <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--app-subtle)]">Accesos rápidos</p>
                         <div className="mt-2 grid grid-cols-2 gap-2">
-                            <Link href="/escanear" className="rounded-xl bg-slate-100 px-3 py-2 text-xs font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-100">
+                            <Link href="/escanear" className="rounded-xl bg-[color-mix(in_srgb,var(--app-card)_78%,var(--app-bg)_22%)] px-3 py-2 text-xs font-bold text-[var(--app-text)]">
                                 Registrar
                             </Link>
-                            <Link href="/comunidad" className="rounded-xl bg-slate-100 px-3 py-2 text-xs font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-100">
+                            <Link href="/comunidad" className="rounded-xl bg-[color-mix(in_srgb,var(--app-card)_78%,var(--app-bg)_22%)] px-3 py-2 text-xs font-bold text-[var(--app-text)]">
                                 Grupos
                             </Link>
-                            <Link href="/tienda" className="rounded-xl bg-slate-100 px-3 py-2 text-xs font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-100">
+                            <Link href="/tienda" className="rounded-xl bg-[color-mix(in_srgb,var(--app-card)_78%,var(--app-bg)_22%)] px-3 py-2 text-xs font-bold text-[var(--app-text)]">
                                 Tienda
                             </Link>
-                            <Link href="/mensajes" className="rounded-xl bg-slate-100 px-3 py-2 text-xs font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-100">
+                            <Link href="/mensajes" className="rounded-xl bg-[color-mix(in_srgb,var(--app-card)_78%,var(--app-bg)_22%)] px-3 py-2 text-xs font-bold text-[var(--app-text)]">
                                 Mensajes
                             </Link>
                         </div>
@@ -504,7 +511,7 @@ export default function ColeccionadorShell({ children }) {
                               role="dialog"
                               aria-modal="true"
                               aria-labelledby="account-menu-title"
-                              className="pointer-events-auto relative w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-5 pt-12 shadow-2xl dark:border-slate-600 dark:bg-slate-900 sm:mr-0"
+                              className="pointer-events-auto relative w-full max-w-sm rounded-2xl border border-[var(--app-subtle)]/35 bg-[var(--app-card)] p-5 pt-12 text-[var(--app-text)] shadow-2xl sm:mr-0"
                           >
                               <h2 id="account-menu-title" className="sr-only">
                                   Tu cuenta
@@ -512,20 +519,20 @@ export default function ColeccionadorShell({ children }) {
                               <button
                                   type="button"
                                   onClick={closeAccountMenu}
-                                  className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+                                  className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full text-[var(--app-subtle)] hover:bg-[var(--app-accent)]/12"
                                   aria-label="Cerrar"
                               >
                                   <IconClose className="h-5 w-5" />
                               </button>
                               <div className="flex flex-col items-center text-center">
-                                  <div className="h-20 w-20 overflow-hidden rounded-full border-2 border-slate-200 dark:border-slate-600">
+                                  <div className="h-20 w-20 overflow-hidden rounded-full border-2 border-[var(--app-subtle)]/40">
                                       {/* eslint-disable-next-line @next/next/no-img-element */}
                                       <img src={storageUrl(user?.avatar_path)} alt="" className="h-full w-full object-cover" />
                                   </div>
-                                  <p className="mt-3 text-lg font-extrabold text-slate-900 dark:text-slate-50">{user?.name || 'Coleccionista'}</p>
+                                  <p className="mt-3 text-lg font-extrabold text-[var(--app-text)]">{user?.name || 'Coleccionista'}</p>
                               </div>
-                              <div className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 dark:border-slate-600 dark:bg-slate-800/80">
-                                  <p className="min-w-0 text-sm font-semibold text-slate-700 dark:text-slate-200">
+                              <div className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[var(--app-subtle)]/30 bg-[color-mix(in_srgb,var(--app-card)_92%,var(--app-bg)_8%)] px-3 py-2.5">
+                                  <p className="min-w-0 text-sm font-semibold text-[var(--app-text)]">
                                       Modo:{' '}
                                       <span className="font-extrabold text-[var(--app-accent)]">{getUiThemeById(uiTheme).name}</span>
                                   </p>
@@ -538,8 +545,8 @@ export default function ColeccionadorShell({ children }) {
                                   </button>
                               </div>
                               {proActive ? (
-                                  <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 dark:border-slate-600 dark:bg-slate-800/80">
-                                      <p className="min-w-0 text-sm font-semibold text-slate-700 dark:text-slate-200">Modo Viku chan</p>
+                                  <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-[var(--app-subtle)]/30 bg-[color-mix(in_srgb,var(--app-card)_92%,var(--app-bg)_8%)] px-3 py-2.5">
+                                      <p className="min-w-0 text-sm font-semibold text-[var(--app-text)]">Modo Viku chan</p>
                                       <button
                                           type="button"
                                           role="switch"
@@ -558,12 +565,12 @@ export default function ColeccionadorShell({ children }) {
                                               }
                                           }}
                                           className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors ${
-                                              Number(user?.viku_chan_mode) === 1 ? 'bg-emerald-600' : 'bg-slate-300 dark:bg-slate-600'
+                                              Number(user?.viku_chan_mode) === 1 ? 'bg-emerald-600' : 'bg-[color-mix(in_srgb,var(--app-subtle)_45%,var(--app-card)_55%)]'
                                           } ${vikuToggleSaving ? 'opacity-60' : ''}`}
                                           aria-label="Activar o desactivar Modo Viku chan"
                                       >
                                           <span
-                                              className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+                                              className={`inline-block h-5 w-5 transform rounded-full bg-[#ffffff] shadow transition-transform ${
                                                   Number(user?.viku_chan_mode) === 1 ? 'translate-x-6' : 'translate-x-1'
                                               }`}
                                           />
@@ -573,7 +580,7 @@ export default function ColeccionadorShell({ children }) {
                               <Link
                                   href="/perfil"
                                   onClick={closeAccountMenu}
-                                  className="mt-3 block w-full rounded-xl border border-slate-200 py-2.5 text-center text-xs font-bold text-slate-600 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+                                  className="mt-3 block w-full rounded-xl border border-[var(--app-subtle)]/35 py-2.5 text-center text-xs font-bold text-[var(--app-text)] transition hover:bg-[var(--app-accent)]/10"
                               >
                                   Ir a mi perfil
                               </Link>
@@ -611,25 +618,25 @@ export default function ColeccionadorShell({ children }) {
                               if (e.target === e.currentTarget) backFromAppearanceToMenu()
                           }}
                       >
-                          <div className="pointer-events-auto flex max-h-[min(92vh,720px)] w-full max-w-sm flex-col rounded-t-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-600 dark:bg-slate-900 sm:rounded-2xl md:max-h-[min(88vh,680px)]">
-                              <div className="flex shrink-0 items-center gap-2 border-b border-slate-100 px-3 py-3 dark:border-slate-700 sm:px-4">
+                          <div className="pointer-events-auto flex max-h-[min(92vh,720px)] w-full max-w-sm flex-col rounded-t-2xl border border-[var(--app-subtle)]/35 bg-[var(--app-card)] text-[var(--app-text)] shadow-2xl sm:rounded-2xl md:max-h-[min(88vh,680px)]">
+                              <div className="flex shrink-0 items-center gap-2 border-b border-[var(--app-subtle)]/20 px-3 py-3 sm:px-4">
                                   <button
                                       type="button"
                                       onClick={backFromAppearanceToMenu}
-                                      className="inline-flex min-h-[44px] min-w-[44px] items-center gap-1.5 rounded-xl px-2 py-1.5 text-sm font-bold text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                                      className="inline-flex min-h-[44px] min-w-[44px] items-center gap-1.5 rounded-xl px-2 py-1.5 text-sm font-bold text-[var(--app-text)] transition hover:bg-[var(--app-accent)]/12"
                                       aria-label="Regresar al menú de cuenta"
                                   >
                                       <IconArrowLeft className="h-5 w-5 shrink-0" />
                                       <span className="whitespace-nowrap text-xs sm:text-sm">Regresar</span>
                                   </button>
-                                  <h2 id="appearance-modal-title" className="min-w-0 flex-1 truncate text-center text-sm font-extrabold text-slate-900 dark:text-slate-50 sm:text-base">
+                                  <h2 id="appearance-modal-title" className="min-w-0 flex-1 truncate text-center text-sm font-extrabold text-[var(--app-text)] sm:text-base">
                                       Apariencia
                                   </h2>
                                   <div className="flex w-[5.5rem] shrink-0 justify-end sm:w-24">
                                       <button
                                           type="button"
                                           onClick={closeAppearanceModal}
-                                          className="grid h-9 w-9 place-items-center rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+                                          className="grid h-9 w-9 place-items-center rounded-full text-[var(--app-subtle)] hover:bg-[var(--app-accent)]/12"
                                           aria-label="Cerrar"
                                       >
                                           <IconClose className="h-5 w-5" />
@@ -651,7 +658,7 @@ export default function ColeccionadorShell({ children }) {
                 : null}
 
             <nav
-                className="bottom-nav-shell fixed bottom-0 left-0 right-0 z-50 border-t border-transparent bg-white/95 backdrop-blur nav-entrance dark:border-slate-600/40 dark:bg-slate-800/98 dark:shadow-[0_-10px_32px_rgba(0,0,0,0.35)] md:hidden"
+                className="bottom-nav-shell fixed bottom-0 left-0 right-0 z-50 border-t border-[var(--app-subtle)]/22 bg-[color-mix(in_srgb,var(--app-card)_96%,var(--app-bg)_4%)] backdrop-blur nav-entrance shadow-[0_-10px_32px_rgba(0,0,0,0.12)] md:hidden dark:shadow-[0_-10px_32px_rgba(0,0,0,0.35)]"
                 aria-label="Navegación principal"
             >
                 <div className="flex overflow-x-auto px-2 py-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
@@ -663,14 +670,14 @@ export default function ColeccionadorShell({ children }) {
                                     key={href}
                                     href={href}
                                     className={`nav-item relative min-w-[3.15rem] flex-1 py-2 text-center ${
-                                        active ? 'text-slate-900 is-active dark:text-slate-50' : 'text-slate-500 dark:text-slate-300'
+                                        active ? 'text-[var(--app-text)] is-active' : 'text-[var(--app-subtle)]'
                                     }`}
                                 >
                                     <span
                                         className={`nav-icon-wrap mx-auto block h-10 w-10 rounded-full ${
                                             active
                                                 ? 'bg-[var(--app-accent)] shadow-lg text-white'
-                                                : 'text-slate-600 dark:text-slate-200'
+                                                : 'text-[var(--app-subtle)]'
                                         } grid place-items-center`}
                                     >
                                         <Icon className="mx-auto h-5 w-5" />
