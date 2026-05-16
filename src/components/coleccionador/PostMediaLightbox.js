@@ -176,6 +176,25 @@ export default function PostMediaLightbox({
     const downloadCurrent = useCallback(async () => {
         if (!currentUrl) return
         const baseName = `imagen-${index + 1}`
+        const extFromUrl = guessExtension(currentUrl, '')
+        const filename = `${baseName}.${extFromUrl}`
+
+        try {
+            const qs = new URLSearchParams({ url: currentUrl, name: filename })
+            const res = await fetch(`/api/download-media?${qs.toString()}`, {
+                method: 'GET',
+                credentials: 'same-origin',
+            })
+            if (!res.ok) throw new Error('proxy')
+            const blob = await res.blob()
+            const mime = blob.type || res.headers.get('content-type') || ''
+            const ext = guessExtension(currentUrl, mime)
+            triggerBlobDownload(blob, `${baseName}.${ext}`)
+            return
+        } catch {
+            /* continuar con descarga directa */
+        }
+
         try {
             const { data, headers } = await axios.get(currentUrl, {
                 responseType: 'blob',
