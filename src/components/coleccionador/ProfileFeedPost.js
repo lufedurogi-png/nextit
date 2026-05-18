@@ -101,11 +101,15 @@ function removeCommentFromTree(tree, targetId) {
         }))
 }
 
+/** Centrado en la columna de contenido (no en todo el viewport): respeta nav md:w-72 y rail xl:w-[22rem]. */
 const FEED_MODAL_BACKDROP =
-    'fixed inset-0 z-[200] flex items-end justify-center bg-transparent p-0 md:items-center md:justify-center md:pl-72 md:pr-6 md:py-6'
+    'fixed inset-0 z-[200] flex items-end justify-center bg-black/40 p-0 md:inset-y-0 md:left-72 md:right-0 md:items-center md:justify-center md:bg-black/45 md:p-6 xl:right-[22rem]'
 
 const THREAD_MODAL_BACKDROP =
-    'fixed inset-0 z-[270] flex items-end justify-center bg-transparent p-0 md:items-center md:justify-center md:pl-72 md:pr-6 md:py-6'
+    'fixed inset-0 z-[270] flex items-end justify-center bg-black/40 p-0 md:inset-y-0 md:left-72 md:right-0 md:items-center md:justify-center md:bg-black/45 md:p-6 xl:right-[22rem]'
+
+const FEED_COMMENTS_MODAL_PANEL =
+    'pointer-events-auto flex w-full max-h-[min(92vh,720px)] max-w-lg flex-col rounded-t-2xl border border-[var(--app-subtle)]/40 bg-[var(--app-card)] text-[var(--app-text)] shadow-2xl md:max-h-[min(85vh,780px)] md:max-w-xl md:rounded-2xl lg:max-w-2xl'
 
 function findCommentByIdInForest(tree, id) {
     if (!Array.isArray(tree) || id == null) return null
@@ -1716,7 +1720,7 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
                               if (e.target === e.currentTarget) closeCommentsModal()
                           }}
                       >
-                          <div className="pointer-events-auto flex max-h-[min(88vh,720px)] w-full max-w-lg flex-col rounded-t-2xl border border-[var(--app-subtle)]/40 bg-[var(--app-card)] text-[var(--app-text)] shadow-2xl md:max-h-[min(85vh,680px)] md:rounded-2xl">
+                          <div className={FEED_COMMENTS_MODAL_PANEL}>
                         <div className="flex shrink-0 items-center justify-between border-b border-[var(--app-subtle)]/30 px-4 py-3">
                             <h2 id={`comments-${post.id}`} className="text-base font-bold text-[var(--app-text)]">
                                 Comentarios
@@ -1847,7 +1851,7 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
                               if (e.target === e.currentTarget) closeThreadModal()
                           }}
                       >
-                          <div className="pointer-events-auto flex max-h-[min(88vh,720px)] w-full max-w-lg flex-col rounded-t-2xl border border-[var(--app-subtle)]/40 bg-[var(--app-card)] text-[var(--app-text)] shadow-2xl md:max-h-[min(85vh,680px)] md:rounded-2xl">
+                          <div className={FEED_COMMENTS_MODAL_PANEL}>
                               <div className="flex shrink-0 items-center border-b border-[var(--app-subtle)]/30 px-2 py-2 sm:px-3">
                                   <div className="flex min-w-0 flex-1 justify-start">
                                       <button
