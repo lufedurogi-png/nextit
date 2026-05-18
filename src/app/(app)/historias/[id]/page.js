@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import axios from '@/lib/axios'
+import AmbientPostImage from '@/components/coleccionador/AmbientPostImage'
 import PageFade from '@/components/coleccionador/PageFade'
 import { storageUrl } from '@/lib/storageUrl'
 import { useAuth } from '@/hooks/auth'
@@ -204,9 +205,13 @@ export default function StoryViewPage() {
                     onTouchStart={onTouchStart}
                     onTouchEnd={onTouchEnd}
                 >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={storageUrl(story.image_path)} alt="" className="h-[82vh] w-full bg-black object-contain" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/40" />
+                    <AmbientPostImage
+                        src={storageUrl(story.image_path)}
+                        containerClassName="h-[82vh]"
+                        innerClassName="h-full min-h-[82vh] w-full"
+                        foregroundClassName="max-h-[82vh] w-full object-contain"
+                    />
+                    <div className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-t from-black/75 via-transparent to-black/40" />
 
                     <button
                         type="button"

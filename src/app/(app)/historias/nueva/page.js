@@ -3,8 +3,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import axios from '@/lib/axios'
+import AmbientPostImage from '@/components/coleccionador/AmbientPostImage'
 import AppHero from '@/components/coleccionador/AppHero'
 import PageFade from '@/components/coleccionador/PageFade'
+import { prepareStoryImageForUpload } from '@/lib/prepareStoryImage'
 import { storageUrl } from '@/lib/storageUrl'
 
 const parseOverlayToList = (raw) => {
@@ -61,6 +63,7 @@ export default function NuevaHistoriaPage() {
     const [existingImagePath, setExistingImagePath] = useState('')
     const [overlayTexts, setOverlayTexts] = useState([])
     const [publishing, setPublishing] = useState(false)
+    const [preparingImage, setPreparingImage] = useState(false)
     const [loadingEdit, setLoadingEdit] = useState(false)
     const [error, setError] = useState('')
     const [draggingIndex, setDraggingIndex] = useState(null)
@@ -144,8 +147,17 @@ export default function NuevaHistoriaPage() {
                 })
                 router.replace(`/historias/${data?.id || ''}`)
             }
-        } catch {
-            setError(isEdit ? 'No se pudo guardar la historia.' : 'No se pudo publicar la historia.')
+        } catch (err) {
+            const apiMsg = err?.response?.data?.message
+            const validation =
+                err?.response?.data?.errors &&
+                typeof err.response.data.errors === 'object' &&
+                Object.values(err.response.data.errors).flat()?.[0]
+            const status = err?.response?.status
+            let fallback = isEdit ? 'No se pudo guardar la historia.' : 'No se pudo publicar la historia.'
+            if (status === 413) fallback = 'La imagen sigue siendo demasiado pesada. Prueba otra foto o recorta antes de subir.'
+            else if (status === 422) fallback = 'Formato o tamaño no válido en el servidor.'
+            setError(String(apiMsg || validation || err?.message || fallback))
         } finally {
             setPublishing(false)
         }
@@ -207,7 +219,7 @@ export default function NuevaHistoriaPage() {
                         type="file"
                         accept="image/*"
                         className="sr-only"
-                        onChange={(e) => {
+                        onChange={async (e) => {
                             const file = e.target.files?.[0]
                             const input = e.target
                             window.queueMicrotask(() => {
@@ -215,10 +227,19 @@ export default function NuevaHistoriaPage() {
                             })
                             if (!(file instanceof File) || file.size <= 0) return
                             clearImage()
-                            setImageEntry({
-                                file,
-                                previewUrl: URL.createObjectURL(file),
-                            })
+                            setError('')
+                            setPreparingImage(true)
+                            try {
+                                const prepared = await prepareStoryImageForUpload(file)
+                                setImageEntry({
+                                    file: prepared,
+                                    previewUrl: URL.createObjectURL(prepared),
+                                })
+                            } catch (prepErr) {
+                                setError(prepErr?.message || 'No se pudo preparar la imagen.')
+                            } finally {
+                                setPreparingImage(false)
+                            }
                         }}
                     />
                     <div className="grid grid-cols-2 gap-2">
@@ -241,14 +262,24 @@ export default function NuevaHistoriaPage() {
                         </button>
                     </div>
 
-                    {previewSrc ? (
+                    {preparingImage ? (
+                        <p className="mt-3 rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center text-sm font-semibold text-slate-600 dark:border-slate-600 dark:bg-slate-950/50 dark:text-slate-300">
+                            Optimizando imagen para subir…
+                        </p>
+                    ) : null}
+
+                    {previewSrc && !preparingImage ? (
                         <div
                             ref={previewRef}
                             onClick={(e) => addOverlayText(e)}
-                            className="relative mt-3 block w-full overflow-hidden rounded-xl border border-slate-200 bg-black dark:border-slate-600"
+                            className="relative mt-3 block w-full overflow-hidden rounded-xl border border-slate-200 bg-[var(--app-card)] dark:border-slate-600"
                         >
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={previewSrc} alt="" className="h-[62vh] w-full object-contain" />
+                            <AmbientPostImage
+                                src={previewSrc}
+                                containerClassName="min-h-[62vh] h-[62vh]"
+                                innerClassName="min-h-[62vh] h-full w-full"
+                                foregroundClassName="max-h-[62vh] w-full object-contain"
+                            />
                             {overlayTexts.map((item, idx) => (
                                 <div
                                     key={`preview-${idx}`}
@@ -320,7 +351,7 @@ export default function NuevaHistoriaPage() {
                         <button
                             type="button"
                             onClick={publish}
-                            disabled={publishing || !canSubmit || loadingEdit}
+                            disabled={publishing || preparingImage || !canSubmit || loadingEdit}
                             className="flex-1 rounded-xl bg-[var(--app-accent)] py-2 text-sm font-bold text-white disabled:opacity-60"
                         >
                             {publishing ? (isEdit ? 'Guardando…' : 'Publicando…') : isEdit ? 'Guardar cambios' : 'Publicar historia'}
