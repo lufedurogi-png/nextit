@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Support\ImageUploadRules;
 use App\Models\CollectorGroup;
 use App\Models\CollectorGroupBan;
 use App\Models\CollectorGroupComment;
@@ -238,7 +239,7 @@ class CollectorGroupController extends Controller
 
         $data = $request->validate([
             'body' => ['required', 'string', 'max:5000'],
-            'images' => ['nullable', 'array', 'max:8'],
+            'images' => ['nullable', 'array', 'max:'.ImageUploadRules::MAX_GROUP_POST_IMAGES],
             'images.*' => ['string', 'max:500'],
         ]);
 
@@ -265,7 +266,7 @@ class CollectorGroupController extends Controller
 
         $data = $request->validate([
             'body' => ['sometimes', 'string', 'max:5000'],
-            'images' => ['sometimes', 'nullable', 'array', 'max:8'],
+            'images' => ['sometimes', 'nullable', 'array', 'max:'.ImageUploadRules::MAX_GROUP_POST_IMAGES],
             'images.*' => ['string', 'max:500'],
         ]);
 
@@ -325,7 +326,7 @@ class CollectorGroupController extends Controller
 
         $data = $request->validate([
             'body' => ['nullable', 'string', 'max:3000', 'required_without:images'],
-            'images' => ['nullable', 'array', 'required_without:body'],
+            'images' => ['nullable', 'array', 'max:'.ImageUploadRules::MAX_GROUP_COMMENT_IMAGES, 'required_without:body'],
             'images.*' => ['string', 'max:500'],
             'parent_comment_id' => ['nullable', 'integer', 'exists:collector_group_comments,id'],
         ]);
@@ -361,7 +362,7 @@ class CollectorGroupController extends Controller
 
         $data = $request->validate([
             'body' => ['nullable', 'string', 'max:3000', 'required_without:images'],
-            'images' => ['nullable', 'array', 'required_without:body'],
+            'images' => ['nullable', 'array', 'max:'.ImageUploadRules::MAX_GROUP_COMMENT_IMAGES, 'required_without:body'],
             'images.*' => ['string', 'max:500'],
         ]);
 
