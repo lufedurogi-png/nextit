@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useParams } from 'next/navigation'
 import axios from '@/lib/axios'
+import { compressImageForUpload, createImageEntriesFromFileList } from '@/lib/compressImageForUpload'
 import PageFade from '@/components/coleccionador/PageFade'
 import { storageUrl } from '@/lib/storageUrl'
 import { useAuth } from '@/hooks/auth'
@@ -28,6 +29,7 @@ export default function GrupoDetallePage() {
     const [postEntries, setPostEntries] = useState([])
     const postFilesRef = useRef(null)
     const [publishing, setPublishing] = useState(false)
+    const [compressingPostImages, setCompressingPostImages] = useState(false)
     const [postMessage, setPostMessage] = useState('')
 
     const [rulesOpen, setRulesOpen] = useState(false)
@@ -121,17 +123,17 @@ export default function GrupoDetallePage() {
         await load()
     }
 
-    const appendPostFiles = (fileList) => {
+    const appendPostFiles = async (fileList) => {
         const files = Array.from(fileList || []).filter((f) => f instanceof File && f.size > 0)
         if (!files.length) return
-        setPostEntries((prev) => [
-            ...prev,
-            ...files.map((file) => ({
-                id: `${file.name}-${file.size}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
-                file,
-                previewUrl: URL.createObjectURL(file),
-            })),
-        ])
+        setCompressingPostImages(true)
+        try {
+            const entries = await createImageEntriesFromFileList(files)
+            if (!entries.length) return
+            setPostEntries((prev) => [...prev, ...entries])
+        } finally {
+            setCompressingPostImages(false)
+        }
     }
 
     const removePostEntry = (entryId) => {
@@ -330,13 +332,16 @@ export default function GrupoDetallePage() {
                                         disabled={!canPost}
                                         className="w-full text-xs text-slate-600 file:mr-2 file:rounded-lg file:border-0 file:bg-slate-200 file:px-2 file:py-1.5 file:text-xs file:font-bold disabled:opacity-50 dark:text-slate-300 dark:file:bg-slate-700"
                                         onChange={(e) => {
-                                            appendPostFiles(e.target.files)
+                                            void appendPostFiles(e.target.files)
                                             const input = e.target
                                             window.queueMicrotask(() => {
                                                 input.value = ''
                                             })
                                         }}
                                     />
+                                    {compressingPostImages ? (
+                                        <p className="mt-1 text-xs font-semibold text-slate-500">Optimizando imágenes…</p>
+                                    ) : null}
                                     {postEntries.length > 0 ? (
                                         <div className="mt-2 flex flex-wrap gap-2">
                                             {postEntries.map((entry) => (
@@ -363,7 +368,7 @@ export default function GrupoDetallePage() {
                                 <button
                                     type="button"
                                     onClick={createPost}
-                                    disabled={publishing || !canPost || (!postBody.trim() && postEntries.length === 0)}
+                                    disabled={publishing || compressingPostImages || !canPost || (!postBody.trim() && postEntries.length === 0)}
                                     className="mt-3 w-full rounded-2xl bg-[var(--app-primary)] py-2.5 text-sm font-extrabold text-white shadow-md transition hover:opacity-95 disabled:opacity-45"
                                 >
                                     {publishing ? 'Publicando…' : 'Publicar'}
@@ -390,6 +395,16 @@ export default function GrupoDetallePage() {
                                         canComment={canComment}
                                         canInteract={Boolean(myMember)}
                                         onRefresh={load}
+                                        onPostDeleted={(postId) =>
+                                            setGroup((prev) =>
+                                                prev
+                                                    ? {
+                                                          ...prev,
+                                                          posts: (prev.posts || []).filter((x) => x.id !== postId),
+                                                      }
+                                                    : prev
+                                            )
+                                        }
                                     />
                                 ))
                             )}
@@ -542,14 +557,20 @@ export default function GrupoDetallePage() {
                                     type="file"
                                     accept="image/*"
                                     className="sr-only"
-                                    onChange={(e) => {
-                                        const file = e.target.files?.[0]
+                                    onChange={async (e) => {
+                                        const raw = e.target.files?.[0]
                                         const input = e.target
                                         window.queueMicrotask(() => {
                                             input.value = ''
                                         })
-                                        if (!file) return
+                                        if (!raw) return
                                         clearEditCover()
+                                        let file = raw
+                                        try {
+                                            file = await compressImageForUpload(raw)
+                                        } catch {
+                                            file = raw
+                                        }
                                         setEditCoverEntry({ file, previewUrl: URL.createObjectURL(file) })
                                     }}
                                 />

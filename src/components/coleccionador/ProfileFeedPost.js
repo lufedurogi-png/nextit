@@ -510,11 +510,13 @@ function ProfileFeedComment({
     )
 }
 
-export default function ProfileFeedPost({ post, currentUserId, onRefresh, onSharePost }) {
+export default function ProfileFeedPost({ post, currentUserId, onRefresh, onPostDeleted, onSharePost }) {
     const [localPost, setLocalPost] = useState(() => ({ ...post }))
     const [activePostImageIndex, setActivePostImageIndex] = useState(0)
     const [postMenuOpen, setPostMenuOpen] = useState(false)
     const [postDeleteConfirmOpen, setPostDeleteConfirmOpen] = useState(false)
+    const [deletingPost, setDeletingPost] = useState(false)
+    const [postDeleteError, setPostDeleteError] = useState('')
     const [editPostModalOpen, setEditPostModalOpen] = useState(false)
     const [editPostBody, setEditPostBody] = useState('')
     const [editPostKeptImages, setEditPostKeptImages] = useState([])
@@ -573,7 +575,8 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
         return () => window.clearTimeout(t)
     }, [threadModalOpen, localComments, threadFlatRows.length])
 
-    const isPostAuthor = Number(post.user_id) === Number(currentUserId)
+    const postAuthorId = localPost.user_id ?? localPost.user?.id ?? post.user_id ?? post.user?.id
+    const isPostAuthor = Number(postAuthorId) === Number(currentUserId)
 
     useEffect(() => {
         setLocalPost({ ...post })
@@ -612,15 +615,14 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
             if (!postMenuRef.current?.contains(e.target)) {
                 setPostMenuOpen(false)
                 setPostDeleteConfirmOpen(false)
+                setPostDeleteError('')
             }
         }
         if (postMenuOpen) {
-            document.addEventListener('mousedown', closeIfOutside)
-            document.addEventListener('touchstart', closeIfOutside, { passive: true })
+            document.addEventListener('click', closeIfOutside, true)
         }
         return () => {
-            document.removeEventListener('mousedown', closeIfOutside)
-            document.removeEventListener('touchstart', closeIfOutside)
+            document.removeEventListener('click', closeIfOutside, true)
         }
     }, [postMenuOpen])
 
@@ -883,14 +885,24 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
         }
     }
 
-    const deletePost = async () => {
+    const deletePost = async (e) => {
+        e?.stopPropagation?.()
+        const postId = localPost?.id ?? post?.id
+        if (!postId || deletingPost) return
+        setDeletingPost(true)
+        setPostDeleteError('')
         setPostDeleteConfirmOpen(false)
         setPostMenuOpen(false)
         try {
-            await axios.delete(`/feed/${post.id}`)
-            await onRefresh()
+            await axios.delete(`/feed/${postId}`)
+            onPostDeleted?.(postId)
+            if (typeof onRefresh === 'function') await onRefresh()
         } catch {
-            // ignorar
+            setPostDeleteError('No se pudo eliminar la publicación.')
+            setPostMenuOpen(true)
+            setPostDeleteConfirmOpen(true)
+        } finally {
+            setDeletingPost(false)
         }
     }
 
@@ -1114,7 +1126,11 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
                                         <IconDotsVertical className="h-5 w-5" />
                                     </button>
                                     {postMenuOpen ? (
-                                        <div className="absolute right-0 z-[80] mt-1 min-w-[11rem] overflow-hidden rounded-xl border border-[var(--app-subtle)]/40 bg-[var(--app-card)] py-1 text-sm text-[var(--app-text)] shadow-lg">
+                                        <div
+                                            className="absolute right-0 z-[80] mt-1 min-w-[11rem] overflow-hidden rounded-xl border border-[var(--app-subtle)]/40 bg-[var(--app-card)] py-1 text-sm text-[var(--app-text)] shadow-lg"
+                                            onMouseDown={(e) => e.stopPropagation()}
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
                                             {!postDeleteConfirmOpen ? (
                                                 <>
                                                     <button
@@ -1137,13 +1153,17 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
                                             ) : (
                                                 <div className="px-3 py-2">
                                                     <p className="text-xs font-semibold text-[var(--app-subtle)]">¿Eliminar esta publicación?</p>
+                                                    {postDeleteError ? (
+                                                        <p className="mt-1 text-[0.65rem] font-semibold text-red-600">{postDeleteError}</p>
+                                                    ) : null}
                                                     <div className="mt-2 flex gap-2">
                                                         <button
                                                             type="button"
-                                                            onClick={deletePost}
-                                                            className="flex-1 rounded-lg bg-red-600 px-2 py-1.5 text-xs font-bold text-white hover:bg-red-700"
+                                                            disabled={deletingPost}
+                                                            onClick={(ev) => void deletePost(ev)}
+                                                            className="flex-1 rounded-lg bg-red-600 px-2 py-1.5 text-xs font-bold text-white hover:bg-red-700 disabled:opacity-60"
                                                         >
-                                                            Sí, eliminar
+                                                            {deletingPost ? 'Eliminando…' : 'Sí, eliminar'}
                                                         </button>
                                                         <button
                                                             type="button"

@@ -148,6 +148,7 @@ export default function GroupPostCard({
     canComment = true,
     canInteract = true,
     onRefresh,
+    onPostDeleted,
     groupMeta = null,
     onSharePost,
 }) {
@@ -179,6 +180,8 @@ export default function GroupPostCard({
     const [threadCommentError, setThreadCommentError] = useState('')
     const [submittingThreadComment, setSubmittingThreadComment] = useState(false)
     const [confirmDelete, setConfirmDelete] = useState(null)
+    const [confirmDeleteError, setConfirmDeleteError] = useState('')
+    const [confirmDeleteBusy, setConfirmDeleteBusy] = useState(false)
     const [editingCommentId, setEditingCommentId] = useState(null)
     const [editingCommentText, setEditingCommentText] = useState('')
     const [editingCommentPaths, setEditingCommentPaths] = useState([])
@@ -194,7 +197,8 @@ export default function GroupPostCard({
     const threadModalFileRef = useRef(null)
 
     const normalizedCurrentUserId = Number(currentUserId)
-    const canEditPost = Number(post.user_id) === normalizedCurrentUserId || canModerate
+    const postAuthorId = post.user_id ?? post.user?.id
+    const canEditPost = Number(postAuthorId) === normalizedCurrentUserId || canModerate
     const [localComments, setLocalComments] = useState(Array.isArray(post.comments) ? post.comments : [])
     const comments = localComments
     const totalComments = comments.reduce((acc, c) => acc + 1 + countRepliesInSubtree(c.replies || []), 0)
@@ -218,12 +222,10 @@ export default function GroupPostCard({
             if (!menuRef.current?.contains(e.target)) setMenuOpen(false)
         }
         if (menuOpen) {
-            document.addEventListener('mousedown', closeIfOutside)
-            document.addEventListener('touchstart', closeIfOutside, { passive: true })
+            document.addEventListener('click', closeIfOutside, true)
         }
         return () => {
-            document.removeEventListener('mousedown', closeIfOutside)
-            document.removeEventListener('touchstart', closeIfOutside)
+            document.removeEventListener('click', closeIfOutside, true)
         }
     }, [menuOpen])
 
@@ -412,9 +414,14 @@ export default function GroupPostCard({
     ])
 
     const deletePost = async () => {
+        const postId = post?.id
+        if (!postId || !targetGroupId) {
+            throw new Error('No se encontró la publicación del grupo.')
+        }
         setMenuOpen(false)
-        await axios.delete(`/groups/${targetGroupId}/posts/${post.id}`)
-        await onRefresh()
+        await axios.delete(`/groups/${targetGroupId}/posts/${postId}`)
+        onPostDeleted?.(postId, targetGroupId)
+        if (typeof onRefresh === 'function') await onRefresh()
     }
 
     const savePostEdit = async () => {
@@ -647,6 +654,8 @@ export default function GroupPostCard({
     }
 
     const requestDeletePost = () => {
+        setMenuOpen(false)
+        setConfirmDeleteError('')
         setConfirmDelete({
             title: 'Eliminar publicación',
             message: '¿Seguro que quieres eliminar esta publicación?',
@@ -656,6 +665,7 @@ export default function GroupPostCard({
     }
 
     const requestDeleteComment = (commentId) => {
+        setConfirmDeleteError('')
         setConfirmDelete({
             title: 'Eliminar comentario',
             message: '¿Seguro que quieres eliminar este comentario?',
@@ -664,12 +674,19 @@ export default function GroupPostCard({
         })
     }
 
-    const runConfirmDelete = async () => {
-        if (!confirmDelete?.onConfirm) return
+    const runConfirmDelete = async (e) => {
+        e?.stopPropagation?.()
+        if (!confirmDelete?.onConfirm || confirmDeleteBusy) return
+        setConfirmDeleteBusy(true)
+        setConfirmDeleteError('')
         try {
             await confirmDelete.onConfirm()
-        } finally {
             setConfirmDelete(null)
+        } catch (err) {
+            const msg = err?.response?.data?.message || err?.message || 'No se pudo completar la eliminación.'
+            setConfirmDeleteError(typeof msg === 'string' ? msg : 'No se pudo completar la eliminación.')
+        } finally {
+            setConfirmDeleteBusy(false)
         }
     }
 
@@ -1094,7 +1111,11 @@ export default function GroupPostCard({
                                     <IconDotsVertical className="h-5 w-5" />
                                 </button>
                                 {menuOpen ? (
-                                    <div className="absolute right-0 z-[80] mt-1 min-w-[10rem] overflow-hidden rounded-xl border border-[var(--app-subtle)]/40 bg-[var(--app-card)] py-1 text-sm text-[var(--app-text)] shadow-lg">
+                                    <div
+                                        className="absolute right-0 z-[80] mt-1 min-w-[10rem] overflow-hidden rounded-xl border border-[var(--app-subtle)]/40 bg-[var(--app-card)] py-1 text-sm text-[var(--app-text)] shadow-lg"
+                                        onMouseDown={(e) => e.stopPropagation()}
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
                                         <button
                                             type="button"
                                             onClick={() => {
@@ -1701,25 +1722,42 @@ export default function GroupPostCard({
                           className={GROUP_MODAL_BACKDROP}
                           role="dialog"
                           aria-modal="true"
-                          onMouseDown={(e) => e.target === e.currentTarget && setConfirmDelete(null)}
+                          onMouseDown={(e) => {
+                              if (e.target === e.currentTarget && !confirmDeleteBusy) {
+                                  setConfirmDelete(null)
+                                  setConfirmDeleteError('')
+                              }
+                          }}
                       >
-                          <div className="pointer-events-auto w-full max-w-sm rounded-2xl border border-[var(--app-subtle)]/35 bg-[var(--app-card)] p-4 text-[var(--app-text)] shadow-2xl">
+                          <div
+                              className="pointer-events-auto w-full max-w-sm rounded-2xl border border-[var(--app-subtle)]/35 bg-[var(--app-card)] p-4 text-[var(--app-text)] shadow-2xl"
+                              onMouseDown={(e) => e.stopPropagation()}
+                              onClick={(e) => e.stopPropagation()}
+                          >
                               <h3 className="text-base font-bold text-[var(--app-text)]">{confirmDelete.title}</h3>
                               <p className="mt-2 text-sm text-[var(--app-subtle)]">{confirmDelete.message}</p>
+                              {confirmDeleteError ? (
+                                  <p className="mt-2 text-xs font-semibold text-red-600">{confirmDeleteError}</p>
+                              ) : null}
                               <div className="mt-4 flex gap-2">
                                   <button
                                       type="button"
-                                      onClick={() => setConfirmDelete(null)}
-                                      className="flex-1 rounded-xl border border-[var(--app-subtle)]/35 py-2 text-sm font-bold text-[var(--app-text)]"
+                                      disabled={confirmDeleteBusy}
+                                      onClick={() => {
+                                          setConfirmDelete(null)
+                                          setConfirmDeleteError('')
+                                      }}
+                                      className="flex-1 rounded-xl border border-[var(--app-subtle)]/35 py-2 text-sm font-bold text-[var(--app-text)] disabled:opacity-60"
                                   >
                                       Cancelar
                                   </button>
                                   <button
                                       type="button"
-                                      onClick={runConfirmDelete}
-                                      className="flex-1 rounded-xl bg-red-600 py-2 text-sm font-bold text-white hover:bg-red-700"
+                                      disabled={confirmDeleteBusy}
+                                      onClick={(ev) => void runConfirmDelete(ev)}
+                                      className="flex-1 rounded-xl bg-red-600 py-2 text-sm font-bold text-white hover:bg-red-700 disabled:opacity-60"
                                   >
-                                      {confirmDelete.actionLabel}
+                                      {confirmDeleteBusy ? 'Eliminando…' : confirmDelete.actionLabel}
                                   </button>
                               </div>
                           </div>

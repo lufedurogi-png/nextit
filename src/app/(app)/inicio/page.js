@@ -465,12 +465,17 @@ export default function InicioPage() {
                                 canComment
                                 canInteract
                                 onRefresh={loadFeed}
+                                onPostDeleted={(postId) => setGroupPosts((prev) => prev.filter((x) => x.id !== postId))}
                             />
                         ) : (
                             <ProfileFeedPost
                                 post={p}
                                 currentUserId={user?.id}
                                 onRefresh={loadFeed}
+                                onPostDeleted={(id) => {
+                                    setPosts((prev) => prev.filter((x) => x.id !== id))
+                                    setGroupPosts((prev) => prev.filter((x) => x.id !== id))
+                                }}
                             />
                         )}
                     </motion.div>

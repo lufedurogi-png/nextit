@@ -283,7 +283,15 @@ export default function PublicProfilePage() {
                             {posts.length === 0 ? (
                                 <p className="rounded-2xl border border-dashed border-slate-200 px-4 py-6 text-center text-sm text-slate-500 dark:border-slate-600">Aún no hay publicaciones.</p>
                             ) : (
-                                posts.map((p) => <ProfileFeedPost key={p.id} post={p} currentUserId={me?.id} onRefresh={load} />)
+                                posts.map((p) => (
+                                    <ProfileFeedPost
+                                        key={p.id}
+                                        post={p}
+                                        currentUserId={me?.id}
+                                        onRefresh={load}
+                                        onPostDeleted={(id) => setPosts((prev) => prev.filter((x) => x.id !== id))}
+                                    />
+                                ))
                             )}
                         </div>
                     </div>
