@@ -11,6 +11,7 @@ use App\Models\UserNotification;
 use App\Support\FeedCommentNesting;
 use App\Support\ImageUploadRules;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class FeedPostController extends Controller
@@ -201,9 +202,16 @@ class FeedPostController extends Controller
 
     public function destroy(Request $request, UserFeedPost $userFeedPost)
     {
-        abort_if((int) $userFeedPost->user_id !== (int) $request->user()->id, 403);
+        abort_if((int) $userFeedPost->user_id !== (int) $request->user()->id, 403, 'Solo puedes eliminar tus propias publicaciones.');
 
-        $userFeedPost->delete();
+        DB::transaction(function () use ($userFeedPost) {
+            // Compartidos que referencian este post (FK noActionOnDelete en parent_post_id).
+            UserFeedPost::query()
+                ->where('parent_post_id', $userFeedPost->id)
+                ->update(['parent_post_id' => null]);
+
+            $userFeedPost->delete();
+        });
 
         return response()->json(['ok' => true]);
     }
