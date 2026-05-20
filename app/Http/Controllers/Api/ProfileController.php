@@ -9,6 +9,7 @@ use App\Services\PlanSubscriptionService;
 use App\Models\UserFeedPost;
 use App\Models\UserFriendship;
 use App\Support\FeedCommentNesting;
+use App\Support\ImageUploadRules;
 use Illuminate\Http\Request;
 
 class ProfileController extends Controller
@@ -39,17 +40,13 @@ class ProfileController extends Controller
         }
 
         if ($request->hasFile('avatar')) {
-            $request->validate([
-                'avatar' => ['file', 'max:10240'],
-            ]);
+            $request->validate(ImageUploadRules::avatarFileRule());
             $path = $request->file('avatar')->store('avatars', 'public');
             $user->avatar_path = $path;
         }
 
         if ($request->hasFile('cover')) {
-            $request->validate([
-                'cover' => ['file', 'max:15360'],
-            ]);
+            $request->validate(ImageUploadRules::coverFileRule());
             $path = $request->file('cover')->store('covers', 'public');
             $user->cover_path = $path;
         }
@@ -71,16 +68,12 @@ class ProfileController extends Controller
         }
 
         if ($request->hasFile('avatar')) {
-            $request->validate([
-                'avatar' => ['file', 'max:10240'],
-            ]);
+            $request->validate(ImageUploadRules::avatarFileRule());
             $user->avatar_path = $request->file('avatar')->store('avatars', 'public');
         }
 
         if ($request->hasFile('cover')) {
-            $request->validate([
-                'cover' => ['file', 'max:15360'],
-            ]);
+            $request->validate(ImageUploadRules::coverFileRule());
             $user->cover_path = $request->file('cover')->store('covers', 'public');
         }
 

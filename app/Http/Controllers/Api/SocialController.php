@@ -16,6 +16,7 @@ use App\Models\UserNotification;
 use App\Models\UserSavedPost;
 use App\Models\UserSearchLog;
 use App\Support\FeedCommentNesting;
+use App\Support\ImageUploadRules;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
@@ -28,12 +29,13 @@ class SocialController extends Controller
         $parentId = null;
 
         if ($request->allFiles()) {
-            $request->validate([
-                'body' => ['nullable', 'string', 'max:3000'],
-                'parent_comment_id' => ['nullable', 'integer'],
-                'images' => ['sometimes', 'array', 'max:6'],
-                'images.*' => ['file', 'max:10240', 'mimes:jpeg,png,jpg,gif,webp'],
-            ]);
+            $request->validate(array_merge(
+                [
+                    'body' => ['nullable', 'string', 'max:3000'],
+                    'parent_comment_id' => ['nullable', 'integer'],
+                ],
+                ImageUploadRules::feedCommentFileRules()
+            ));
             foreach ((array) $request->file('images', []) as $file) {
                 if ($file && $file->isValid()) {
                     $paths[] = $file->store('feed-comments', 'public');
@@ -45,7 +47,7 @@ class SocialController extends Controller
             $data = $request->validate([
                 'body' => ['nullable', 'string', 'max:3000'],
                 'parent_comment_id' => ['nullable', 'integer'],
-                'images' => ['nullable', 'array', 'max:6'],
+                'images' => ['nullable', 'array', 'max:'.ImageUploadRules::MAX_FEED_COMMENT_IMAGES],
                 'images.*' => ['string', 'max:500'],
             ]);
             $body = trim((string) ($data['body'] ?? ''));
@@ -116,11 +118,10 @@ class SocialController extends Controller
         $body = null;
 
         if ($request->allFiles()) {
-            $request->validate([
-                'body' => ['nullable', 'string', 'max:3000'],
-                'images' => ['sometimes', 'array', 'max:6'],
-                'images.*' => ['file', 'max:10240', 'mimes:jpeg,png,jpg,gif,webp'],
-            ]);
+            $request->validate(array_merge(
+                ['body' => ['nullable', 'string', 'max:3000']],
+                ImageUploadRules::feedCommentFileRules()
+            ));
             $newPaths = [];
             foreach ((array) $request->file('images', []) as $file) {
                 if ($file && $file->isValid()) {
@@ -135,7 +136,7 @@ class SocialController extends Controller
         } else {
             $data = $request->validate([
                 'body' => ['sometimes', 'string', 'max:3000'],
-                'images' => ['sometimes', 'nullable', 'array', 'max:6'],
+                'images' => ['sometimes', 'nullable', 'array', 'max:'.ImageUploadRules::MAX_FEED_COMMENT_IMAGES],
                 'images.*' => ['string', 'max:500'],
             ]);
             if (array_key_exists('body', $data)) {

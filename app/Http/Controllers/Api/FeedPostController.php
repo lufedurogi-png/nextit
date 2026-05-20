@@ -9,6 +9,7 @@ use App\Models\UserFeedPostReaction;
 use App\Models\UserFriendship;
 use App\Models\UserNotification;
 use App\Support\FeedCommentNesting;
+use App\Support\ImageUploadRules;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
@@ -105,11 +106,10 @@ class FeedPostController extends Controller
         $body = '';
 
         if ($request->allFiles()) {
-            $request->validate([
-                'body' => ['nullable', 'string', 'max:5000'],
-                'images' => ['sometimes', 'array', 'max:8'],
-                'images.*' => ['file', 'max:10240', 'mimes:jpeg,png,jpg,gif,webp'],
-            ]);
+            $request->validate(array_merge(
+                ['body' => ['nullable', 'string', 'max:5000']],
+                ImageUploadRules::feedPostFileRules()
+            ));
             foreach ((array) $request->file('images', []) as $file) {
                 if ($file && $file->isValid()) {
                     $paths[] = $file->store('feed-posts', 'public');
@@ -119,7 +119,7 @@ class FeedPostController extends Controller
         } else {
             $data = $request->validate([
                 'body' => ['nullable', 'string', 'max:5000'],
-                'images' => ['nullable', 'array', 'max:8'],
+                'images' => ['nullable', 'array', 'max:'.ImageUploadRules::MAX_FEED_POST_IMAGES],
                 'images.*' => ['string', 'max:500'],
             ]);
             $body = trim((string) ($data['body'] ?? ''));
@@ -148,11 +148,10 @@ class FeedPostController extends Controller
         $body = null;
 
         if ($request->allFiles()) {
-            $request->validate([
-                'body' => ['nullable', 'string', 'max:5000'],
-                'images' => ['sometimes', 'array', 'max:8'],
-                'images.*' => ['file', 'max:10240', 'mimes:jpeg,png,jpg,gif,webp'],
-            ]);
+            $request->validate(array_merge(
+                ['body' => ['nullable', 'string', 'max:5000']],
+                ImageUploadRules::feedPostFileRules()
+            ));
             $newPaths = [];
             foreach ((array) $request->file('images', []) as $file) {
                 if ($file && $file->isValid()) {
@@ -167,7 +166,7 @@ class FeedPostController extends Controller
         } else {
             $data = $request->validate([
                 'body' => ['sometimes', 'string', 'max:5000'],
-                'images' => ['sometimes', 'nullable', 'array', 'max:8'],
+                'images' => ['sometimes', 'nullable', 'array', 'max:'.ImageUploadRules::MAX_FEED_POST_IMAGES],
                 'images.*' => ['string', 'max:500'],
             ]);
             if (array_key_exists('body', $data)) {
