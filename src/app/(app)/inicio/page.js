@@ -473,8 +473,8 @@ export default function InicioPage() {
                                 currentUserId={user?.id}
                                 onRefresh={loadFeed}
                                 onPostDeleted={(id) => {
-                                    setPosts((prev) => prev.filter((x) => x.id !== id))
-                                    setGroupPosts((prev) => prev.filter((x) => x.id !== id))
+                                    const nid = Number(id)
+                                    setPosts((prev) => prev.filter((x) => Number(x.id) !== nid))
                                 }}
                             />
                         )}

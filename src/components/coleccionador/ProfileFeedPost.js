@@ -514,9 +514,9 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onPost
     const [localPost, setLocalPost] = useState(() => ({ ...post }))
     const [activePostImageIndex, setActivePostImageIndex] = useState(0)
     const [postMenuOpen, setPostMenuOpen] = useState(false)
-    const [postDeleteConfirmOpen, setPostDeleteConfirmOpen] = useState(false)
-    const [deletingPost, setDeletingPost] = useState(false)
-    const [postDeleteError, setPostDeleteError] = useState('')
+    const [confirmDelete, setConfirmDelete] = useState(null)
+    const [confirmDeleteError, setConfirmDeleteError] = useState('')
+    const [confirmDeleteBusy, setConfirmDeleteBusy] = useState(false)
     const [editPostModalOpen, setEditPostModalOpen] = useState(false)
     const [editPostBody, setEditPostBody] = useState('')
     const [editPostKeptImages, setEditPostKeptImages] = useState([])
@@ -611,18 +611,14 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onPost
     }, [localPost.images])
 
     useEffect(() => {
+        if (!postMenuOpen) return
         const closeIfOutside = (e) => {
-            if (!postMenuRef.current?.contains(e.target)) {
-                setPostMenuOpen(false)
-                setPostDeleteConfirmOpen(false)
-                setPostDeleteError('')
-            }
+            if (!postMenuRef.current?.contains(e.target)) setPostMenuOpen(false)
         }
-        if (postMenuOpen) {
-            document.addEventListener('click', closeIfOutside, true)
-        }
+        const t = window.setTimeout(() => document.addEventListener('click', closeIfOutside), 0)
         return () => {
-            document.removeEventListener('click', closeIfOutside, true)
+            window.clearTimeout(t)
+            document.removeEventListener('click', closeIfOutside)
         }
     }, [postMenuOpen])
 
@@ -885,24 +881,40 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onPost
         }
     }
 
-    const deletePost = async (e) => {
-        e?.stopPropagation?.()
+    const deletePost = async () => {
         const postId = localPost?.id ?? post?.id
-        if (!postId || deletingPost) return
-        setDeletingPost(true)
-        setPostDeleteError('')
-        setPostDeleteConfirmOpen(false)
+        if (postId == null || postId === '') {
+            throw new Error('No se encontró la publicación.')
+        }
         setPostMenuOpen(false)
+        await axios.delete(`/feed/${postId}`)
+        onPostDeleted?.(postId)
+        if (typeof onRefresh === 'function') await onRefresh()
+    }
+
+    const requestDeletePost = () => {
+        setPostMenuOpen(false)
+        setConfirmDeleteError('')
+        setConfirmDelete({
+            title: 'Eliminar publicación',
+            message: '¿Seguro que quieres eliminar esta publicación?',
+            actionLabel: 'Sí, eliminar',
+            onConfirm: deletePost,
+        })
+    }
+
+    const runConfirmDelete = async () => {
+        if (!confirmDelete?.onConfirm || confirmDeleteBusy) return
+        setConfirmDeleteBusy(true)
+        setConfirmDeleteError('')
         try {
-            await axios.delete(`/feed/${postId}`)
-            onPostDeleted?.(postId)
-            if (typeof onRefresh === 'function') await onRefresh()
-        } catch {
-            setPostDeleteError('No se pudo eliminar la publicación.')
-            setPostMenuOpen(true)
-            setPostDeleteConfirmOpen(true)
+            await confirmDelete.onConfirm()
+            setConfirmDelete(null)
+        } catch (err) {
+            const msg = err?.response?.data?.message || err?.message || 'No se pudo eliminar la publicación.'
+            setConfirmDeleteError(typeof msg === 'string' ? msg : 'No se pudo eliminar la publicación.')
         } finally {
-            setDeletingPost(false)
+            setConfirmDeleteBusy(false)
         }
     }
 
@@ -1111,13 +1123,7 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onPost
                                 <div className="relative z-[2] shrink-0" ref={postMenuRef}>
                                     <button
                                         type="button"
-                                        onClick={() =>
-                                            setPostMenuOpen((v) => {
-                                                const next = !v
-                                                if (!next) setPostDeleteConfirmOpen(false)
-                                                return next
-                                            })
-                                        }
+                                        onClick={() => setPostMenuOpen((v) => !v)}
                                         className="flex h-10 w-10 min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-transparent text-[var(--app-subtle)] transition hover:border-[var(--app-subtle)]/40 hover:bg-[var(--app-accent)]/10 active:bg-[var(--app-accent)]/16"
                                         aria-expanded={postMenuOpen}
                                         aria-haspopup="true"
@@ -1131,50 +1137,22 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onPost
                                             onMouseDown={(e) => e.stopPropagation()}
                                             onClick={(e) => e.stopPropagation()}
                                         >
-                                            {!postDeleteConfirmOpen ? (
-                                                <>
-                                                    <button
-                                                        type="button"
-                                                        onClick={openEditPostModal}
-                                                        className="flex w-full items-center gap-2 px-3 py-2 text-left font-semibold text-[var(--app-text)] hover:bg-[var(--app-accent)]/12"
-                                                    >
-                                                        <IconPencil className="h-4 w-4 shrink-0" />
-                                                        Editar publicación
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setPostDeleteConfirmOpen(true)}
-                                                        className="flex w-full items-center gap-2 px-3 py-2 text-left font-semibold text-red-600 hover:bg-red-500/10"
-                                                    >
-                                                        <IconTrash className="h-4 w-4 shrink-0" />
-                                                        Eliminar
-                                                    </button>
-                                                </>
-                                            ) : (
-                                                <div className="px-3 py-2">
-                                                    <p className="text-xs font-semibold text-[var(--app-subtle)]">¿Eliminar esta publicación?</p>
-                                                    {postDeleteError ? (
-                                                        <p className="mt-1 text-[0.65rem] font-semibold text-red-600">{postDeleteError}</p>
-                                                    ) : null}
-                                                    <div className="mt-2 flex gap-2">
-                                                        <button
-                                                            type="button"
-                                                            disabled={deletingPost}
-                                                            onClick={(ev) => void deletePost(ev)}
-                                                            className="flex-1 rounded-lg bg-red-600 px-2 py-1.5 text-xs font-bold text-white hover:bg-red-700 disabled:opacity-60"
-                                                        >
-                                                            {deletingPost ? 'Eliminando…' : 'Sí, eliminar'}
-                                                        </button>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => setPostDeleteConfirmOpen(false)}
-                                                            className="flex-1 rounded-lg border border-[var(--app-subtle)]/45 px-2 py-1.5 text-xs font-bold text-[var(--app-text)] hover:bg-[var(--app-accent)]/10"
-                                                        >
-                                                            Cancelar
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            )}
+                                            <button
+                                                type="button"
+                                                onClick={openEditPostModal}
+                                                className="flex w-full items-center gap-2 px-3 py-2 text-left font-semibold text-[var(--app-text)] hover:bg-[var(--app-accent)]/12"
+                                            >
+                                                <IconPencil className="h-4 w-4 shrink-0" />
+                                                Editar publicación
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={requestDeletePost}
+                                                className="flex w-full items-center gap-2 px-3 py-2 text-left font-semibold text-red-600 hover:bg-red-500/10"
+                                            >
+                                                <IconTrash className="h-4 w-4 shrink-0" />
+                                                Eliminar
+                                            </button>
                                         </div>
                                     ) : null}
                                 </div>
@@ -2028,6 +2006,56 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onPost
                                       className="mt-2 w-full rounded-xl bg-[var(--app-primary)] py-2.5 text-sm font-bold text-white shadow-sm"
                                   >
                                       Publicar respuesta
+                                  </button>
+                              </div>
+                          </div>
+                      </div>,
+                      document.body
+                  )
+                : null}
+
+            {confirmDelete && typeof document !== 'undefined'
+                ? createPortal(
+                      <div
+                          className={FEED_MODAL_BACKDROP}
+                          role="dialog"
+                          aria-modal="true"
+                          onMouseDown={(e) => {
+                              if (e.target === e.currentTarget && !confirmDeleteBusy) {
+                                  setConfirmDelete(null)
+                                  setConfirmDeleteError('')
+                              }
+                          }}
+                      >
+                          <div
+                              className="pointer-events-auto w-full max-w-sm rounded-2xl border border-[var(--app-subtle)]/35 bg-[var(--app-card)] p-4 text-[var(--app-text)] shadow-2xl"
+                              onMouseDown={(e) => e.stopPropagation()}
+                              onClick={(e) => e.stopPropagation()}
+                          >
+                              <h3 className="text-base font-bold text-[var(--app-text)]">{confirmDelete.title}</h3>
+                              <p className="mt-2 text-sm text-[var(--app-subtle)]">{confirmDelete.message}</p>
+                              {confirmDeleteError ? (
+                                  <p className="mt-2 text-xs font-semibold text-red-600">{confirmDeleteError}</p>
+                              ) : null}
+                              <div className="mt-4 flex gap-2">
+                                  <button
+                                      type="button"
+                                      disabled={confirmDeleteBusy}
+                                      onClick={() => {
+                                          setConfirmDelete(null)
+                                          setConfirmDeleteError('')
+                                      }}
+                                      className="flex-1 rounded-xl border border-[var(--app-subtle)]/35 py-2 text-sm font-bold text-[var(--app-text)] disabled:opacity-60"
+                                  >
+                                      Cancelar
+                                  </button>
+                                  <button
+                                      type="button"
+                                      disabled={confirmDeleteBusy}
+                                      onClick={() => void runConfirmDelete()}
+                                      className="flex-1 rounded-xl bg-red-600 py-2 text-sm font-bold text-white hover:bg-red-700 disabled:opacity-60"
+                                  >
+                                      {confirmDeleteBusy ? 'Eliminando…' : confirmDelete.actionLabel}
                                   </button>
                               </div>
                           </div>

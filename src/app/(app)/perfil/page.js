@@ -393,7 +393,9 @@ export default function PerfilPage() {
                                         post={p}
                                         currentUserId={user?.id}
                                         onRefresh={loadPosts}
-                                        onPostDeleted={(id) => setPosts((prev) => prev.filter((x) => x.id !== id))}
+                                        onPostDeleted={(id) =>
+                                            setPosts((prev) => prev.filter((x) => Number(x.id) !== Number(id)))
+                                        }
                                     />
                                 ))
                             )}

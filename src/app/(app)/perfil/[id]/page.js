@@ -289,7 +289,9 @@ export default function PublicProfilePage() {
                                         post={p}
                                         currentUserId={me?.id}
                                         onRefresh={load}
-                                        onPostDeleted={(id) => setPosts((prev) => prev.filter((x) => x.id !== id))}
+                                        onPostDeleted={(id) =>
+                                            setPosts((prev) => prev.filter((x) => Number(x.id) !== Number(id)))
+                                        }
                                     />
                                 ))
                             )}

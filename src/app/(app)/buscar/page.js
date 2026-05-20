@@ -183,7 +183,17 @@ export default function BuscarPage() {
                                                 onRefresh={runSearch}
                                             />
                                         ) : (
-                                            <ProfileFeedPost post={p} currentUserId={user?.id} onRefresh={runSearch} />
+                                            <ProfileFeedPost
+                                                post={p}
+                                                currentUserId={user?.id}
+                                                onRefresh={runSearch}
+                                                onPostDeleted={(id) =>
+                                                    setResult((prev) => ({
+                                                        ...prev,
+                                                        posts: prev.posts.filter((x) => Number(x.id) !== Number(id)),
+                                                    }))
+                                                }
+                                            />
                                         )}
                                     </motion.div>
                                 ))}
