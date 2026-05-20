@@ -7,22 +7,16 @@ import { useAuth } from '@/hooks/auth'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import PageFade from '@/components/coleccionador/PageFade'
 import ProfileFeedPost from '@/components/coleccionador/ProfileFeedPost'
+import ProfileNewPostForm from '@/components/coleccionador/ProfileNewPostForm'
 import axios from '@/lib/axios'
 import { storageUrl } from '@/lib/storageUrl'
 import { profileHref } from '@/lib/profileUrl'
-import { emitVikuChanSignal } from '@/lib/vikuChanSignals'
-
 export default function PerfilPage() {
     const { user, mutate: mutateUser } = useAuth({})
     const [name, setName] = useState('')
     const [saving, setSaving] = useState(false)
     const [collectionsCount, setCollectionsCount] = useState(0)
     const [posts, setPosts] = useState([])
-    const [newPost, setNewPost] = useState('')
-    const [newPostEntries, setNewPostEntries] = useState([])
-    const [publishingPost, setPublishingPost] = useState(false)
-    const [newPostMessage, setNewPostMessage] = useState('')
-    const newPostFilesRef = useRef(null)
     const [loadingPosts, setLoadingPosts] = useState(true)
     const [mediaMessage, setMediaMessage] = useState('')
     const [imgBust, setImgBust] = useState(0)
@@ -33,41 +27,6 @@ export default function PerfilPage() {
     const [outgoingRequests, setOutgoingRequests] = useState([])
     const [friendsModalOpen, setFriendsModalOpen] = useState(false)
     const [friendsTab, setFriendsTab] = useState('friends')
-
-    const clearNewPostEntries = useCallback(() => {
-        setNewPostEntries((prev) => {
-            prev.forEach((e) => URL.revokeObjectURL(e.previewUrl))
-            return []
-        })
-    }, [])
-
-    const appendNewPostFiles = useCallback((fileList) => {
-        const files = Array.from(fileList || []).filter((f) => f instanceof File && f.size > 0)
-        if (files.length === 0) return
-        setNewPostEntries((prev) => [
-            ...prev,
-            ...files.map((file) => ({
-                id: `${file.name}-${file.size}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
-                file,
-                previewUrl: URL.createObjectURL(file),
-            })),
-        ])
-    }, [])
-
-    const removeNewPostEntry = useCallback((id) => {
-        setNewPostEntries((prev) => {
-            const found = prev.find((x) => x.id === id)
-            if (found) URL.revokeObjectURL(found.previewUrl)
-            return prev.filter((x) => x.id !== id)
-        })
-    }, [])
-
-    useEffect(
-        () => () => {
-            clearNewPostEntries()
-        },
-        [clearNewPostEntries]
-    )
 
     useEffect(() => {
         setName(user?.name || '')
@@ -202,46 +161,16 @@ export default function PerfilPage() {
         }
     }
 
-    const publishPost = async () => {
-        const body = newPost.trim()
-        if (!body && newPostEntries.length === 0) return
-        setPublishingPost(true)
-        setNewPostMessage('')
-        const fd = new FormData()
-        if (body) fd.append('body', body)
-        newPostEntries.forEach((e) => fd.append('images[]', e.file))
-        try {
-            const { data } = await axios.post('/feed', fd)
-            const createdPost =
-                data && typeof data === 'object'
-                    ? {
-                          ...data,
-                          comments: Array.isArray(data.comments) ? data.comments : [],
-                          likes_count: data.likes_count ?? 0,
-                          dislikes_count: data.dislikes_count ?? 0,
-                      }
-                    : null
-
+    const handlePostPublished = useCallback(
+        (createdPost) => {
             if (createdPost?.id) {
                 setPosts((prev) => [createdPost, ...prev])
-                emitVikuChanSignal('compose')
             } else {
-                await loadPosts()
+                loadPosts()
             }
-            setNewPost('')
-            clearNewPostEntries()
-            if (newPostFilesRef.current) newPostFilesRef.current.value = ''
-        } catch (err) {
-            const msg =
-                err.response?.data?.errors?.images?.[0] ||
-                err.response?.data?.errors?.['images.0']?.[0] ||
-                err.response?.data?.message ||
-                'No se pudo crear la publicación. Verifica formato (jpeg/png/jpg/gif/webp) y tamaño máximo de 10 MB por imagen.'
-            setNewPostMessage(msg)
-        } finally {
-            setPublishingPost(false)
-        }
-    }
+        },
+        [loadPosts]
+    )
 
     const respondRequest = async (friendshipId, action) => {
         await axios.post(`/friendships/${friendshipId}/respond`, { action })
@@ -430,63 +359,8 @@ export default function PerfilPage() {
                             </div>
                         </div>
 
-                        <div className="pointer-events-auto mt-6 rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900/55">
-                            <p className="text-sm font-bold text-slate-900 dark:text-slate-50">Nueva publicación</p>
-                            <p className="text-xs text-slate-500 dark:text-slate-400">También aparecerá en Inicio para tus seguidores de la comunidad.</p>
-                            <textarea
-                                value={newPost}
-                                onChange={(e) => setNewPost(e.target.value)}
-                                rows={3}
-                                maxLength={5000}
-                                className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-50"
-                                placeholder="¿Qué coleccionas hoy? Muestra un hallazgo o busca un faltante…"
-                            />
-                            <div className="mt-2">
-                                <input
-                                    ref={newPostFilesRef}
-                                    type="file"
-                                    accept="image/*"
-                                    multiple
-                                    className="w-full text-xs text-slate-600 file:mr-2 file:rounded-lg file:border-0 file:bg-slate-200 file:px-2 file:py-1.5 file:text-xs file:font-bold dark:text-slate-300 dark:file:bg-slate-700"
-                                    onChange={(e) => {
-                                        appendNewPostFiles(e.target.files)
-                                        const input = e.target
-                                        window.queueMicrotask(() => {
-                                            input.value = ''
-                                        })
-                                    }}
-                                />
-                                {newPostEntries.length > 0 ? (
-                                    <div className="mt-2 flex flex-wrap gap-2">
-                                        {newPostEntries.map((entry) => (
-                                            <div
-                                                key={entry.id}
-                                                className="relative h-16 w-16 overflow-hidden rounded-lg border border-slate-200 dark:border-slate-600"
-                                            >
-                                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                <img src={entry.previewUrl} alt="" className="h-full w-full object-cover" />
-                                                <button
-                                                    type="button"
-                                                    title="Quitar"
-                                                    onClick={() => removeNewPostEntry(entry.id)}
-                                                    className="absolute right-0.5 top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-[11px] font-bold text-white"
-                                                >
-                                                    ×
-                                                </button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : null}
-                            </div>
-                            {newPostMessage ? <p className="mt-2 text-xs font-semibold text-amber-600 dark:text-amber-400">{newPostMessage}</p> : null}
-                            <button
-                                type="button"
-                                onClick={publishPost}
-                                disabled={publishingPost || (!newPost.trim() && newPostEntries.length === 0)}
-                                className="mt-2 w-full rounded-2xl bg-[var(--app-primary)] py-2.5 text-sm font-extrabold text-white shadow-md transition hover:opacity-95 disabled:opacity-45"
-                            >
-                                {publishingPost ? 'Publicando…' : 'Publicar'}
-                            </button>
+                        <div className="pointer-events-auto mt-6 rounded-2xl border border-[var(--app-subtle)]/25 bg-[var(--app-card)] p-4">
+                            <ProfileNewPostForm onPublished={handlePostPublished} />
                         </div>
 
                         <div className="pointer-events-auto mt-5 space-y-3">

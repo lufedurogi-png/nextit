@@ -8,6 +8,7 @@ import { storageUrl } from '@/lib/storageUrl'
 import PageFade from '@/components/coleccionador/PageFade'
 import ProfileFeedPost from '@/components/coleccionador/ProfileFeedPost'
 import GroupPostCard from '@/components/coleccionador/GroupPostCard'
+import CreatePostPromptBar from '@/components/coleccionador/CreatePostPromptBar'
 import { useAuth } from '@/hooks/auth'
 import { profileHref } from '@/lib/profileUrl'
 
@@ -285,6 +286,10 @@ export default function InicioPage() {
                         })}
                     </div>
                 </section>
+
+                {user?.id ? (
+                    <CreatePostPromptBar user={user} onPublished={() => loadFeed()} />
+                ) : null}
 
                 <section className="rounded-3xl border border-slate-200 bg-white/90 p-2 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
                     <div className="grid grid-cols-2 gap-1 text-xs font-bold sm:grid-cols-4">
