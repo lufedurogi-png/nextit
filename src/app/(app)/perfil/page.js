@@ -9,6 +9,7 @@ import PageFade from '@/components/coleccionador/PageFade'
 import ProfileFeedPost from '@/components/coleccionador/ProfileFeedPost'
 import ProfileNewPostForm from '@/components/coleccionador/ProfileNewPostForm'
 import axios from '@/lib/axios'
+import { compressImageForUpload } from '@/lib/compressImageForUpload'
 import { storageUrl } from '@/lib/storageUrl'
 import { profileHref } from '@/lib/profileUrl'
 export default function PerfilPage() {
@@ -113,8 +114,15 @@ export default function PerfilPage() {
 
     const onAvatarChange = async (e) => {
         const input = e.currentTarget
-        const file = input.files?.[0]
-        if (!file) return
+        const raw = input.files?.[0]
+        if (!raw) return
+        setMediaMessage('Optimizando foto de perfil…')
+        let file = raw
+        try {
+            file = await compressImageForUpload(raw)
+        } catch {
+            file = raw
+        }
         const fd = new FormData()
         fd.append('avatar', file)
         setMediaMessage('Guardando foto de perfil…')
@@ -127,8 +135,8 @@ export default function PerfilPage() {
             const msg =
                 err.response?.data?.message ||
                 (err.response?.status === 422
-                    ? 'No se pudo validar la imagen (tamaño o formato).'
-                    : 'No se pudo guardar la foto. Revisa conexión y tamaño máx. ~10 MB.')
+                    ? 'No se pudo validar la imagen (formato no admitido).'
+                    : 'No se pudo guardar la foto. Revisa tu conexión e inténtalo de nuevo.')
             setMediaMessage(msg)
         } finally {
             input.value = ''
@@ -138,8 +146,15 @@ export default function PerfilPage() {
 
     const onCoverChange = async (e) => {
         const input = e.currentTarget
-        const file = input.files?.[0]
-        if (!file) return
+        const raw = input.files?.[0]
+        if (!raw) return
+        setMediaMessage('Optimizando portada…')
+        let file = raw
+        try {
+            file = await compressImageForUpload(raw)
+        } catch {
+            file = raw
+        }
         const fd = new FormData()
         fd.append('cover', file)
         setMediaMessage('Guardando portada…')
@@ -152,8 +167,8 @@ export default function PerfilPage() {
             const msg =
                 err.response?.data?.message ||
                 (err.response?.status === 422
-                    ? 'No se pudo validar la imagen (tamaño o formato).'
-                    : 'No se pudo guardar la portada. Revisa conexión y tamaño máx. ~15 MB.')
+                    ? 'No se pudo validar la imagen (formato no admitido).'
+                    : 'No se pudo guardar la portada. Revisa tu conexión e inténtalo de nuevo.')
             setMediaMessage(msg)
         } finally {
             input.value = ''

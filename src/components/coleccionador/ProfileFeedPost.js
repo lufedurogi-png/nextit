@@ -7,6 +7,7 @@ import axios from '@/lib/axios'
 import { storageUrl } from '@/lib/storageUrl'
 import { profileHref } from '@/lib/profileUrl'
 import { buildFeedPostShareUrl, shareNativeOrClipboard } from '@/lib/sharePost'
+import { createImageEntriesFromFileList } from '@/lib/compressImageForUpload'
 import { scrollAncestorsToBottom } from '@/lib/scrollAncestorsToBottom'
 import { emitVikuChanSignal } from '@/lib/vikuChanSignals'
 import ReactionLikeIcon from '@/components/coleccionador/ReactionLikeIcon'
@@ -324,7 +325,7 @@ function ProfileFeedComment({
                                         multiple
                                         className="max-w-full text-[0.7rem] file:mr-2 file:rounded-lg file:border-0 file:bg-[var(--app-primary)]/15 file:px-2 file:py-1 file:text-[0.65rem] file:font-bold file:text-[var(--app-text)]"
                                         onChange={(e) => {
-                                            onAppendEditingNewFiles(e.target.files)
+                                            void onAppendEditingNewFiles(e.target.files)
                                             const input = e.target
                                             window.queueMicrotask(() => {
                                                 input.value = ''
@@ -659,15 +660,7 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
         setThreadReplyToName(null)
     }, [])
 
-    const toFileEntries = useCallback((fileList) => {
-        const list = Array.from(fileList || []).filter((f) => f instanceof File && f.size > 0)
-        if (list.length === 0) return []
-        return list.map((file) => ({
-            id: `${file.name}-${file.size}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
-            file,
-            previewUrl: URL.createObjectURL(file),
-        }))
-    }, [])
+    const toFileEntries = useCallback(async (fileList) => createImageEntriesFromFileList(fileList), [])
 
     const clearCommentFileEntries = useCallback(() => {
         setCommentFileEntries((prev) => {
@@ -677,8 +670,8 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
     }, [])
 
     const appendCommentFiles = useCallback(
-        (fileList) => {
-            const entries = toFileEntries(fileList)
+        async (fileList) => {
+            const entries = await toFileEntries(fileList)
             if (entries.length === 0) return
             setCommentFileEntries((prev) => [...prev, ...entries])
         },
@@ -701,8 +694,8 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
     }, [])
 
     const appendThreadFiles = useCallback(
-        (fileList) => {
-            const entries = toFileEntries(fileList)
+        async (fileList) => {
+            const entries = await toFileEntries(fileList)
             if (entries.length === 0) return
             setThreadFileEntries((prev) => [...prev, ...entries])
         },
@@ -725,8 +718,8 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
     }, [])
 
     const appendEditingNewFiles = useCallback(
-        (fileList) => {
-            const entries = toFileEntries(fileList)
+        async (fileList) => {
+            const entries = await toFileEntries(fileList)
             if (entries.length === 0) return
             setEditingNewEntries((prev) => [...prev, ...entries])
         },
@@ -820,17 +813,10 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
         })
     }, [])
 
-    const appendEditNewFiles = useCallback((fileList) => {
-        const list = Array.from(fileList || []).filter((f) => f instanceof File && f.size > 0)
-        if (list.length === 0) return
-        setEditPostNewEntries((prev) => [
-            ...prev,
-            ...list.map((file) => ({
-                id: `${file.name}-${file.size}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
-                file,
-                previewUrl: URL.createObjectURL(file),
-            })),
-        ])
+    const appendEditNewFiles = useCallback(async (fileList) => {
+        const entries = await createImageEntriesFromFileList(fileList)
+        if (entries.length === 0) return
+        setEditPostNewEntries((prev) => [...prev, ...entries])
     }, [])
 
     useEffect(
@@ -1350,7 +1336,7 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
                                 multiple
                                 className="sr-only"
                                 onChange={(e) => {
-                                    appendEditNewFiles(e.target.files)
+                                    void appendEditNewFiles(e.target.files)
                                     const input = e.target
                                     window.queueMicrotask(() => {
                                         input.value = ''
@@ -1583,7 +1569,7 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
                                                                     multiple
                                                                     className="max-w-full text-[0.7rem] file:mr-2 file:rounded-lg file:border-0 file:bg-[var(--app-primary)]/15 file:px-2 file:py-1 file:text-[0.65rem] file:font-bold file:text-[var(--app-text)]"
                                                                     onChange={(e) => {
-                                                                        appendThreadFiles(e.target.files)
+                                                                        void appendThreadFiles(e.target.files)
                                                                         const input = e.target
                                                                         window.queueMicrotask(() => {
                                                                             input.value = ''
@@ -1653,7 +1639,7 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
                                     multiple
                                     className="max-w-full text-[0.7rem] file:mr-2 file:rounded-lg file:border-0 file:bg-[var(--app-primary)]/15 file:px-2 file:py-1 file:text-[0.65rem] file:font-bold file:text-[var(--app-text)]"
                                     onChange={(e) => {
-                                        appendCommentFiles(e.target.files)
+                                        void appendCommentFiles(e.target.files)
                                         const input = e.target
                                         window.queueMicrotask(() => {
                                             input.value = ''
@@ -1793,7 +1779,7 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
                                     multiple
                                     className="max-w-full text-[0.7rem] file:mr-2 file:rounded-lg file:border-0 file:bg-[var(--app-primary)]/15 file:px-2 file:py-1 file:text-[0.65rem] file:font-bold file:text-[var(--app-text)]"
                                     onChange={(e) => {
-                                        appendCommentFiles(e.target.files)
+                                        void appendCommentFiles(e.target.files)
                                         const input = e.target
                                         window.queueMicrotask(() => {
                                             input.value = ''
@@ -1983,7 +1969,7 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onShar
                                           multiple
                                           className="max-w-full text-[0.7rem] file:mr-2 file:rounded-lg file:border-0 file:bg-[var(--app-primary)]/15 file:px-2 file:py-1 file:text-[0.65rem] file:font-bold file:text-[var(--app-text)]"
                                           onChange={(e) => {
-                                              appendThreadFiles(e.target.files)
+                                              void appendThreadFiles(e.target.files)
                                               const input = e.target
                                               window.queueMicrotask(() => {
                                                   input.value = ''

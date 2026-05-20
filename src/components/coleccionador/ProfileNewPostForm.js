@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import axios from '@/lib/axios'
+import { createImageEntriesFromFileList } from '@/lib/compressImageForUpload'
 import { emitVikuChanSignal } from '@/lib/vikuChanSignals'
 
 /**
@@ -13,6 +14,7 @@ export default function ProfileNewPostForm({ onPublished, onClose, showCloseButt
     const [newPostEntries, setNewPostEntries] = useState([])
     const [publishingPost, setPublishingPost] = useState(false)
     const [newPostMessage, setNewPostMessage] = useState('')
+    const [compressingImages, setCompressingImages] = useState(false)
     const newPostFilesRef = useRef(null)
 
     const clearNewPostEntries = useCallback(() => {
@@ -22,17 +24,17 @@ export default function ProfileNewPostForm({ onPublished, onClose, showCloseButt
         })
     }, [])
 
-    const appendNewPostFiles = useCallback((fileList) => {
+    const appendNewPostFiles = useCallback(async (fileList) => {
         const files = Array.from(fileList || []).filter((f) => f instanceof File && f.size > 0)
         if (files.length === 0) return
-        setNewPostEntries((prev) => [
-            ...prev,
-            ...files.map((file) => ({
-                id: `${file.name}-${file.size}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
-                file,
-                previewUrl: URL.createObjectURL(file),
-            })),
-        ])
+        setCompressingImages(true)
+        try {
+            const entries = await createImageEntriesFromFileList(files)
+            if (entries.length === 0) return
+            setNewPostEntries((prev) => [...prev, ...entries])
+        } finally {
+            setCompressingImages(false)
+        }
     }, [])
 
     const removeNewPostEntry = useCallback((id) => {
@@ -82,7 +84,7 @@ export default function ProfileNewPostForm({ onPublished, onClose, showCloseButt
                 err.response?.data?.errors?.images?.[0] ||
                 err.response?.data?.errors?.['images.0']?.[0] ||
                 err.response?.data?.message ||
-                'No se pudo crear la publicación. Verifica formato (jpeg/png/jpg/gif/webp) y tamaño máximo de 10 MB por imagen.'
+                'No se pudo crear la publicación. Verifica que las imágenes sean jpeg, png, jpg, gif o webp.'
             setNewPostMessage(msg)
         } finally {
             setPublishingPost(false)
@@ -104,7 +106,9 @@ export default function ProfileNewPostForm({ onPublished, onClose, showCloseButt
                 </button>
             ) : null}
             <p className={`text-sm font-bold text-[var(--app-text)] ${showCloseButton ? 'pr-10' : ''}`}>Nueva publicación</p>
-            <p className="text-xs text-[var(--app-subtle)]">También aparecerá en Inicio para tus seguidores de la comunidad.</p>
+            <p className="text-xs text-[var(--app-subtle)]">
+                También aparecerá en Inicio para tus seguidores de la comunidad. Las fotos se optimizan al elegirlas.
+            </p>
             <textarea
                 value={newPost}
                 onChange={(e) => setNewPost(e.target.value)}
@@ -121,13 +125,16 @@ export default function ProfileNewPostForm({ onPublished, onClose, showCloseButt
                     multiple
                     className="w-full text-xs text-[var(--app-subtle)] file:mr-2 file:rounded-lg file:border-0 file:bg-[var(--app-primary)]/15 file:px-2 file:py-1.5 file:text-xs file:font-bold file:text-[var(--app-text)]"
                     onChange={(e) => {
-                        appendNewPostFiles(e.target.files)
+                        void appendNewPostFiles(e.target.files)
                         const input = e.target
                         window.queueMicrotask(() => {
                             input.value = ''
                         })
                     }}
                 />
+                {compressingImages ? (
+                    <p className="mt-1 text-xs font-semibold text-[var(--app-subtle)]">Optimizando imágenes…</p>
+                ) : null}
                 {newPostEntries.length > 0 ? (
                     <div className="mt-2 flex flex-wrap gap-2">
                         {newPostEntries.map((entry) => (
@@ -154,7 +161,7 @@ export default function ProfileNewPostForm({ onPublished, onClose, showCloseButt
             <button
                 type="button"
                 onClick={publishPost}
-                disabled={publishingPost || (!newPost.trim() && newPostEntries.length === 0)}
+                disabled={publishingPost || compressingImages || (!newPost.trim() && newPostEntries.length === 0)}
                 className="mt-2 w-full rounded-2xl bg-[var(--app-primary)] py-2.5 text-sm font-extrabold text-white shadow-md transition hover:opacity-95 disabled:opacity-45"
             >
                 {publishingPost ? 'Publicando…' : 'Publicar'}

@@ -7,6 +7,7 @@ import axios from '@/lib/axios'
 import { storageUrl } from '@/lib/storageUrl'
 import { profileHref } from '@/lib/profileUrl'
 import { buildGroupPostShareUrl, shareNativeOrClipboard } from '@/lib/sharePost'
+import { createImageEntriesFromFileList } from '@/lib/compressImageForUpload'
 import { scrollAncestorsToBottom } from '@/lib/scrollAncestorsToBottom'
 import { emitVikuChanSignal } from '@/lib/vikuChanSignals'
 import ReactionLikeIcon from '@/components/coleccionador/ReactionLikeIcon'
@@ -241,15 +242,7 @@ export default function GroupPostCard({
         setEditNewFiles([])
     }, [post.id, post.body, post.images])
 
-    const toFileEntries = useCallback((fileList) => {
-        const list = Array.from(fileList || []).filter((f) => f instanceof File && f.size > 0)
-        if (list.length === 0) return []
-        return list.map((file) => ({
-            id: `${file.name}-${file.size}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
-            file,
-            previewUrl: URL.createObjectURL(file),
-        }))
-    }, [])
+    const toFileEntries = useCallback(async (fileList) => createImageEntriesFromFileList(fileList), [])
 
     const clearCommentFileEntries = useCallback(() => {
         setCommentFileEntries((prev) => {
@@ -258,11 +251,14 @@ export default function GroupPostCard({
         })
     }, [])
 
-    const appendCommentFiles = useCallback((fileList) => {
-        const entries = toFileEntries(fileList)
-        if (entries.length === 0) return
-        setCommentFileEntries((prev) => [...prev, ...entries])
-    }, [toFileEntries])
+    const appendCommentFiles = useCallback(
+        async (fileList) => {
+            const entries = await toFileEntries(fileList)
+            if (entries.length === 0) return
+            setCommentFileEntries((prev) => [...prev, ...entries])
+        },
+        [toFileEntries]
+    )
 
     const removeCommentFileEntry = useCallback((id) => {
         setCommentFileEntries((prev) => {
@@ -282,8 +278,8 @@ export default function GroupPostCard({
     }, [])
 
     const appendThreadFiles = useCallback(
-        (fileList) => {
-            const entries = toFileEntries(fileList)
+        async (fileList) => {
+            const entries = await toFileEntries(fileList)
             if (entries.length === 0) return
             setThreadFileEntries((prev) => [...prev, ...entries])
         },
@@ -307,11 +303,20 @@ export default function GroupPostCard({
         })
     }, [])
 
-    const appendEditingCommentFiles = useCallback((fileList) => {
-        const entries = toFileEntries(fileList)
+    const appendEditingCommentFiles = useCallback(
+        async (fileList) => {
+            const entries = await toFileEntries(fileList)
+            if (entries.length === 0) return
+            setEditingCommentNewEntries((prev) => [...prev, ...entries])
+        },
+        [toFileEntries]
+    )
+
+    const appendEditPostFiles = useCallback(async (fileList) => {
+        const entries = await createImageEntriesFromFileList(fileList)
         if (entries.length === 0) return
-        setEditingCommentNewEntries((prev) => [...prev, ...entries])
-    }, [toFileEntries])
+        setEditNewFiles((prev) => [...prev, ...entries.map((e) => e.file)])
+    }, [])
 
     const removeEditingCommentNewEntry = useCallback((id) => {
         setEditingCommentNewEntries((prev) => {
@@ -817,7 +822,7 @@ export default function GroupPostCard({
                                                 multiple
                                                 className="max-w-full text-[0.7rem] file:mr-2 file:rounded-lg file:border-0 file:bg-[var(--app-primary)]/15 file:px-2 file:py-1 file:text-[0.65rem] file:font-bold file:text-[var(--app-text)]"
                                                 onChange={(e) => {
-                                                    appendEditingCommentFiles(e.target.files)
+                                                    void appendEditingCommentFiles(e.target.files)
                                                     const input = e.target
                                                     window.queueMicrotask(() => {
                                                         input.value = ''
@@ -1230,7 +1235,20 @@ export default function GroupPostCard({
                                     </div>
                                 ))}
                             </div>
-                            <input ref={editFileRef} type="file" accept="image/*" multiple className="sr-only" onChange={(e) => setEditNewFiles((p) => [...p, ...Array.from(e.target.files || [])])} />
+                            <input
+                                ref={editFileRef}
+                                type="file"
+                                accept="image/*"
+                                multiple
+                                className="sr-only"
+                                onChange={(e) => {
+                                    void appendEditPostFiles(e.target.files)
+                                    const input = e.target
+                                    window.queueMicrotask(() => {
+                                        input.value = ''
+                                    })
+                                }}
+                            />
                             <button
                                 type="button"
                                 onClick={() => editFileRef.current?.click()}
@@ -1356,7 +1374,7 @@ export default function GroupPostCard({
                                             multiple
                                             className="max-w-full text-[0.7rem] file:mr-2 file:rounded-lg file:border-0 file:bg-[var(--app-primary)]/15 file:px-2 file:py-1 file:text-[0.65rem] file:font-bold file:text-[var(--app-text)]"
                                             onChange={(e) => {
-                                                appendCommentFiles(e.target.files)
+                                                void appendCommentFiles(e.target.files)
                                                 const input = e.target
                                                 window.queueMicrotask(() => {
                                                     input.value = ''
@@ -1481,7 +1499,7 @@ export default function GroupPostCard({
                                             multiple
                                             className="max-w-full text-[0.7rem] file:mr-2 file:rounded-lg file:border-0 file:bg-[var(--app-primary)]/15 file:px-2 file:py-1 file:text-[0.65rem] file:font-bold file:text-[var(--app-text)]"
                                             onChange={(e) => {
-                                                appendCommentFiles(e.target.files)
+                                                void appendCommentFiles(e.target.files)
                                                 const input = e.target
                                                 window.queueMicrotask(() => {
                                                     input.value = ''
@@ -1620,7 +1638,7 @@ export default function GroupPostCard({
                                                   multiple
                                                   className="max-w-full text-[0.7rem] file:mr-2 file:rounded-lg file:border-0 file:bg-[var(--app-primary)]/15 file:px-2 file:py-1 file:text-[0.65rem] file:font-bold file:text-[var(--app-text)]"
                                                   onChange={(e) => {
-                                                      appendThreadFiles(e.target.files)
+                                                      void appendThreadFiles(e.target.files)
                                                       const input = e.target
                                                       window.queueMicrotask(() => {
                                                           input.value = ''
