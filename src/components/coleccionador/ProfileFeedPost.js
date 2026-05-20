@@ -27,6 +27,20 @@ function formatFeedDate(iso) {
     }
 }
 
+function apiErrorMessage(err, fallback) {
+    const data = err?.response?.data
+    if (typeof data?.message === 'string' && data.message.trim()) return data.message
+    if (data?.errors && typeof data.errors === 'object') {
+        const first = Object.values(data.errors)?.[0]
+        if (Array.isArray(first) && first[0]) return String(first[0])
+    }
+    const status = err?.response?.status
+    if (status === 403) return 'No tienes permiso para eliminar esta publicación.'
+    if (status === 404) return 'La publicación ya no existe.'
+    if (status) return `${fallback} (error ${status})`
+    return err?.message || fallback
+}
+
 function displayBody(body) {
     return (body || '').trim()
 }
@@ -911,8 +925,7 @@ export default function ProfileFeedPost({ post, currentUserId, onRefresh, onPost
             await confirmDelete.onConfirm()
             setConfirmDelete(null)
         } catch (err) {
-            const msg = err?.response?.data?.message || err?.message || 'No se pudo eliminar la publicación.'
-            setConfirmDeleteError(typeof msg === 'string' ? msg : 'No se pudo eliminar la publicación.')
+            setConfirmDeleteError(apiErrorMessage(err, 'No se pudo eliminar la publicación.'))
         } finally {
             setConfirmDeleteBusy(false)
         }
