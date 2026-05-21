@@ -12,6 +12,7 @@ use App\Models\CollectorGroupMember;
 use App\Models\CollectorGroupPost;
 use App\Models\CollectorGroupPostReaction;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class CollectorGroupController extends Controller
 {
@@ -238,16 +239,25 @@ class CollectorGroupController extends Controller
         $this->assertMemberCanPost($request, $collector_group);
 
         $data = $request->validate([
-            'body' => ['required', 'string', 'max:5000'],
+            'body' => ['nullable', 'string', 'max:5000'],
             'images' => ['nullable', 'array', 'max:'.ImageUploadRules::MAX_GROUP_POST_IMAGES],
             'images.*' => ['string', 'max:500'],
         ]);
 
+        $body = trim((string) ($data['body'] ?? ''));
+        $images = $data['images'] ?? [];
+
+        if ($body === '' && $images === []) {
+            throw ValidationException::withMessages([
+                'body' => ['Escribe un texto o adjunta al menos una imagen.'],
+            ]);
+        }
+
         $post = CollectorGroupPost::create([
             'group_id' => $collector_group->id,
             'user_id' => $request->user()->id,
-            'body' => $data['body'],
-            'images' => $data['images'] ?? null,
+            'body' => $body !== '' ? $body : ' ',
+            'images' => $images !== [] ? $images : null,
         ]);
 
         return response()->json($post->load('user:id,name,email,avatar_path')->loadCount([
@@ -265,12 +275,24 @@ class CollectorGroupController extends Controller
         abort_unless($post->user_id === $request->user()->id || $canModerate, 403);
 
         $data = $request->validate([
-            'body' => ['sometimes', 'string', 'max:5000'],
+            'body' => ['sometimes', 'nullable', 'string', 'max:5000'],
             'images' => ['sometimes', 'nullable', 'array', 'max:'.ImageUploadRules::MAX_GROUP_POST_IMAGES],
             'images.*' => ['string', 'max:500'],
         ]);
 
-        $post->update($data);
+        $nextBody = array_key_exists('body', $data) ? trim((string) ($data['body'] ?? '')) : trim((string) $post->body);
+        $nextImages = array_key_exists('images', $data) ? ($data['images'] ?? []) : ($post->images ?? []);
+
+        if ($nextBody === '' && $nextImages === []) {
+            throw ValidationException::withMessages([
+                'body' => ['Debe quedar texto o al menos una imagen.'],
+            ]);
+        }
+
+        $post->update([
+            'body' => $nextBody !== '' ? $nextBody : ' ',
+            'images' => $nextImages !== [] ? $nextImages : null,
+        ]);
 
         return $post->fresh()
             ->load([

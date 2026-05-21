@@ -60,4 +60,34 @@ class FeedCommentNesting
 
         return $build(0);
     }
+
+    /** Borra todos los comentarios de un post (hijos antes que padres por FK parent_comment_id). */
+    public static function deleteAllForPost(int $postId): void
+    {
+        $all = UserFeedPostComment::query()
+            ->where('post_id', $postId)
+            ->get(['id', 'parent_comment_id']);
+
+        if ($all->isEmpty()) {
+            return;
+        }
+
+        $childrenByParent = $all->groupBy(fn ($c) => (int) ($c->parent_comment_id ?? 0));
+        $order = [];
+
+        $walk = function (int $id) use (&$walk, $childrenByParent, &$order) {
+            foreach ($childrenByParent->get($id, collect()) as $ch) {
+                $walk((int) $ch->id);
+            }
+            $order[] = $id;
+        };
+
+        foreach ($childrenByParent->get(0, collect()) as $root) {
+            $walk((int) $root->id);
+        }
+
+        foreach ($order as $id) {
+            UserFeedPostComment::query()->where('id', $id)->delete();
+        }
+    }
 }

@@ -210,6 +210,9 @@ class FeedPostController extends Controller
                 ->where('parent_post_id', $userFeedPost->id)
                 ->update(['parent_post_id' => null]);
 
+            // Comentarios anidados (FK parent_comment_id noAction) antes de borrar el post.
+            FeedCommentNesting::deleteAllForPost((int) $userFeedPost->id);
+
             $userFeedPost->delete();
         });
 
