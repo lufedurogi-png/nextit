@@ -158,16 +158,19 @@ export default function GrupoDetallePage() {
                 const up = await axios.post('/uploads', fd)
                 if (up.data?.path) images.push(up.data.path)
             }
-            await axios.post(`/groups/${id}/posts`, {
-                body: text || ' ',
+            const payload = {
                 images: images.length ? images : null,
-            })
+            }
+            if (text) payload.body = text
+            await axios.post(`/groups/${id}/posts`, payload)
             setPostBody('')
             clearPostEntries()
             if (postFilesRef.current) postFilesRef.current.value = ''
             await load()
         } catch (err) {
-            const msg = err?.response?.data?.message || 'No se pudo publicar.'
+            const data = err?.response?.data
+            const fieldMsg = data?.errors?.body?.[0]
+            const msg = fieldMsg || data?.message || 'No se pudo publicar.'
             setPostMessage(typeof msg === 'string' ? msg : 'No se pudo publicar.')
         } finally {
             setPublishing(false)

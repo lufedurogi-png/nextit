@@ -156,6 +156,7 @@ export default function GroupPostCard({
     const [commentsOpen, setCommentsOpen] = useState(false)
     const [mediaLightboxOpen, setMediaLightboxOpen] = useState(false)
     const [mediaLightboxStart, setMediaLightboxStart] = useState(0)
+    const [activePostImageIndex, setActivePostImageIndex] = useState(0)
     const [commentImageViewerOpen, setCommentImageViewerOpen] = useState(false)
     const [commentImageViewerUrls, setCommentImageViewerUrls] = useState([])
     const [commentImageViewerStart, setCommentImageViewerStart] = useState(0)
@@ -212,6 +213,15 @@ export default function GroupPostCard({
         setDislikesCount(post.dislikes_count ?? 0)
         setCommentReactionOverrides({})
     }, [post.id, post.likes_count, post.dislikes_count])
+
+    useEffect(() => {
+        const total = Array.isArray(post.images) ? post.images.length : 0
+        if (total === 0) {
+            setActivePostImageIndex(0)
+            return
+        }
+        setActivePostImageIndex((prev) => Math.min(prev, total - 1))
+    }, [post.id, post.images])
 
     useEffect(() => {
         setLocalComments(Array.isArray(post.comments) ? post.comments : [])
@@ -713,6 +723,8 @@ export default function GroupPostCard({
     }
 
     const textBody = (post.body || '').trim()
+    const postImages = Array.isArray(post.images) ? post.images : []
+    const activePostImagePath = postImages[Math.min(activePostImageIndex, Math.max(postImages.length - 1, 0))]
 
     const openCommentImageViewer = useCallback((paths, startIdx = 0) => {
         if (!Array.isArray(paths) || paths.length === 0) return
@@ -1150,32 +1162,57 @@ export default function GroupPostCard({
                 </div>
             ) : null}
 
-            {(post.images || []).length > 0 ? (
-                <div className={`px-4 pb-4 ${(post.images || []).length === 1 ? '' : 'grid grid-cols-2 gap-1'}`}>
-                    {(post.images || []).length === 1 ? (
+            {postImages.length > 0 ? (
+                <div className="px-4 pb-4">
+                    {postImages.length === 1 ? (
                         <div className="overflow-hidden rounded-2xl border border-[var(--app-subtle)]/20 bg-[var(--app-card)]">
                             <AmbientPostImage
-                                src={storageUrl((post.images || [])[0])}
+                                src={storageUrl(postImages[0])}
                                 foregroundClassName="max-h-[min(70vh,520px)] w-full object-contain"
                                 onOpen={() => openMediaLightbox(0)}
                             />
                         </div>
                     ) : (
-                        (post.images || []).map((img, idx) => (
-                            <button
-                                key={img}
-                                type="button"
-                                onClick={() => openMediaLightbox(idx)}
-                                className="relative block w-full cursor-zoom-in overflow-hidden rounded-xl text-left ring-1 ring-[var(--app-subtle)]/20 transition hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-accent)]"
-                            >
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img
-                                    src={storageUrl(img)}
-                                    alt=""
-                                    className="aspect-[4/3] w-full object-cover sm:aspect-video"
-                                />
-                            </button>
-                        ))
+                        <div className="rounded-2xl border border-[var(--app-subtle)]/20 bg-[var(--app-card)] p-2">
+                            <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
+                                <div className="order-2 sm:order-1 sm:w-20">
+                                    <div className="flex gap-2 overflow-x-auto pb-1 sm:max-h-[420px] sm:flex-col sm:overflow-y-auto sm:overflow-x-hidden sm:pb-0">
+                                        {postImages.map((path, i) => {
+                                            const selected = i === activePostImageIndex
+                                            return (
+                                                <button
+                                                    key={`${path}-${i}`}
+                                                    type="button"
+                                                    onClick={() => setActivePostImageIndex(i)}
+                                                    className={`h-16 w-16 shrink-0 overflow-hidden rounded-lg border transition ${
+                                                        selected
+                                                            ? 'border-[var(--app-accent)] ring-2 ring-[var(--app-accent)]/30'
+                                                            : 'border-[var(--app-subtle)]/25 hover:border-[var(--app-accent)]/35'
+                                                    }`}
+                                                    aria-label={`Ver imagen ${i + 1}`}
+                                                >
+                                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                    <img
+                                                        src={storageUrl(path)}
+                                                        alt=""
+                                                        className="h-full w-full object-cover"
+                                                    />
+                                                </button>
+                                            )
+                                        })}
+                                    </div>
+                                </div>
+                                <div className="order-1 min-w-0 flex-1 overflow-hidden rounded-xl border border-[var(--app-subtle)]/20 sm:order-2">
+                                    {activePostImagePath ? (
+                                        <AmbientPostImage
+                                            src={storageUrl(activePostImagePath)}
+                                            foregroundClassName="max-h-[min(70vh,520px)] w-full object-contain"
+                                            onOpen={() => openMediaLightbox(activePostImageIndex)}
+                                        />
+                                    ) : null}
+                                </div>
+                            </div>
+                        </div>
                     )}
                 </div>
             ) : null}
