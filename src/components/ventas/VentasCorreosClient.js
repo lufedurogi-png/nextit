@@ -5,7 +5,10 @@ import Link from 'next/link'
 import Input from '@/components/Input'
 import Label from '@/components/Label'
 import { useAdminTheme } from '@/contexts/AdminThemeContext'
-import VentasCorreoEditor, { buildCuerpoHtmlConImagenes } from '@/components/ventas/VentasCorreoEditor'
+import VentasCorreoEditor, {
+    buildCuerpoHtmlConImagenes,
+    ETIQUETA_USUARIOS,
+} from '@/components/ventas/VentasCorreoEditor'
 import {
     createVentasCorreoDestinatario,
     deleteVentasCorreoDestinatario,
@@ -186,7 +189,8 @@ export default function VentasCorreosClient() {
             setStatus({ type: 'err', text: 'Escribe el asunto del correo.' })
             return
         }
-        const tieneTexto = (cuerpoHtml.replace(/<[^>]+>/g, '').trim() || '').length > 0
+        const cuerpoPlano = (cuerpoHtml.replace(/<[^>]+>/g, '').trim() || '')
+        const tieneTexto = cuerpoPlano.length > 0 || cuerpoHtml.includes(ETIQUETA_USUARIOS)
         const tieneImagenes = imagenesSlots.some((s) => s.file)
         if (!tieneTexto && !tieneImagenes) {
             setStatus({ type: 'err', text: 'Escribe el mensaje o agrega al menos una imagen.' })
@@ -399,6 +403,7 @@ export default function VentasCorreosClient() {
                 darkMode={darkMode}
                 asunto={asunto}
                 onAsuntoChange={setAsunto}
+                cuerpoHtml={cuerpoHtml}
                 editorRef={editorRef}
                 mensajeResetKey={mensajeResetKey}
                 onCuerpoChange={setCuerpoHtml}

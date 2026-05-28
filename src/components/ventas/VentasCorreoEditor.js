@@ -10,6 +10,18 @@ function formatBytes(n) {
     return `${(b / (1024 * 1024)).toFixed(1)} MB`
 }
 
+/** Etiqueta de personalización: en el servidor se sustituye por el nombre de cada destinatario. */
+export const ETIQUETA_USUARIOS = '@usuarios'
+
+export function nombreVistaPreviaDestinatario(destinatario) {
+    if (!destinatario) return '…'
+    const nombre = (destinatario.nombre || '').trim()
+    if (nombre) return nombre
+    const email = destinatario.email || ''
+    const local = email.includes('@') ? email.split('@')[0] : email
+    return local || 'cliente'
+}
+
 export function buildCuerpoHtmlConImagenes(htmlEditor, cantidadImagenes) {
     let html = (htmlEditor || '').trim()
     if (cantidadImagenes > 0) {
@@ -26,6 +38,7 @@ export default function VentasCorreoEditor({
     darkMode,
     asunto,
     onAsuntoChange,
+    cuerpoHtml = '',
     editorRef,
     mensajeResetKey = 0,
     onCuerpoChange,
@@ -66,6 +79,23 @@ export default function VentasCorreoEditor({
             document.execCommand(cmd, false, null)
         } catch (_) {}
     }
+
+    const insertarEtiquetaUsuarios = () => {
+        const el = editorRef.current
+        if (!el) return
+        el.focus()
+        try {
+            document.execCommand('insertText', false, ETIQUETA_USUARIOS)
+        } catch (_) {
+            el.textContent = (el.textContent || '') + ETIQUETA_USUARIOS
+        }
+        onCuerpoChange(el.innerHTML ?? '')
+    }
+
+    const cuerpoPlano = (cuerpoHtml || '').replace(/<[^>]+>/g, '')
+    const tieneEtiquetaUsuarios = cuerpoPlano.includes(ETIQUETA_USUARIOS)
+    const ejemploDestinatario = destinatariosSeleccionados?.[0]
+    const nombreEjemplo = nombreVistaPreviaDestinatario(ejemploDestinatario)
 
     const agregarImagen = (file) => {
         if (!file || !file.type.startsWith('image/')) return
@@ -113,7 +143,9 @@ export default function VentasCorreoEditor({
             <div>
                 <Label>Cuerpo del mensaje</Label>
                 <p className="text-xs text-violet-700/70 dark:text-violet-300/60 mb-2">
-                    Selecciona texto y usa negrita, cursiva o subrayado (como en Gmail).
+                    Selecciona texto y usa negrita, cursiva o subrayado. Inserta{' '}
+                    <code className="rounded bg-violet-100/80 px-1 py-0.5 text-[11px] dark:bg-violet-900/50">{ETIQUETA_USUARIOS}</code>{' '}
+                    para que cada destinatario vea su nombre registrado.
                 </p>
                 <div
                     className={`rounded-xl border overflow-hidden ${
@@ -121,7 +153,7 @@ export default function VentasCorreoEditor({
                     }`}
                 >
                     <div
-                        className={`flex flex-wrap gap-1 border-b px-2 py-1.5 ${
+                        className={`flex flex-wrap items-center gap-1 border-b px-2 py-1.5 ${
                             darkMode ? 'border-violet-800/60 bg-[#12101a]' : 'border-violet-100 bg-violet-50/80'
                         }`}
                         role="toolbar"
@@ -135,6 +167,15 @@ export default function VentasCorreoEditor({
                         </button>
                         <button type="button" className={toolbarBtn} onClick={() => aplicarFormato('underline')} title="Subrayado">
                             <span className="underline">U</span>
+                        </button>
+                        <span className="mx-1 h-5 w-px bg-violet-200 dark:bg-violet-800/80" aria-hidden />
+                        <button
+                            type="button"
+                            className={`${toolbarBtn} font-mono text-xs font-semibold normal-case tracking-tight`}
+                            onClick={insertarEtiquetaUsuarios}
+                            title="Insertar nombre del destinatario"
+                        >
+                            {ETIQUETA_USUARIOS}
                         </button>
                     </div>
                     <div
@@ -151,6 +192,24 @@ export default function VentasCorreoEditor({
                         }`}
                     />
                 </div>
+                {tieneEtiquetaUsuarios && (
+                    <p className="mt-2 text-xs text-violet-700/90 dark:text-violet-300/80 rounded-lg bg-violet-50/90 dark:bg-violet-950/40 px-3 py-2 border border-violet-100 dark:border-violet-900/50">
+                        {ejemploDestinatario ? (
+                            <>
+                                Vista previa (ejemplo con{' '}
+                                <strong>{ejemploDestinatario.nombre || ejemploDestinatario.email}</strong>): cada
+                                persona verá su propio nombre donde escribiste{' '}
+                                <code className="font-mono text-[11px]">{ETIQUETA_USUARIOS}</code> — p. ej. «Estimado{' '}
+                                <strong>{nombreEjemplo}</strong>».
+                            </>
+                        ) : (
+                            <>
+                                Al enviar, <code className="font-mono text-[11px]">{ETIQUETA_USUARIOS}</code> se
+                                reemplazará por el nombre de cada destinatario. Selecciona contactos en la tabla.
+                            </>
+                        )}
+                    </p>
+                )}
             </div>
 
             <div>
@@ -298,6 +357,12 @@ export default function VentasCorreoEditor({
                     <p className="text-sm text-violet-900/80 dark:text-violet-200/80">
                         Se enviará a <strong>{destinatariosSeleccionados.length}</strong> destinatario(s):
                     </p>
+                    {tieneEtiquetaUsuarios && (
+                        <p className="text-xs text-violet-800/90 dark:text-violet-200/70">
+                            Cada persona verá su nombre donde usaste{' '}
+                            <code className="font-mono rounded bg-white/60 px-1 dark:bg-black/20">{ETIQUETA_USUARIOS}</code>.
+                        </p>
+                    )}
                     <ul className="max-h-32 overflow-y-auto text-sm rounded-lg bg-white/60 dark:bg-[#12101a]/60 px-3 py-2 space-y-1">
                         {destinatariosSeleccionados.map((d) => (
                             <li key={d.id} className="text-violet-900 dark:text-violet-100">
