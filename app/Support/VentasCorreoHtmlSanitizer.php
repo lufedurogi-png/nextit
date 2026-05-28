@@ -26,8 +26,13 @@ class VentasCorreoHtmlSanitizer
             return true;
         }
 
+        if (str_contains($html, VentasCorreoPersonalizacion::ETIQUETA_USUARIOS)) {
+            return true;
+        }
+
         $texto = html_entity_decode(strip_tags($html));
         $texto = preg_replace('/\[\[IMG:\d+\]\]/', '', $texto) ?? $texto;
+        $texto = str_replace(VentasCorreoPersonalizacion::ETIQUETA_USUARIOS, '', $texto);
 
         return trim($texto) !== '';
     }

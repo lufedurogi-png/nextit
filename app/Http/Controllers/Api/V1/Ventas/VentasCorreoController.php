@@ -10,6 +10,7 @@ use App\Models\VentasCorreoEnvioAdjunto;
 use App\Models\VentasCorreoEnvioDestinatario;
 use App\Support\VentasCorreoAdjuntoRules;
 use App\Support\VentasCorreoHtmlSanitizer;
+use App\Support\VentasCorreoPersonalizacion;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -260,9 +261,15 @@ class VentasCorreoController extends Controller
 
         foreach ($destinatarios as $destinatario) {
             try {
+                $cuerpoParaDestinatario = VentasCorreoPersonalizacion::personalizar(
+                    $cuerpoHtml,
+                    $destinatario->nombre,
+                    $destinatario->email,
+                );
+
                 Mail::to($destinatario->email)->send(new VentasCorreoMasivoMail(
                     $asunto,
-                    $cuerpoHtml,
+                    $cuerpoParaDestinatario,
                     $remitente,
                     $adjuntosMail,
                     $inlineMail,
@@ -459,12 +466,10 @@ class VentasCorreoController extends Controller
             if ($url === '') {
                 continue;
             }
-            $etiqueta = '<img src="'.$url.'" alt="" style="max-width:100%;height:auto;display:block;margin:12px auto;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.12);" />';
+            $etiqueta = '<img src="'.htmlspecialchars($url, ENT_QUOTES, 'UTF-8').'" alt="" style="max-width:100%;height:auto;display:block;margin:12px auto;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.12);" />';
             $html = str_replace('[[IMG:'.$i.']]', $etiqueta, $html);
         }
 
-        $html = preg_replace('/\[\[IMG:\d+\]\]/', '', $html) ?? $html;
-
-        return $html;
+        return preg_replace('/\[\[IMG:\d+\]\]/', '', $html) ?? $html;
     }
 }

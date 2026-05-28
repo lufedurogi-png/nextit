@@ -14,15 +14,15 @@ class VentasCorreoMasivoMail extends Mailable
     use Queueable, SerializesModels;
 
     /**
-     * @param  list<array{path: string, name: string}>  $adjuntosArchivos
+     * @param  list<array{path: string, mime?: string}>  $adjuntosArchivos
      * @param  list<array{path: string, mime?: string}>  $imagenesInline
      */
     public function __construct(
         public string $asunto,
-        public string $cuerpoHtml,
-        public ?string $remitenteNombre = null,
-        public array $adjuntosArchivos = [],
-        public array $imagenesInline = [],
+        protected string $cuerpoHtml,
+        protected ?string $remitenteNombre = null,
+        protected array $adjuntosArchivos = [],
+        protected array $imagenesInline = [],
     ) {}
 
     public function envelope(): Envelope
@@ -37,7 +37,8 @@ class VentasCorreoMasivoMail extends Mailable
         return new Content(
             view: 'emails.ventas-correo',
             with: [
-                'cuerpoHtml' => $this->resolverCuerpoConImagenes(),
+                'cuerpoHtml' => $this->cuerpoHtml,
+                'imagenesInline' => $this->imagenesInline,
                 'remitenteNombre' => $this->remitenteNombre,
             ],
         );
@@ -58,27 +59,5 @@ class VentasCorreoMasivoMail extends Mailable
         }
 
         return $out;
-    }
-
-    private function resolverCuerpoConImagenes(): string
-    {
-        $html = $this->cuerpoHtml;
-
-        foreach ($this->imagenesInline as $i => $img) {
-            $path = $img['path'] ?? '';
-            if ($path === '' || ! is_readable($path)) {
-                continue;
-            }
-            $mime = $img['mime'] ?? (mime_content_type($path) ?: 'image/jpeg');
-            $contenido = file_get_contents($path);
-            if ($contenido === false) {
-                continue;
-            }
-            $src = 'data:'.$mime.';base64,'.base64_encode($contenido);
-            $etiqueta = '<img src="'.$src.'" alt="" style="max-width:100%;height:auto;display:block;margin:12px 0;border-radius:6px;" />';
-            $html = str_replace('[[IMG:'.$i.']]', $etiqueta, $html);
-        }
-
-        return $html;
     }
 }

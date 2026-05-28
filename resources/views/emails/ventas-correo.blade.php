@@ -1,3 +1,12 @@
+@php
+    use App\Support\VentasCorreoInlineHtml;
+
+    $cuerpoRenderizado = VentasCorreoInlineHtml::reemplazarMarcadores(
+        $cuerpoHtml,
+        $imagenesInline ?? [],
+        fn (string $path) => $message->embed($path),
+    );
+@endphp
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -7,7 +16,7 @@
     @if($remitenteNombre)
         <p style="margin-bottom: 16px; color: #6b7280; font-size: 13px;">Mensaje de <strong>{{ $remitenteNombre }}</strong> — Todo para la oficina</p>
     @endif
-    <div style="font-size: 15px;">{!! $cuerpoHtml !!}</div>
+    <div style="font-size: 15px;">{!! $cuerpoRenderizado !!}</div>
     <p style="margin-top: 28px; color: #6b7280; font-size: 12px;">
         <strong>Tienda en línea</strong><br />
         <a href="https://todoparaoficna.shop/tienda" style="color: #7c3aed; font-weight: 600;">https://todoparaoficna.shop/tienda</a>
