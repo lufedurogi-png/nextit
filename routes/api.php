@@ -29,11 +29,14 @@ use App\Http\Controllers\Api\V1\MetodoPagoController;
 use App\Http\Controllers\Api\V1\PayPalController;
 use App\Http\Controllers\Api\V1\PedidoController;
 use App\Http\Controllers\Api\V1\ProductoController;
-use App\Http\Controllers\Api\V1\PruebaPedidoController;
 use App\Http\Controllers\Api\V1\PromocionController;
+use App\Http\Controllers\Api\V1\PruebaPedidoController;
 use App\Http\Controllers\Api\V1\PublicidadController;
 use App\Http\Controllers\Api\V1\TarjetaGuardadaController;
 use App\Http\Controllers\Api\V1\Ventas\VentasAuthController;
+use App\Http\Controllers\Api\V1\Ventas\VentasCalendarioTareaController;
+use App\Http\Controllers\Api\V1\Ventas\VentasCorreoController;
+use App\Http\Controllers\Api\V1\Ventas\VentasCotizacionController;
 use App\Http\Controllers\Spa\Auth\AuthController as SpaAuthController;
 use Illuminate\Support\Facades\Route;
 
@@ -112,6 +115,30 @@ Route::prefix('v1')->group(function () {
 
         Route::put('/auth/password', [ApiAuthController::class, 'changePassword'])->middleware(['permission:edit profile'])->name('auth.password.update');
 
+        // Ventas (vendedores): calendario / pendientes
+        Route::middleware('role:seller')->prefix('ventas')->name('ventas.')->group(function () {
+            Route::get('/calendario/tareas', [VentasCalendarioTareaController::class, 'index'])->name('calendario.tareas.index');
+            Route::post('/calendario/tareas', [VentasCalendarioTareaController::class, 'store'])->name('calendario.tareas.store');
+            Route::put('/calendario/tareas/{id}', [VentasCalendarioTareaController::class, 'update'])->name('calendario.tareas.update');
+            Route::delete('/calendario/tareas/{id}', [VentasCalendarioTareaController::class, 'destroy'])->name('calendario.tareas.destroy');
+
+            Route::get('/cotizaciones/reglas-precio', [VentasCotizacionController::class, 'reglasPrecio'])->name('cotizaciones.reglas-precio');
+            Route::get('/cotizaciones/clientes', [VentasCotizacionController::class, 'searchClientes'])->name('cotizaciones.clientes');
+            Route::get('/cotizaciones', [VentasCotizacionController::class, 'index'])->name('cotizaciones.index');
+            Route::post('/cotizaciones', [VentasCotizacionController::class, 'store'])->name('cotizaciones.store');
+            Route::put('/cotizaciones/{id}', [VentasCotizacionController::class, 'update'])->name('cotizaciones.update');
+            Route::delete('/cotizaciones/{id}', [VentasCotizacionController::class, 'destroy'])->name('cotizaciones.destroy');
+
+            Route::get('/correos/historial', [VentasCorreoController::class, 'indexHistorial'])->name('correos.historial.index');
+            Route::get('/correos/historial/{id}', [VentasCorreoController::class, 'showHistorial'])->name('correos.historial.show');
+            Route::get('/correos/destinatarios', [VentasCorreoController::class, 'indexDestinatarios'])->name('correos.destinatarios.index');
+            Route::post('/correos/destinatarios', [VentasCorreoController::class, 'storeDestinatario'])->name('correos.destinatarios.store');
+            Route::delete('/correos/destinatarios/{id}', [VentasCorreoController::class, 'destroyDestinatario'])->name('correos.destinatarios.destroy');
+            Route::post('/correos/enviar', [VentasCorreoController::class, 'send'])
+                ->middleware('throttle:20,1')
+                ->name('correos.enviar');
+        });
+
         // SPA Routes - COOKIES ----------------------
         Route::prefix('spa')->group(function () {
 
@@ -183,78 +210,88 @@ Route::prefix('v1')->group(function () {
             Route::delete('/chat-mensajes/{id}', [ClienteChatController::class, 'destroy'])->name('chat.mensajes.destroy');
         });
 
-        // Admin routes (solo usuarios con rol admin)
-        Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
-            Route::get('/stats/categorias-mas-vistas', [AdminStatsController::class, 'categoriasMasVistas'])->name('stats.categorias');
-            Route::get('/stats/clientes-por-mes', [AdminStatsController::class, 'clientesPorMes'])->name('stats.clientes');
-            Route::get('/stats/actividad-usuarios', [AdminStatsController::class, 'actividadUsuarios'])->name('stats.actividad');
-            Route::get('/stats/actividad-eventos', [AdminStatsController::class, 'actividadEventos'])->name('stats.actividad.eventos');
-            Route::get('/stats/catalogo-resumen', [AdminStatsController::class, 'catalogoResumen'])->name('stats.catalogo.resumen');
+        // Admin: lecturas y chat compartidos con vendedores; gestión sensible solo administrador
+        Route::prefix('admin')->name('admin.')->group(function () {
+            Route::middleware('role:admin|seller')->group(function () {
+                Route::get('/stats/categorias-mas-vistas', [AdminStatsController::class, 'categoriasMasVistas'])->name('stats.categorias');
+                Route::get('/stats/clientes-por-mes', [AdminStatsController::class, 'clientesPorMes'])->name('stats.clientes');
+                Route::get('/stats/actividad-usuarios', [AdminStatsController::class, 'actividadUsuarios'])->name('stats.actividad');
+                Route::get('/stats/actividad-eventos', [AdminStatsController::class, 'actividadEventos'])->name('stats.actividad.eventos');
+                Route::get('/stats/catalogo-resumen', [AdminStatsController::class, 'catalogoResumen'])->name('stats.catalogo.resumen');
 
-            Route::get('/tipos-usuario', [ManagerUserController::class, 'getTypesUser'])->name('tipos-usuario');
-            Route::get('/permisos', [ManagerUserController::class, 'getPermissions'])->name('permisos');
+                Route::get('/publicidad', [PublicidadAdminController::class, 'index'])->name('publicidad.admin.index');
 
-            Route::get('/usuarios', [ManagerUserController::class, 'index'])->name('usuarios.index');
-            Route::post('/usuarios', [ManagerUserController::class, 'store'])->name('usuarios.store');
-            Route::put('/usuarios/{usuarioId}', [ManagerUserController::class, 'update'])->name('usuarios.update');
-            Route::delete('/usuarios/{usuarioId}', [ManagerUserController::class, 'destroy'])->name('usuarios.destroy');
-            Route::put('/usuarios/{usuarioId}/rol', [ManagerUserController::class, 'setRole'])->name('usuarios.rol');
-            Route::delete('/usuarios/{usuarioId}/rol', [ManagerUserController::class, 'removeRole'])->name('usuarios.rol.destroy');
-            Route::put('/usuarios/{usuarioId}/password', [ManagerUserController::class, 'resetPassword'])->name('usuarios.password');
-            Route::post('/usuarios/{usuarioId}/permisos', [ManagerUserController::class, 'grantPermission'])->name('usuarios.permisos.grant');
-            Route::post('/usuarios/{usuarioId}/permisos/revocar', [ManagerUserController::class, 'revokePermission'])->name('usuarios.permisos.revoke');
+                Route::get('/promociones', [PromocionAdminController::class, 'index'])->name('promociones.admin.index');
+                Route::get('/promociones/{id}', [PromocionAdminController::class, 'show'])->name('promociones.admin.show');
 
-            Route::get('/publicidad', [PublicidadAdminController::class, 'index'])->name('publicidad.admin.index');
-            Route::patch('/publicidad/carrusel', [PublicidadAdminController::class, 'updateCarrusel'])->name('publicidad.admin.carrusel');
-            Route::post('/publicidad', [PublicidadAdminController::class, 'store'])->name('publicidad.admin.store');
-            Route::delete('/publicidad/{id}', [PublicidadAdminController::class, 'destroy'])->name('publicidad.admin.destroy');
+                Route::get('/desarrolladores', [DesarrolladorAdminController::class, 'index'])->name('desarrolladores.admin.index');
 
-            Route::get('/promociones', [PromocionAdminController::class, 'index'])->name('promociones.admin.index');
-            Route::get('/promociones/{id}', [PromocionAdminController::class, 'show'])->name('promociones.admin.show');
-            Route::post('/promociones', [PromocionAdminController::class, 'store'])->name('promociones.admin.store');
-            Route::put('/promociones/{id}', [PromocionAdminController::class, 'update'])->name('promociones.admin.update');
-            Route::delete('/promociones/{id}', [PromocionAdminController::class, 'destroy'])->name('promociones.admin.destroy');
-            Route::post('/promociones/{id}/items', [PromocionAdminController::class, 'agregarItem'])->name('promociones.admin.items.add');
-            Route::post('/promociones/{id}/quitar-item', [PromocionAdminController::class, 'quitarItem'])->name('promociones.admin.items.remove');
-            Route::get('/desarrolladores', [DesarrolladorAdminController::class, 'index'])->name('desarrolladores.admin.index');
-            Route::post('/desarrolladores', [DesarrolladorAdminController::class, 'store'])->name('desarrolladores.admin.store');
-            Route::put('/desarrolladores/{id}', [DesarrolladorAdminController::class, 'update'])->name('desarrolladores.admin.update');
-            Route::delete('/desarrolladores/{id}', [DesarrolladorAdminController::class, 'destroy'])->name('desarrolladores.admin.destroy');
+                Route::get('/productos-manuales', [ProductoManualAdminController::class, 'index'])->name('productos-manuales.index');
+                Route::get('/productos-manuales/grupos', [ProductoManualAdminController::class, 'gruposDistintos'])->name('productos-manuales.grupos');
+                Route::get('/productos-manuales/marcas', [ProductoManualAdminController::class, 'marcasDistintas'])->name('productos-manuales.marcas');
+                Route::get('/productos-manuales/{id}', [ProductoManualAdminController::class, 'show'])->name('productos-manuales.show');
 
-            Route::get('/productos-manuales', [ProductoManualAdminController::class, 'index'])->name('productos-manuales.index');
-            Route::post('/productos-manuales', [ProductoManualAdminController::class, 'store'])->name('productos-manuales.store');
-            Route::get('/productos-manuales/grupos', [ProductoManualAdminController::class, 'gruposDistintos'])->name('productos-manuales.grupos');
-            Route::get('/productos-manuales/marcas', [ProductoManualAdminController::class, 'marcasDistintas'])->name('productos-manuales.marcas');
-            Route::get('/productos-manuales/{id}', [ProductoManualAdminController::class, 'show'])->name('productos-manuales.show');
-            Route::put('/productos-manuales/{id}', [ProductoManualAdminController::class, 'update'])->name('productos-manuales.update');
-            Route::delete('/productos-manuales/{id}', [ProductoManualAdminController::class, 'destroy'])->name('productos-manuales.destroy');
-            Route::post('/productos-manuales/{id}/anular', [ProductoManualAdminController::class, 'toggleAnulado'])->name('productos-manuales.toggle-anulado');
+                Route::get('/pedidos', [PedidoAdminController::class, 'index'])->name('pedidos.admin.index');
+                Route::get('/pedidos/{id}/pdf', [PedidoAdminController::class, 'downloadPdf'])->name('pedidos.admin.pdf');
+                Route::get('/pedidos/{id}', [PedidoAdminController::class, 'show'])->name('pedidos.admin.show');
 
-            Route::get('/pedidos', [PedidoAdminController::class, 'index'])->name('pedidos.admin.index');
-            Route::patch('/pedidos/{id}/estatus', [PedidoAdminController::class, 'updateEstatusPedido'])->name('pedidos.admin.estatus');
-            Route::get('/pedidos/{id}/pdf', [PedidoAdminController::class, 'downloadPdf'])->name('pedidos.admin.pdf');
-            Route::get('/pedidos/{id}', [PedidoAdminController::class, 'show'])->name('pedidos.admin.show');
+                Route::get('/margen-venta', [AdminMargenVentaController::class, 'show'])->name('margen-venta.show');
+                Route::get('/metodos-pago', [AdminMetodoPagoController::class, 'index'])->name('metodos-pago.admin.index');
 
-            Route::get('/margen-venta', [AdminMargenVentaController::class, 'show'])->name('margen-venta.show');
-            Route::put('/margen-venta', [AdminMargenVentaController::class, 'update'])->name('margen-venta.update');
-            Route::post('/margen-venta/reset', [AdminMargenVentaController::class, 'reset'])->name('margen-venta.reset');
-            Route::get('/metodos-pago', [AdminMetodoPagoController::class, 'index'])->name('metodos-pago.admin.index');
-            Route::put('/metodos-pago/{codigo}', [AdminMetodoPagoController::class, 'update'])->name('metodos-pago.admin.update');
+                Route::get('/cotizaciones-invitado/emails', [AdminCotizacionInvitadoController::class, 'emailsDistinct'])->name('cotizaciones-invitado.admin.emails');
+                Route::get('/cotizaciones-invitado', [AdminCotizacionInvitadoController::class, 'index'])->name('cotizaciones-invitado.admin.index');
+                Route::get('/cotizaciones-invitado/{id}', [AdminCotizacionInvitadoController::class, 'show'])->name('cotizaciones-invitado.admin.show');
+                Route::get('/cotizaciones-invitado/{id}/pdf', [AdminCotizacionInvitadoController::class, 'downloadPdf'])->name('cotizaciones-invitado.admin.pdf');
 
-            Route::get('/backup/preview-export', [AdminBackupController::class, 'previewExport'])->name('backup.preview');
-            Route::post('/backup/export', [AdminBackupController::class, 'export'])->name('backup.export');
-            Route::post('/backup/import', [AdminBackupController::class, 'import'])->name('backup.import');
+                Route::get('/chat/clientes', [AdminChatController::class, 'indexClientes'])->name('chat.clientes.index');
+                Route::get('/chat/clientes/{userId}', [AdminChatController::class, 'show'])->name('chat.clientes.show');
+                Route::post('/chat/clientes/{userId}/mensajes', [AdminChatController::class, 'store'])->name('chat.clientes.mensajes.store');
+                Route::put('/chat/mensajes/{id}', [AdminChatController::class, 'update'])->name('chat.mensajes.update');
+                Route::delete('/chat/mensajes/{id}', [AdminChatController::class, 'destroy'])->name('chat.mensajes.destroy');
+            });
 
-            Route::get('/cotizaciones-invitado/emails', [AdminCotizacionInvitadoController::class, 'emailsDistinct'])->name('cotizaciones-invitado.admin.emails');
-            Route::get('/cotizaciones-invitado', [AdminCotizacionInvitadoController::class, 'index'])->name('cotizaciones-invitado.admin.index');
-            Route::get('/cotizaciones-invitado/{id}', [AdminCotizacionInvitadoController::class, 'show'])->name('cotizaciones-invitado.admin.show');
-            Route::get('/cotizaciones-invitado/{id}/pdf', [AdminCotizacionInvitadoController::class, 'downloadPdf'])->name('cotizaciones-invitado.admin.pdf');
+            Route::middleware('role:admin')->group(function () {
+                Route::get('/tipos-usuario', [ManagerUserController::class, 'getTypesUser'])->name('tipos-usuario');
+                Route::get('/permisos', [ManagerUserController::class, 'getPermissions'])->name('permisos');
 
-            Route::get('/chat/clientes', [AdminChatController::class, 'indexClientes'])->name('chat.clientes.index');
-            Route::get('/chat/clientes/{userId}', [AdminChatController::class, 'show'])->name('chat.clientes.show');
-            Route::post('/chat/clientes/{userId}/mensajes', [AdminChatController::class, 'store'])->name('chat.clientes.mensajes.store');
-            Route::put('/chat/mensajes/{id}', [AdminChatController::class, 'update'])->name('chat.mensajes.update');
-            Route::delete('/chat/mensajes/{id}', [AdminChatController::class, 'destroy'])->name('chat.mensajes.destroy');
+                Route::get('/usuarios', [ManagerUserController::class, 'index'])->name('usuarios.index');
+                Route::post('/usuarios', [ManagerUserController::class, 'store'])->name('usuarios.store');
+                Route::put('/usuarios/{usuarioId}', [ManagerUserController::class, 'update'])->name('usuarios.update');
+                Route::delete('/usuarios/{usuarioId}', [ManagerUserController::class, 'destroy'])->name('usuarios.destroy');
+                Route::put('/usuarios/{usuarioId}/rol', [ManagerUserController::class, 'setRole'])->name('usuarios.rol');
+                Route::delete('/usuarios/{usuarioId}/rol', [ManagerUserController::class, 'removeRole'])->name('usuarios.rol.destroy');
+                Route::put('/usuarios/{usuarioId}/password', [ManagerUserController::class, 'resetPassword'])->name('usuarios.password');
+                Route::post('/usuarios/{usuarioId}/permisos', [ManagerUserController::class, 'grantPermission'])->name('usuarios.permisos.grant');
+                Route::post('/usuarios/{usuarioId}/permisos/revocar', [ManagerUserController::class, 'revokePermission'])->name('usuarios.permisos.revoke');
+
+                Route::patch('/publicidad/carrusel', [PublicidadAdminController::class, 'updateCarrusel'])->name('publicidad.admin.carrusel');
+                Route::post('/publicidad', [PublicidadAdminController::class, 'store'])->name('publicidad.admin.store');
+                Route::delete('/publicidad/{id}', [PublicidadAdminController::class, 'destroy'])->name('publicidad.admin.destroy');
+
+                Route::post('/promociones', [PromocionAdminController::class, 'store'])->name('promociones.admin.store');
+                Route::put('/promociones/{id}', [PromocionAdminController::class, 'update'])->name('promociones.admin.update');
+                Route::delete('/promociones/{id}', [PromocionAdminController::class, 'destroy'])->name('promociones.admin.destroy');
+                Route::post('/promociones/{id}/items', [PromocionAdminController::class, 'agregarItem'])->name('promociones.admin.items.add');
+                Route::post('/promociones/{id}/quitar-item', [PromocionAdminController::class, 'quitarItem'])->name('promociones.admin.items.remove');
+                Route::post('/desarrolladores', [DesarrolladorAdminController::class, 'store'])->name('desarrolladores.admin.store');
+                Route::put('/desarrolladores/{id}', [DesarrolladorAdminController::class, 'update'])->name('desarrolladores.admin.update');
+                Route::delete('/desarrolladores/{id}', [DesarrolladorAdminController::class, 'destroy'])->name('desarrolladores.admin.destroy');
+
+                Route::post('/productos-manuales', [ProductoManualAdminController::class, 'store'])->name('productos-manuales.store');
+                Route::put('/productos-manuales/{id}', [ProductoManualAdminController::class, 'update'])->name('productos-manuales.update');
+                Route::delete('/productos-manuales/{id}', [ProductoManualAdminController::class, 'destroy'])->name('productos-manuales.destroy');
+                Route::post('/productos-manuales/{id}/anular', [ProductoManualAdminController::class, 'toggleAnulado'])->name('productos-manuales.toggle-anulado');
+
+                Route::patch('/pedidos/{id}/estatus', [PedidoAdminController::class, 'updateEstatusPedido'])->name('pedidos.admin.estatus');
+
+                Route::put('/margen-venta', [AdminMargenVentaController::class, 'update'])->name('margen-venta.update');
+                Route::post('/margen-venta/reset', [AdminMargenVentaController::class, 'reset'])->name('margen-venta.reset');
+                Route::put('/metodos-pago/{codigo}', [AdminMetodoPagoController::class, 'update'])->name('metodos-pago.admin.update');
+
+                Route::get('/backup/preview-export', [AdminBackupController::class, 'previewExport'])->name('backup.preview');
+                Route::post('/backup/export', [AdminBackupController::class, 'export'])->name('backup.export');
+                Route::post('/backup/import', [AdminBackupController::class, 'import'])->name('backup.import');
+            });
         });
 
     });

@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Promocion extends Model
 {
+    /** Laravel pluraliza "Promocion" como "promocions"; la tabla real es "promociones". */
+    protected $table = 'promociones';
+
     protected $fillable = [
         'slug',
         'titulo',

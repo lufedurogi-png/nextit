@@ -1,11 +1,11 @@
 <?php
 
+use App\Http\Middleware\AddEcommerceApiSecurityHeaders;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Spatie\Permission\Exceptions\UnauthorizedException;
-use App\Http\Middleware\AddEcommerceApiSecurityHeaders;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -21,6 +21,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'api/v1/auth/*',
             'api/v1/admin/auth/*',
             'api/v1/ventas/auth/*',
+            'api/v1/ventas/calendario/*',
+            'api/v1/ventas/cotizaciones',
+            'api/v1/ventas/cotizaciones/*',
+            'api/v1/ventas/correos/*',
             'api/v1/admin/*',
             'api/v1/user/*',
             'api/v1/prueba-pedido',
