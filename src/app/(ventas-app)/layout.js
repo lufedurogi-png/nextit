@@ -5,7 +5,7 @@ import VentasChrome from '@/components/ventas/VentasChrome'
 
 export default function VentasAppLayout({ children }) {
     return (
-        <AdminThemeProvider>
+        <AdminThemeProvider storageKey="ventas_dark_mode">
             <VentasChrome>{children}</VentasChrome>
         </AdminThemeProvider>
     )

@@ -57,7 +57,7 @@ function LayoutContent({ children }) {
 
 export default function VentasAuthLayout({ children }) {
     return (
-        <AdminThemeProvider>
+        <AdminThemeProvider storageKey="ventas_dark_mode">
             <LayoutContent>{children}</LayoutContent>
         </AdminThemeProvider>
     )

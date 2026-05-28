@@ -1,36 +1,45 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect, useLayoutEffect } from 'react'
 
 const AdminThemeContext = createContext(null)
 
-export function AdminThemeProvider({ children }) {
-    const [darkMode, setDarkMode] = useState(true)
+function leerTemaGuardado(storageKey, defaultDark) {
+    if (typeof window === 'undefined') return defaultDark
+    try {
+        const saved = localStorage.getItem(storageKey)
+        if (saved !== null) return JSON.parse(saved) === true
+    } catch (_) {}
+    return defaultDark
+}
+
+export function AdminThemeProvider({ children, storageKey = 'darkMode', defaultDark = true }) {
+    const [darkMode, setDarkMode] = useState(defaultDark)
+    const [listo, setListo] = useState(false)
+
+    useLayoutEffect(() => {
+        setDarkMode(leerTemaGuardado(storageKey, defaultDark))
+        setListo(true)
+    }, [storageKey, defaultDark])
 
     useEffect(() => {
-        if (typeof window === 'undefined') return
-        const saved = localStorage.getItem('darkMode')
-        if (saved !== null) setDarkMode(JSON.parse(saved))
-    }, [])
-
-    useEffect(() => {
-        if (darkMode) {
-            document.documentElement.classList.add('dark')
-        } else {
-            document.documentElement.classList.remove('dark')
+        document.documentElement.classList.toggle('dark', darkMode)
+        if (listo) {
+            localStorage.setItem(storageKey, JSON.stringify(darkMode))
         }
-        localStorage.setItem('darkMode', JSON.stringify(darkMode))
-    }, [darkMode])
+    }, [darkMode, listo, storageKey])
 
     useEffect(() => {
         const handleStorageChange = (e) => {
-            if (e.key === 'darkMode' && e.newValue !== null) {
-                setDarkMode(JSON.parse(e.newValue))
+            if (e.key === storageKey && e.newValue !== null) {
+                try {
+                    setDarkMode(JSON.parse(e.newValue) === true)
+                } catch (_) {}
             }
         }
         window.addEventListener('storage', handleStorageChange)
         return () => window.removeEventListener('storage', handleStorageChange)
-    }, [])
+    }, [storageKey])
 
     return (
         <AdminThemeContext.Provider value={{ darkMode, setDarkMode }}>
