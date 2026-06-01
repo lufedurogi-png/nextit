@@ -46,3 +46,38 @@ export function getPaginationRange(currentPage, lastPage) {
 
     return withDots
 }
+
+/**
+ * Compatibilidad con vistas admin antiguas.
+ * Retorna una ventana corta de páginas y banderas para elipsis/última página.
+ */
+export function getPaginationWindow(currentPage, lastPage) {
+    const totalP = Math.max(1, Number(lastPage) || 1)
+    const current = Math.min(Math.max(1, Number(currentPage) || 1), totalP)
+
+    if (totalP <= 7) {
+        return {
+            windowPages: Array.from({ length: totalP }, (_, i) => i + 1),
+            showEllipsis: false,
+            showLastPage: false,
+        }
+    }
+
+    // Muestra primeras páginas y entorno de la actual.
+    const pages = new Set([1, current - 1, current, current + 1])
+    if (current <= 3) {
+        pages.add(2)
+        pages.add(3)
+        pages.add(4)
+    }
+
+    const windowPages = [...pages]
+        .filter((p) => p >= 1 && p < totalP)
+        .sort((a, b) => a - b)
+
+    const showLastPage = totalP > 1 && !windowPages.includes(totalP)
+    const lastWindowPage = windowPages[windowPages.length - 1] ?? 1
+    const showEllipsis = showLastPage && lastWindowPage < totalP - 1
+
+    return { windowPages, showEllipsis, showLastPage }
+}
