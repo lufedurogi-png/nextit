@@ -18,7 +18,8 @@ export async function getSubcategoriaDataForSSR(categoria, subcategoria) {
         const params = new URLSearchParams()
         if (isVerTodo) params.set('categoria_principal', categoria)
         else params.set('grupo', subcategoria)
-        params.set('per_page', '36')
+        params.set('per_page', '24')
+        params.set('page', '1')
 
         const marcasUrl = isVerTodo
             ? `${BASE}/catalogos/marcas?categoria_principal=${encodeURIComponent(categoria)}`
@@ -37,7 +38,15 @@ export async function getSubcategoriaDataForSSR(categoria, subcategoria) {
             ? productosData.data.productos
             : []
         const marcas = marcasData?.success && Array.isArray(marcasData?.data) ? marcasData.data : []
-        return { catalogDisponible, productos, marcas }
+        const meta = productosData?.success && productosData?.data ? productosData.data : {}
+        return {
+            catalogDisponible,
+            productos,
+            marcas,
+            total: meta.total ?? productos.length,
+            current_page: meta.current_page ?? 1,
+            last_page: meta.last_page ?? 1,
+        }
     } catch {
         return { catalogDisponible: false, productos: [], marcas: [] }
     }

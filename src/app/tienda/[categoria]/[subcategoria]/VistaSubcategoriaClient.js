@@ -1,13 +1,16 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import useSWR from 'swr'
 import Link from 'next/link'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import ProductCard from '@/components/ProductCard'
 import ProductGrid from '@/components/ProductGrid'
 import TiendaNavHeader from '@/components/TiendaNavHeader'
+import TiendaFooter from '@/components/TiendaFooter'
+import TiendaPagination from '@/components/TiendaPagination'
 import { getProductos, getFiltrosDinamicos } from '@/lib/productos'
+import { PRODUCTOS_POR_PAGINA } from '@/lib/pagination'
 import { useTiendaDarkMode } from '@/hooks/useTiendaDarkMode'
 import { useMobileLeftDrawerSwipe } from '@/hooks/useMobileLeftDrawerSwipe'
 
@@ -34,7 +37,9 @@ function parseUrlFilters(urlFilters = {}) {
     } catch {
         //
     }
-    return { marca, precio, stock, filtros }
+    const paginaRaw = parseInt(urlFilters.pagina ?? '1', 10)
+    const pagina = Number.isFinite(paginaRaw) && paginaRaw > 0 ? paginaRaw : 1
+    return { marca, precio, stock, filtros, pagina }
 }
 
 export default function VistaSubcategoriaClient({ categoria, subcategoria, initialData = {}, urlFilters = {} }) {
@@ -61,6 +66,7 @@ export default function VistaSubcategoriaClient({ categoria, subcategoria, initi
     const [filtrosDinamicosSeleccionados, setFiltrosDinamicosSeleccionados] = useState(() => parsed.filtros)
     const [compararSeleccionados, setCompararSeleccionados] = useState([])
     const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
+    const [currentPage, setCurrentPage] = useState(() => parsed.pagina)
 
     const MAX_COMPARAR = 4
 
@@ -132,13 +138,23 @@ export default function VistaSubcategoriaClient({ categoria, subcategoria, initi
     })
 
     // Sincronizar estado con URL cuando vuelves desde producto (navegación con filtros en query)
-    const parsedKey = `${parsed.marca}|${parsed.precio}|${parsed.stock}|${JSON.stringify(parsed.filtros)}`
+    const parsedKey = `${parsed.marca}|${parsed.precio}|${parsed.stock}|${JSON.stringify(parsed.filtros)}|${parsed.pagina}`
     useEffect(() => {
         setSelectedMarca(parsed.marca)
         setRangoPrecio(parsed.precio)
         setStockFiltro(parsed.stock)
         setFiltrosDinamicosSeleccionados(parsed.filtros)
+        setCurrentPage(parsed.pagina)
     }, [parsedKey])
+
+    const filtrosSinPaginaKey = `${selectedMarca}|${rangoPrecio}|${stockFiltro}|${JSON.stringify(filtrosActivos)}|${categoria}|${subcategoria}|${orden}`
+    const prevFiltrosSinPaginaKey = useRef(filtrosSinPaginaKey)
+    useEffect(() => {
+        if (prevFiltrosSinPaginaKey.current !== filtrosSinPaginaKey) {
+            setCurrentPage(1)
+            prevFiltrosSinPaginaKey.current = filtrosSinPaginaKey
+        }
+    }, [filtrosSinPaginaKey])
 
     const actualizarUrl = useCallback(() => {
         const params = new URLSearchParams()
@@ -151,17 +167,31 @@ export default function VistaSubcategoriaClient({ categoria, subcategoria, initi
         if (Object.keys(fActivos).length > 0) {
             params.set('filtros', encodeURIComponent(JSON.stringify(fActivos)))
         }
+        if (currentPage > 1) params.set('pagina', String(currentPage))
         const qs = params.toString()
         const url = qs ? `${pathname}?${qs}` : pathname
         router.replace(url, { scroll: false })
-    }, [pathname, router, selectedMarca, rangoPrecio, stockFiltro, filtrosDinamicosSeleccionados])
+    }, [pathname, router, selectedMarca, rangoPrecio, stockFiltro, filtrosDinamicosSeleccionados, currentPage])
 
     useEffect(() => {
         actualizarUrl()
-    }, [selectedMarca, rangoPrecio, stockFiltro, filtrosDinamicosSeleccionados])
+    }, [selectedMarca, rangoPrecio, stockFiltro, filtrosDinamicosSeleccionados, currentPage])
 
     const productosKeyRaw = categoria
-        ? ['subcategoria-productos', categoria, subcategoria, isVerTodo, selectedMarca, orden, rangoPrecio, stockFiltro, rango?.min, rango?.max, JSON.stringify(filtrosActivos)]
+        ? [
+              'subcategoria-productos',
+              categoria,
+              subcategoria,
+              isVerTodo,
+              selectedMarca,
+              orden,
+              rangoPrecio,
+              stockFiltro,
+              currentPage,
+              rango?.min,
+              rango?.max,
+              JSON.stringify(filtrosActivos),
+          ]
         : null
     const productosKeyStr = productosKeyRaw ? JSON.stringify(productosKeyRaw) : ''
     const [productosKeyDebounced, setProductosKeyDebounced] = useState(() => productosKeyRaw)
@@ -174,6 +204,19 @@ export default function VistaSubcategoriaClient({ categoria, subcategoria, initi
         return () => clearTimeout(t)
     }, [productosKeyStr])
     const [productosAnteriores, setProductosAnteriores] = useState([])
+    const filtrosProductosKey = JSON.stringify([
+        categoria,
+        subcategoria,
+        isVerTodo,
+        selectedMarca,
+        orden,
+        rangoPrecio,
+        stockFiltro,
+        rango?.min,
+        rango?.max,
+        JSON.stringify(filtrosActivos),
+    ])
+    const staleProductosKeyRef = useRef('')
     const { data: productosData, isLoading: loading } = useSWR(
         productosKeyDebounced,
         async () => {
@@ -185,36 +228,83 @@ export default function VistaSubcategoriaClient({ categoria, subcategoria, initi
             if (rango?.min != null) filters.precio_min = rango.min
             if (rango?.max != null) filters.precio_max = rango.max
             if (Object.keys(filtrosActivos).length > 0) filters.filtros = filtrosActivos
+            if (stockFiltro === 'con_stock') filters.solo_con_stock = true
+            filters.page = currentPage
+            filters.per_page = PRODUCTOS_POR_PAGINA
             const res = await getProductos(filters)
-            return res?.productos ?? []
+            return {
+                productos: res?.productos ?? [],
+                total: res?.total ?? 0,
+                current_page: res?.current_page ?? currentPage,
+                last_page: res?.last_page ?? 1,
+            }
         },
         {
             revalidateOnFocus: false,
             dedupingInterval: 15000,
-            fallbackData: !selectedMarca && orden === 'reciente' && !rangoPrecio && !stockFiltro && Object.keys(filtrosActivos).length === 0 && initialData?.productos ? initialData.productos : undefined,
-            revalidateOnMount: !(!selectedMarca && orden === 'reciente' && !rangoPrecio && !stockFiltro && Object.keys(filtrosActivos).length === 0 && initialData?.productos),
+            fallbackData:
+                currentPage === 1 &&
+                !selectedMarca &&
+                orden === 'reciente' &&
+                !rangoPrecio &&
+                !stockFiltro &&
+                Object.keys(filtrosActivos).length === 0 &&
+                initialData?.productos
+                    ? {
+                          productos: initialData.productos,
+                          total: initialData.total ?? initialData.productos.length,
+                          current_page: initialData.current_page ?? 1,
+                          last_page: initialData.last_page ?? 1,
+                      }
+                    : undefined,
+            revalidateOnMount: true,
         }
     )
-    const productos = productosData ?? []
+    const productos = productosData?.productos ?? []
+    const paginationMeta = {
+        total: productosData?.total ?? productos.length,
+        currentPage: productosData?.current_page ?? currentPage,
+        lastPage: productosData?.last_page ?? 1,
+    }
     const productosFiltradosPorStock = useMemo(() => {
         if (!Array.isArray(productos)) return []
-        if (!stockFiltro) return productos
+        // con_stock ya se aplica en el servidor; sin_stock no tiene soporte en API
+        if (!stockFiltro || stockFiltro === 'con_stock') return productos
 
         return productos.filter((producto) => {
             const totalStock = Number(producto?.disponible || 0) + Number(producto?.disponible_cd || 0)
-            if (stockFiltro === 'con_stock') return totalStock > 0
             if (stockFiltro === 'sin_stock') return totalStock <= 0
             return true
         })
     }, [productos, stockFiltro])
 
     useEffect(() => {
-        if (productosFiltradosPorStock.length > 0) setProductosAnteriores(productosFiltradosPorStock)
-    }, [productosFiltradosPorStock])
+        if (productosFiltradosPorStock.length > 0) {
+            setProductosAnteriores(productosFiltradosPorStock)
+            staleProductosKeyRef.current = filtrosProductosKey
+        }
+    }, [productosFiltradosPorStock, filtrosProductosKey])
 
-    const productosAMostrar = loading && productos.length === 0 && productosAnteriores.length > 0
-        ? productosAnteriores
-        : productosFiltradosPorStock
+    const puedeUsarAnteriores =
+        loading &&
+        productos.length === 0 &&
+        productosAnteriores.length > 0 &&
+        staleProductosKeyRef.current === filtrosProductosKey
+
+    const productosAMostrar = puedeUsarAnteriores ? productosAnteriores : productosFiltradosPorStock
+
+    useEffect(() => {
+        if (paginationMeta.lastPage > 0 && currentPage > paginationMeta.lastPage) {
+            setCurrentPage(paginationMeta.lastPage)
+        }
+    }, [currentPage, paginationMeta.lastPage])
+
+    const handlePageChange = useCallback((page) => {
+        setCurrentPage(page)
+        if (typeof window !== 'undefined') {
+            window.scrollTo({ top: 0, behavior: 'smooth' })
+        }
+    }, [])
 
     const tituloSubcategoria = isVerTodo ? 'Ver todo' : subcategoria
 
@@ -226,6 +316,7 @@ export default function VistaSubcategoriaClient({ categoria, subcategoria, initi
         Object.entries(filtrosDinamicosSeleccionados).filter(([, v]) => v != null && String(v).trim() !== '')
     )
     if (Object.keys(fAct).length > 0) paramsParaUrl.set('filtros', encodeURIComponent(JSON.stringify(fAct)))
+    if (currentPage > 1) paramsParaUrl.set('pagina', String(currentPage))
     const urlConFiltros = paramsParaUrl.toString() ? `${pathname}?${paramsParaUrl.toString()}` : pathname
 
     return (
@@ -453,6 +544,26 @@ export default function VistaSubcategoriaClient({ categoria, subcategoria, initi
                                         />
                                     ))}
                                 </ProductGrid>
+                                {paginationMeta.lastPage > 1 && (
+                                    <div className="mt-8 flex flex-col items-center gap-3">
+                                        <TiendaPagination
+                                            darkMode={darkMode}
+                                            currentPage={paginationMeta.currentPage}
+                                            lastPage={paginationMeta.lastPage}
+                                            onPageChange={handlePageChange}
+                                        />
+                                        <p className={`text-sm ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+                                            Página {paginationMeta.currentPage} de {paginationMeta.lastPage}
+                                            {paginationMeta.total > 0 && (
+                                                <span>
+                                                    {' '}
+                                                    · {paginationMeta.total} producto
+                                                    {paginationMeta.total !== 1 ? 's' : ''}
+                                                </span>
+                                            )}
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                         )}
 
@@ -469,6 +580,7 @@ export default function VistaSubcategoriaClient({ categoria, subcategoria, initi
                     </div>
                 </main>
             </div>
+            <TiendaFooter darkMode={darkMode} />
         </div>
     )
 }

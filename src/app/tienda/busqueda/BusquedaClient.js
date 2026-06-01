@@ -7,6 +7,9 @@ import useSWR from 'swr'
 import ProductCard from '@/components/ProductCard'
 import ProductGrid from '@/components/ProductGrid'
 import TiendaNavHeader from '@/components/TiendaNavHeader'
+import TiendaFooter from '@/components/TiendaFooter'
+import TiendaPagination from '@/components/TiendaPagination'
+import { paginateArray, PRODUCTOS_POR_PAGINA } from '@/lib/pagination'
 import { getCatalogEstado, getFiltrosDinamicosBusqueda, getProductos } from '@/lib/productos'
 import { getBusqueda, getBusquedaSessionId } from '@/lib/busqueda'
 import { useTiendaDarkMode } from '@/hooks/useTiendaDarkMode'
@@ -71,6 +74,7 @@ export default function BusquedaClient({ initialData = null, initialQuery = '' }
     const [filtrosDinamicos, setFiltrosDinamicos] = useState({})
     const [filtrosDinamicosSeleccionados, setFiltrosDinamicosSeleccionados] = useState(() => parsed.filtros || {})
     const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
+    const [currentPage, setCurrentPage] = useState(1)
 
     const initialDataRef = useRef(initialData)
     initialDataRef.current = initialData
@@ -170,7 +174,17 @@ export default function BusquedaClient({ initialData = null, initialQuery = '' }
 
     useEffect(() => {
         setFiltrosDinamicosSeleccionados({})
+        setCurrentPage(1)
     }, [querySearch])
+
+    const filtrosBusquedaKey = `${selectedMarca}|${rangoPrecio}|${stockFiltro}|${orden}|${JSON.stringify(filtrosActivos)}`
+    const prevFiltrosBusquedaKey = useRef(filtrosBusquedaKey)
+    useEffect(() => {
+        if (prevFiltrosBusquedaKey.current !== filtrosBusquedaKey) {
+            setCurrentPage(1)
+            prevFiltrosBusquedaKey.current = filtrosBusquedaKey
+        }
+    }, [filtrosBusquedaKey])
 
     const productosKeyRaw =
         usarApiProductos && catalogDisponible && querySearch.trim()
@@ -250,6 +264,18 @@ export default function BusquedaClient({ initialData = null, initialQuery = '' }
             return true
         })
     }, [listaBase, stockFiltro])
+
+    const paginacion = useMemo(
+        () => paginateArray(productosConStock, currentPage, PRODUCTOS_POR_PAGINA),
+        [productosConStock, currentPage]
+    )
+
+    const handlePageChange = useCallback((page) => {
+        setCurrentPage(page)
+        if (typeof window !== 'undefined') {
+            window.scrollTo({ top: 0, behavior: 'smooth' })
+        }
+    }, [])
 
     const actualizarUrl = useCallback(() => {
         const params = new URLSearchParams()
@@ -511,7 +537,7 @@ export default function BusquedaClient({ initialData = null, initialQuery = '' }
                                                         darkMode={darkMode}
                                                         className={`transition-opacity duration-200 ${loadingLista ? 'pointer-events-none opacity-70' : ''}`}
                                                     >
-                                                        {productosConStock.map((producto) => (
+                                                        {paginacion.items.map((producto) => (
                                                             <ProductCard
                                                                 key={producto.clave}
                                                                 producto={producto}
@@ -521,6 +547,26 @@ export default function BusquedaClient({ initialData = null, initialQuery = '' }
                                                             />
                                                         ))}
                                                     </ProductGrid>
+                                                    {paginacion.lastPage > 1 && (
+                                                        <div className="mt-8 flex flex-col items-center gap-3">
+                                                            <TiendaPagination
+                                                                darkMode={darkMode}
+                                                                currentPage={paginacion.currentPage}
+                                                                lastPage={paginacion.lastPage}
+                                                                onPageChange={handlePageChange}
+                                                            />
+                                                            <p className={`text-sm ${textMuted}`}>
+                                                                Página {paginacion.currentPage} de {paginacion.lastPage}
+                                                                {paginacion.total > 0 && (
+                                                                    <span>
+                                                                        {' '}
+                                                                        · {paginacion.total} producto
+                                                                        {paginacion.total !== 1 ? 's' : ''}
+                                                                    </span>
+                                                                )}
+                                                            </p>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             )}
                                             {resultadoBusqueda.productos.length > 0 && productosConStock.length === 0 && (
@@ -549,6 +595,7 @@ export default function BusquedaClient({ initialData = null, initialQuery = '' }
                     </div>
                 </main>
             </div>
+            <TiendaFooter darkMode={darkMode} />
         </div>
     )
 }
