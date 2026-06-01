@@ -4,15 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class VentasCorreoDestinatario extends Model
+class VentasCorreoGrupo extends Model
 {
-    protected $table = 'ventas_correo_destinatarios';
+    protected $table = 'ventas_correo_grupos';
 
     protected $fillable = [
         'user_id',
-        'ventas_correo_grupo_id',
-        'email',
         'nombre',
     ];
 
@@ -21,8 +20,8 @@ class VentasCorreoDestinatario extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function grupo(): BelongsTo
+    public function destinatarios(): HasMany
     {
-        return $this->belongsTo(VentasCorreoGrupo::class, 'ventas_correo_grupo_id');
+        return $this->hasMany(VentasCorreoDestinatario::class, 'ventas_correo_grupo_id');
     }
 }

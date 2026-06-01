@@ -33,10 +33,16 @@ use App\Http\Controllers\Api\V1\PromocionController;
 use App\Http\Controllers\Api\V1\PruebaPedidoController;
 use App\Http\Controllers\Api\V1\PublicidadController;
 use App\Http\Controllers\Api\V1\TarjetaGuardadaController;
+use App\Http\Controllers\Api\V1\Ventas\VentasBusquedaController;
 use App\Http\Controllers\Api\V1\Ventas\VentasAuthController;
 use App\Http\Controllers\Api\V1\Ventas\VentasCalendarioTareaController;
-use App\Http\Controllers\Api\V1\Ventas\VentasCorreoController;
+use App\Http\Controllers\Api\V1\Ventas\VentasChatController;
+use App\Http\Controllers\Api\V1\Ventas\VentasChatFichaController;
 use App\Http\Controllers\Api\V1\Ventas\VentasCotizacionController;
+use App\Http\Controllers\Api\V1\Ventas\VentasCorreoController;
+use App\Http\Controllers\Api\V1\Ventas\VentasClientesController;
+use App\Http\Controllers\Api\V1\Ventas\VentasPipelineController;
+use App\Http\Controllers\Api\V1\Ventas\VentasReportesController;
 use App\Http\Controllers\Spa\Auth\AuthController as SpaAuthController;
 use Illuminate\Support\Facades\Route;
 
@@ -123,6 +129,16 @@ Route::prefix('v1')->group(function () {
             Route::delete('/calendario/tareas/{id}', [VentasCalendarioTareaController::class, 'destroy'])->name('calendario.tareas.destroy');
 
             Route::get('/cotizaciones/reglas-precio', [VentasCotizacionController::class, 'reglasPrecio'])->name('cotizaciones.reglas-precio');
+            Route::get('/reportes/resumen', [VentasReportesController::class, 'resumen'])->name('reportes.resumen');
+            Route::get('/busqueda', [VentasBusquedaController::class, 'index'])->name('busqueda.index');
+            Route::get('/pipeline/resumen', [VentasPipelineController::class, 'resumen'])->name('pipeline.resumen');
+            Route::get('/pipeline', [VentasPipelineController::class, 'index'])->name('pipeline.index');
+            Route::get('/pipeline/{id}', [VentasPipelineController::class, 'show'])->name('pipeline.show');
+            Route::put('/pipeline/{id}', [VentasPipelineController::class, 'update'])->name('pipeline.update');
+            Route::get('/clientes/crm', [VentasClientesController::class, 'indexCrm'])->name('clientes.crm.index');
+            Route::get('/clientes/tienda', [VentasClientesController::class, 'indexTienda'])->name('clientes.tienda.index');
+            Route::get('/clientes/crm/cotizaciones', [VentasClientesController::class, 'indexCrmCotizaciones'])->name('clientes.crm.cotizaciones.index');
+            Route::get('/clientes/crm/cotizaciones/{id}', [VentasClientesController::class, 'showCrmCotizacion'])->name('clientes.crm.cotizaciones.show');
             Route::get('/cotizaciones/clientes', [VentasCotizacionController::class, 'searchClientes'])->name('cotizaciones.clientes');
             Route::get('/cotizaciones', [VentasCotizacionController::class, 'index'])->name('cotizaciones.index');
             Route::post('/cotizaciones', [VentasCotizacionController::class, 'store'])->name('cotizaciones.store');
@@ -131,12 +147,32 @@ Route::prefix('v1')->group(function () {
 
             Route::get('/correos/historial', [VentasCorreoController::class, 'indexHistorial'])->name('correos.historial.index');
             Route::get('/correos/historial/{id}', [VentasCorreoController::class, 'showHistorial'])->name('correos.historial.show');
+            Route::delete('/correos/historial/{id}', [VentasCorreoController::class, 'destroyHistorial'])->name('correos.historial.destroy');
+            Route::get('/correos/grupos', [VentasCorreoController::class, 'indexGrupos'])->name('correos.grupos.index');
+            Route::post('/correos/grupos', [VentasCorreoController::class, 'storeGrupo'])->name('correos.grupos.store');
+            Route::put('/correos/grupos/{id}', [VentasCorreoController::class, 'updateGrupo'])->name('correos.grupos.update');
+            Route::delete('/correos/grupos/{id}', [VentasCorreoController::class, 'destroyGrupo'])->name('correos.grupos.destroy');
             Route::get('/correos/destinatarios', [VentasCorreoController::class, 'indexDestinatarios'])->name('correos.destinatarios.index');
             Route::post('/correos/destinatarios', [VentasCorreoController::class, 'storeDestinatario'])->name('correos.destinatarios.store');
             Route::delete('/correos/destinatarios/{id}', [VentasCorreoController::class, 'destroyDestinatario'])->name('correos.destinatarios.destroy');
             Route::post('/correos/enviar', [VentasCorreoController::class, 'send'])
                 ->middleware('throttle:20,1')
                 ->name('correos.enviar');
+
+            Route::get('/chat/clientes', [VentasChatController::class, 'indexClientes'])->name('chat.clientes.index');
+            Route::get('/chat/clientes/{userId}', [VentasChatController::class, 'show'])->name('chat.clientes.show');
+            Route::get('/chat/clientes/{userId}/ficha', [VentasChatFichaController::class, 'showCliente'])->name('chat.clientes.ficha.cliente');
+            Route::get('/chat/clientes/{userId}/comentarios', [VentasChatFichaController::class, 'indexComentarios'])->name('chat.clientes.comentarios.index');
+            Route::post('/chat/clientes/{userId}/comentarios', [VentasChatFichaController::class, 'storeComentario'])->name('chat.clientes.comentarios.store');
+            Route::get('/chat/clientes/{userId}/pedidos', [VentasChatFichaController::class, 'indexPedidos'])->name('chat.clientes.pedidos.index');
+            Route::get('/chat/clientes/{userId}/pedidos/{pedidoId}', [VentasChatFichaController::class, 'showPedido'])->name('chat.clientes.pedidos.show');
+            Route::get('/chat/clientes/{userId}/pedidos/{pedidoId}/pdf', [VentasChatFichaController::class, 'downloadPedidoPdf'])->name('chat.clientes.pedidos.pdf');
+            Route::get('/chat/clientes/{userId}/cotizaciones/tienda/{id}/pdf', [VentasChatFichaController::class, 'downloadCotizacionTiendaPdf'])->name('chat.clientes.cotizaciones.tienda.pdf');
+            Route::get('/chat/clientes/{userId}/cotizaciones/{tipo}/{id}', [VentasChatFichaController::class, 'showCotizacion'])->name('chat.clientes.cotizaciones.show');
+            Route::get('/chat/clientes/{userId}/cotizaciones', [VentasChatFichaController::class, 'indexCotizaciones'])->name('chat.clientes.cotizaciones.index');
+            Route::post('/chat/clientes/{userId}/mensajes', [VentasChatController::class, 'store'])->name('chat.clientes.mensajes.store');
+            Route::put('/chat/mensajes/{id}', [VentasChatController::class, 'update'])->name('chat.mensajes.update');
+            Route::delete('/chat/mensajes/{id}', [VentasChatController::class, 'destroy'])->name('chat.mensajes.destroy');
         });
 
         // SPA Routes - COOKIES ----------------------

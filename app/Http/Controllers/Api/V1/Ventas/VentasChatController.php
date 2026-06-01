@@ -4,19 +4,22 @@ namespace App\Http\Controllers\Api\V1\Ventas;
 
 use App\Http\Controllers\Controller;
 use App\Models\ClienteVentasMensaje;
+use App\Models\Cotizacion;
+use App\Models\Pedido;
 use App\Models\User;
+use App\Models\VentasClienteFicha;
+use App\Models\VentasCotizacion;
+use App\Support\ChatChannel;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class VentasChatController extends Controller
 {
-    /**
-     * Lista de clientes que tienen al menos un mensaje, con nombre, email y cantidad de mensajes sin contestar.
-     */
     public function indexClientes(): JsonResponse
     {
         $clientesConMensajes = ClienteVentasMensaje::query()
+            ->where('channel', ChatChannel::VENTAS)
             ->select('user_id')
             ->groupBy('user_id')
             ->pluck('user_id');
@@ -42,19 +45,23 @@ class VentasChatController extends Controller
         return response()->json(['success' => true, 'data' => $data]);
     }
 
-    /**
-     * Mensajes del chat con un cliente (para el usuario de ventas).
-     */
-    public function show(int $userId): JsonResponse
+    public function show(Request $request, int $userId): JsonResponse
     {
-        $mensajes = ClienteVentasMensaje::where('user_id', $userId)
+        $afterId = max(0, (int) $request->query('after_id', 0));
+
+        $query = ClienteVentasMensaje::where('user_id', $userId)
+            ->where('channel', ChatChannel::VENTAS)
             ->with(['user:id,name,email', 'seller:id,name,email'])
-            ->orderBy('created_at')
-            ->get()
-            ->map(fn (ClienteVentasMensaje $m) => $this->mapMensaje($m));
+            ->orderBy('created_at');
+
+        if ($afterId > 0) {
+            $query->where('id', '>', $afterId);
+        }
+
+        $mensajes = $query->get()->map(fn (ClienteVentasMensaje $m) => $this->mapMensaje($m));
 
         $cliente = User::find($userId, ['id', 'name', 'email']);
-        if (!$cliente) {
+        if (! $cliente) {
             return response()->json(['success' => false, 'message' => 'Cliente no encontrado'], 404);
         }
 
@@ -72,12 +79,13 @@ class VentasChatController extends Controller
         $request->validate(['body' => 'required|string|max:5000']);
 
         $cliente = User::find($userId);
-        if (!$cliente) {
+        if (! $cliente) {
             return response()->json(['success' => false, 'message' => 'Cliente no encontrado'], 404);
         }
 
         $mensaje = ClienteVentasMensaje::create([
             'user_id' => $userId,
+            'channel' => ChatChannel::VENTAS,
             'sender_type' => 'seller',
             'seller_id' => Auth::id(),
             'body' => $request->input('body'),
@@ -92,6 +100,7 @@ class VentasChatController extends Controller
     public function update(Request $request, int $id): JsonResponse
     {
         $mensaje = ClienteVentasMensaje::where('id', $id)
+            ->where('channel', ChatChannel::VENTAS)
             ->where('sender_type', 'seller')
             ->where('seller_id', Auth::id())
             ->firstOrFail();
@@ -108,18 +117,138 @@ class VentasChatController extends Controller
     public function destroy(int $id): JsonResponse
     {
         $mensaje = ClienteVentasMensaje::where('id', $id)
+            ->where('channel', ChatChannel::VENTAS)
             ->where('sender_type', 'seller')
             ->where('seller_id', Auth::id())
             ->firstOrFail();
 
         $mensaje->delete();
+
         return response()->json(['success' => true]);
     }
 
-    /** Cuenta solo los mensajes del cliente que están después del último mensaje de ventas (cola del hilo sin contestar). */
+    public function showFicha(int $userId): JsonResponse
+    {
+        $cliente = User::with('cliente')->find($userId, ['id', 'name', 'email']);
+        if (! $cliente) {
+            return response()->json(['success' => false, 'message' => 'Cliente no encontrado'], 404);
+        }
+
+        $ficha = VentasClienteFicha::query()
+            ->where('seller_id', Auth::id())
+            ->where('cliente_user_id', $userId)
+            ->first();
+
+        $telefono = $cliente->cliente?->telefono;
+        if (! $telefono) {
+            $telefono = $cliente->direccionesEnvio()
+                ->orderByDesc('id')
+                ->value('telefono');
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'cliente' => [
+                    'id' => $cliente->id,
+                    'name' => $cliente->name,
+                    'email' => $cliente->email,
+                    'telefono' => $telefono,
+                ],
+                'notas' => $ficha?->notas ?? '',
+                'historial' => $this->buildHistorial($userId),
+            ],
+        ]);
+    }
+
+    public function updateFicha(Request $request, int $userId): JsonResponse
+    {
+        $cliente = User::find($userId, ['id']);
+        if (! $cliente) {
+            return response()->json(['success' => false, 'message' => 'Cliente no encontrado'], 404);
+        }
+
+        $validated = $request->validate([
+            'notas' => ['nullable', 'string', 'max:5000'],
+        ]);
+
+        $ficha = VentasClienteFicha::updateOrCreate(
+            [
+                'seller_id' => Auth::id(),
+                'cliente_user_id' => $userId,
+            ],
+            [
+                'notas' => $validated['notas'] ?? '',
+            ]
+        );
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'notas' => $ficha->notas ?? '',
+            ],
+        ]);
+    }
+
+    /** @return list<array{tipo: string, label: string, fecha: string}> */
+    private function buildHistorial(int $userId): array
+    {
+        $items = [];
+
+        $pedidos = Pedido::query()
+            ->where('user_id', $userId)
+            ->orderByDesc('created_at')
+            ->limit(5)
+            ->get(['id', 'folio', 'estatus_pedido', 'created_at']);
+
+        foreach ($pedidos as $p) {
+            $folio = $p->folio ?: ('#'.$p->id);
+            $estatus = $p->estatus_pedido ? ' — '.$p->estatus_pedido : '';
+            $items[] = [
+                'tipo' => 'pedido',
+                'label' => 'Pedido '.$folio.$estatus,
+                'fecha' => $p->created_at?->toIso8601String() ?? '',
+            ];
+        }
+
+        $cotizacionesTienda = Cotizacion::query()
+            ->where('user_id', $userId)
+            ->orderByDesc('created_at')
+            ->limit(5)
+            ->get(['id', 'total', 'created_at']);
+
+        foreach ($cotizacionesTienda as $c) {
+            $items[] = [
+                'tipo' => 'cotizacion_tienda',
+                'label' => 'Cotización tienda #'.$c->id,
+                'fecha' => $c->created_at?->toIso8601String() ?? '',
+            ];
+        }
+
+        $cotizacionesVentas = VentasCotizacion::query()
+            ->where('cliente_user_id', $userId)
+            ->orderByDesc('created_at')
+            ->limit(5)
+            ->get(['id', 'folio', 'total', 'created_at']);
+
+        foreach ($cotizacionesVentas as $c) {
+            $folio = $c->folio ?: ('V-'.$c->id);
+            $items[] = [
+                'tipo' => 'cotizacion_ventas',
+                'label' => 'Cotización '.$folio,
+                'fecha' => $c->created_at?->toIso8601String() ?? '',
+            ];
+        }
+
+        usort($items, fn ($a, $b) => strcmp($b['fecha'], $a['fecha']));
+
+        return array_slice($items, 0, 8);
+    }
+
     private function getMensajesSinContestarPorCliente(array $userIds): array
     {
         $mensajes = ClienteVentasMensaje::whereIn('user_id', $userIds)
+            ->where('channel', ChatChannel::VENTAS)
             ->orderBy('user_id')
             ->orderByDesc('created_at')
             ->get(['user_id', 'sender_type']);
@@ -136,13 +265,12 @@ class VentasChatController extends Controller
             }
             if ($m->sender_type === 'seller') {
                 $yaVimosVentas = true;
-            } else {
-                if (! $yaVimosVentas) {
-                    $count++;
-                    $result[$m->user_id] = $count;
-                }
+            } elseif (! $yaVimosVentas) {
+                $count++;
+                $result[$m->user_id] = $count;
             }
         }
+
         return $result;
     }
 
@@ -164,6 +292,7 @@ class VentasChatController extends Controller
             $arr['seller_name'] = $m->seller->name;
             $arr['seller_email'] = $m->seller->email;
         }
+
         return $arr;
     }
 }

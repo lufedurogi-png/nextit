@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1\Ventas;
 use App\Http\Controllers\Controller;
 use App\Mail\VentasCorreoMasivoMail;
 use App\Models\VentasCorreoDestinatario;
+use App\Models\VentasCorreoGrupo;
 use App\Models\VentasCorreoEnvio;
 use App\Models\VentasCorreoEnvioAdjunto;
 use App\Models\VentasCorreoEnvioDestinatario;
@@ -21,10 +22,105 @@ use Illuminate\Support\Facades\Validator;
 
 class VentasCorreoController extends Controller
 {
+    public function indexGrupos(): JsonResponse
+    {
+        $rows = VentasCorreoGrupo::query()
+            ->where('user_id', Auth::id())
+            ->withCount('destinatarios')
+            ->orderBy('nombre')
+            ->get()
+            ->map(fn (VentasCorreoGrupo $g) => $this->mapGrupo($g));
+
+        return response()->json(['success' => true, 'data' => $rows]);
+    }
+
+    public function storeGrupo(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'nombre' => ['required', 'string', 'max:200'],
+        ]);
+
+        $nombre = trim($validated['nombre']);
+        $duplicado = VentasCorreoGrupo::query()
+            ->where('user_id', Auth::id())
+            ->where('nombre', $nombre)
+            ->exists();
+
+        if ($duplicado) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ya tienes un grupo con ese nombre.',
+            ], 422);
+        }
+
+        $grupo = VentasCorreoGrupo::create([
+            'user_id' => Auth::id(),
+            'nombre' => $nombre,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'data' => $this->mapGrupo($grupo->loadCount('destinatarios')),
+        ], 201);
+    }
+
+    public function updateGrupo(Request $request, int $id): JsonResponse
+    {
+        $grupo = VentasCorreoGrupo::query()
+            ->where('user_id', Auth::id())
+            ->whereKey($id)
+            ->firstOrFail();
+
+        $validated = $request->validate([
+            'nombre' => ['required', 'string', 'max:200'],
+        ]);
+
+        $nombre = trim($validated['nombre']);
+        $duplicado = VentasCorreoGrupo::query()
+            ->where('user_id', Auth::id())
+            ->where('nombre', $nombre)
+            ->whereKeyNot($grupo->id)
+            ->exists();
+
+        if ($duplicado) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ya tienes otro grupo con ese nombre.',
+            ], 422);
+        }
+
+        $grupo->update(['nombre' => $nombre]);
+
+        return response()->json([
+            'success' => true,
+            'data' => $this->mapGrupo($grupo->fresh()->loadCount('destinatarios')),
+        ]);
+    }
+
+    public function destroyGrupo(int $id): JsonResponse
+    {
+        $grupo = VentasCorreoGrupo::query()
+            ->where('user_id', Auth::id())
+            ->whereKey($id)
+            ->firstOrFail();
+
+        VentasCorreoDestinatario::query()
+            ->where('ventas_correo_grupo_id', $grupo->id)
+            ->delete();
+
+        $grupo->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Grupo eliminado junto con sus contactos.',
+        ]);
+    }
+
     public function indexDestinatarios(): JsonResponse
     {
         $rows = VentasCorreoDestinatario::query()
             ->where('user_id', Auth::id())
+            ->with('grupo')
             ->orderBy('nombre')
             ->orderBy('email')
             ->get()
@@ -38,7 +134,20 @@ class VentasCorreoController extends Controller
         $validated = $request->validate([
             'email' => ['required', 'email:rfc', 'max:255'],
             'nombre' => ['nullable', 'string', 'max:200'],
+            'grupo_id' => ['required', 'integer'],
         ]);
+
+        $grupo = VentasCorreoGrupo::query()
+            ->where('user_id', Auth::id())
+            ->whereKey((int) $validated['grupo_id'])
+            ->first();
+
+        if (! $grupo) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El grupo seleccionado no es válido.',
+            ], 422);
+        }
 
         $email = mb_strtolower(trim($validated['email']));
         $nombre = isset($validated['nombre']) ? trim((string) $validated['nombre']) : '';
@@ -50,26 +159,28 @@ class VentasCorreoController extends Controller
             ->first();
 
         if ($existente) {
-            if ($nombre !== null && $existente->nombre !== $nombre) {
-                $existente->update(['nombre' => $nombre]);
-            }
+            $existente->update([
+                'ventas_correo_grupo_id' => $grupo->id,
+                'nombre' => $nombre ?? $existente->nombre,
+            ]);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Este correo ya estaba registrado.',
-                'data' => $this->mapDestinatario($existente->fresh()),
+                'message' => 'Este correo ya estaba registrado; se movió al grupo seleccionado.',
+                'data' => $this->mapDestinatario($existente->fresh()->load('grupo')),
             ]);
         }
 
         $destinatario = VentasCorreoDestinatario::create([
             'user_id' => Auth::id(),
+            'ventas_correo_grupo_id' => $grupo->id,
             'email' => $email,
             'nombre' => $nombre,
         ]);
 
         return response()->json([
             'success' => true,
-            'data' => $this->mapDestinatario($destinatario),
+            'data' => $this->mapDestinatario($destinatario->load('grupo')),
         ], 201);
     }
 
@@ -87,12 +198,43 @@ class VentasCorreoController extends Controller
 
     public function indexHistorial(Request $request): JsonResponse
     {
-        $perPage = min(50, max(5, (int) $request->query('per_page', 10)));
+        $perPage = min(50, max(1, (int) $request->query('per_page', 6)));
         $page = max(1, (int) $request->query('page', 1));
 
-        $paginator = VentasCorreoEnvio::query()
+        $query = VentasCorreoEnvio::query()
             ->where('user_id', Auth::id())
-            ->with(['destinatarios', 'adjuntos'])
+            ->with(['destinatarios', 'adjuntos']);
+
+        $buscar = trim((string) $request->query('q', ''));
+        if ($buscar !== '') {
+            $like = '%'.$buscar.'%';
+            $query->where(function ($w) use ($like) {
+                $w->where('asunto', 'like', $like)
+                    ->orWhere('cuerpo', 'like', $like)
+                    ->orWhereHas('destinatarios', function ($d) use ($like) {
+                        $d->where('email', 'like', $like)
+                            ->orWhere('nombre', 'like', $like);
+                    });
+            });
+        }
+
+        if ($request->filled('anio')) {
+            $query->whereYear('created_at', (int) $request->query('anio'));
+        }
+        if ($request->filled('mes')) {
+            $mes = (int) $request->query('mes');
+            if ($mes >= 1 && $mes <= 12) {
+                $query->whereMonth('created_at', $mes);
+            }
+        }
+        if ($request->filled('dia')) {
+            $dia = (int) $request->query('dia');
+            if ($dia >= 1 && $dia <= 31) {
+                $query->whereDay('created_at', $dia);
+            }
+        }
+
+        $paginator = $query
             ->orderByDesc('created_at')
             ->paginate($perPage, ['*'], 'page', $page);
 
@@ -126,6 +268,33 @@ class VentasCorreoController extends Controller
         return response()->json([
             'success' => true,
             'data' => $this->mapEnvio($envio, true),
+        ]);
+    }
+
+    public function destroyHistorial(int $id): JsonResponse
+    {
+        $envio = VentasCorreoEnvio::query()
+            ->where('user_id', Auth::id())
+            ->with('adjuntos')
+            ->find($id);
+
+        if (! $envio) {
+            return response()->json(['success' => false, 'message' => 'Envío no encontrado.'], 404);
+        }
+
+        $directorio = 'ventas-correos/'.$envio->user_id.'/'.$envio->id;
+        foreach ($envio->adjuntos as $adjunto) {
+            if ($adjunto->ruta !== '') {
+                Storage::disk('local')->delete($adjunto->ruta);
+            }
+        }
+        Storage::disk('local')->deleteDirectory($directorio);
+
+        $envio->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Envío eliminado del historial.',
         ]);
     }
 
@@ -360,10 +529,25 @@ class VentasCorreoController extends Controller
     /**
      * @return array<string, mixed>
      */
+    private function mapGrupo(VentasCorreoGrupo $g): array
+    {
+        return [
+            'id' => $g->id,
+            'nombre' => $g->nombre,
+            'destinatarios_count' => (int) ($g->destinatarios_count ?? $g->destinatarios()->count()),
+            'created_at' => $g->created_at?->toIso8601String(),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
     private function mapDestinatario(VentasCorreoDestinatario $d): array
     {
         return [
             'id' => $d->id,
+            'grupo_id' => $d->ventas_correo_grupo_id,
+            'grupo_nombre' => $d->grupo?->nombre,
             'email' => $d->email,
             'nombre' => $d->nombre,
             'created_at' => $d->created_at?->toIso8601String(),

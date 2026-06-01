@@ -11,6 +11,7 @@ class ClienteVentasMensaje extends Model
 
     protected $fillable = [
         'user_id',
+        'channel',
         'sender_type',
         'seller_id',
         'body',

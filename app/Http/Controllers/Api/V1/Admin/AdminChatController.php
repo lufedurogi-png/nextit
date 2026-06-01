@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ClienteVentasMensaje;
 use App\Models\User;
+use App\Support\ChatChannel;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -14,6 +15,7 @@ class AdminChatController extends Controller
     public function indexClientes(): JsonResponse
     {
         $clientesConMensajes = ClienteVentasMensaje::query()
+            ->where('channel', ChatChannel::ADMIN)
             ->select('user_id')
             ->groupBy('user_id')
             ->pluck('user_id');
@@ -39,16 +41,23 @@ class AdminChatController extends Controller
         return response()->json(['success' => true, 'data' => $data]);
     }
 
-    public function show(int $userId): JsonResponse
+    public function show(Request $request, int $userId): JsonResponse
     {
-        $mensajes = ClienteVentasMensaje::where('user_id', $userId)
+        $afterId = max(0, (int) $request->query('after_id', 0));
+
+        $query = ClienteVentasMensaje::where('user_id', $userId)
+            ->where('channel', ChatChannel::ADMIN)
             ->with(['user:id,name,email', 'seller:id,name,email'])
-            ->orderBy('created_at')
-            ->get()
-            ->map(fn (ClienteVentasMensaje $m) => $this->mapMensaje($m));
+            ->orderBy('created_at');
+
+        if ($afterId > 0) {
+            $query->where('id', '>', $afterId);
+        }
+
+        $mensajes = $query->get()->map(fn (ClienteVentasMensaje $m) => $this->mapMensaje($m));
 
         $cliente = User::find($userId, ['id', 'name', 'email']);
-        if (!$cliente) {
+        if (! $cliente) {
             return response()->json(['success' => false, 'message' => 'Cliente no encontrado'], 404);
         }
 
@@ -66,12 +75,13 @@ class AdminChatController extends Controller
         $request->validate(['body' => 'required|string|max:5000']);
 
         $cliente = User::find($userId);
-        if (!$cliente) {
+        if (! $cliente) {
             return response()->json(['success' => false, 'message' => 'Cliente no encontrado'], 404);
         }
 
         $mensaje = ClienteVentasMensaje::create([
             'user_id' => $userId,
+            'channel' => ChatChannel::ADMIN,
             'sender_type' => 'admin',
             'seller_id' => Auth::id(),
             'body' => $request->input('body'),
@@ -86,6 +96,7 @@ class AdminChatController extends Controller
     public function update(Request $request, int $id): JsonResponse
     {
         $mensaje = ClienteVentasMensaje::where('id', $id)
+            ->where('channel', ChatChannel::ADMIN)
             ->whereIn('sender_type', ['admin', 'seller'])
             ->where('seller_id', Auth::id())
             ->firstOrFail();
@@ -102,17 +113,20 @@ class AdminChatController extends Controller
     public function destroy(int $id): JsonResponse
     {
         $mensaje = ClienteVentasMensaje::where('id', $id)
+            ->where('channel', ChatChannel::ADMIN)
             ->whereIn('sender_type', ['admin', 'seller'])
             ->where('seller_id', Auth::id())
             ->firstOrFail();
 
         $mensaje->delete();
+
         return response()->json(['success' => true]);
     }
 
     private function getMensajesSinContestarPorCliente(array $userIds): array
     {
         $mensajes = ClienteVentasMensaje::whereIn('user_id', $userIds)
+            ->where('channel', ChatChannel::ADMIN)
             ->orderBy('user_id')
             ->orderByDesc('created_at')
             ->get(['user_id', 'sender_type']);
@@ -120,21 +134,22 @@ class AdminChatController extends Controller
         $result = array_fill_keys($userIds, 0);
         $currentUserId = null;
         $count = 0;
-        $yaVimosAdmin = false;
+        $yaVimosStaff = false;
         foreach ($mensajes as $m) {
             if ($currentUserId !== $m->user_id) {
                 $currentUserId = $m->user_id;
                 $count = 0;
-                $yaVimosAdmin = false;
+                $yaVimosStaff = false;
             }
 
             if (in_array($m->sender_type, ['admin', 'seller'], true)) {
-                $yaVimosAdmin = true;
-            } elseif (!$yaVimosAdmin) {
+                $yaVimosStaff = true;
+            } elseif (! $yaVimosStaff) {
                 $count++;
                 $result[$m->user_id] = $count;
             }
         }
+
         return $result;
     }
 
@@ -156,10 +171,10 @@ class AdminChatController extends Controller
         if ($m->seller_id && $m->relationLoaded('seller') && $m->seller) {
             $arr['admin_name'] = $m->seller->name;
             $arr['admin_email'] = $m->seller->email;
-            // Compatibilidad temporal para clientes viejos.
             $arr['seller_name'] = $m->seller->name;
             $arr['seller_email'] = $m->seller->email;
         }
+
         return $arr;
     }
 }

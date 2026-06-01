@@ -20,6 +20,10 @@ class VentasCotizacion extends Model
         'descuento_general_pct',
         'items',
         'total',
+        'pipeline_etapa',
+        'pipeline_prioridad',
+        'pipeline_fecha_proximo_contacto',
+        'pipeline_motivo_perdida',
     ];
 
     /**
@@ -31,6 +35,7 @@ class VentasCotizacion extends Model
             'items' => 'array',
             'descuento_general_pct' => 'decimal:2',
             'total' => 'decimal:2',
+            'pipeline_fecha_proximo_contacto' => 'datetime',
         ];
     }
 

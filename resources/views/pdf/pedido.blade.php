@@ -226,7 +226,7 @@
         </div>
 
         <div class="footer">
-            <strong>Pedido {{ $pedido->folio }}</strong> · Documento generado por Todo para la oficina · {{ now()->format('d/m/Y H:i') }}
+            <strong>Pedido {{ $pedido->folio }}</strong> · Documento generado por Todo para oficina · {{ now()->format('d/m/Y H:i') }}
         </div>
     </div>
 </body>

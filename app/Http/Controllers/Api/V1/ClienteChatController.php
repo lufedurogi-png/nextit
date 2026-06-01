@@ -4,37 +4,53 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\ClienteVentasMensaje;
+use App\Support\ChatChannel;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class ClienteChatController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $mensajes = ClienteVentasMensaje::where('user_id', Auth::id())
+        $channel = ChatChannel::normalize($request->query('channel'));
+        $afterId = max(0, (int) $request->query('after_id', 0));
+
+        $query = ClienteVentasMensaje::where('user_id', Auth::id())
+            ->where('channel', $channel)
             ->with(['seller:id,name,email'])
-            ->orderBy('created_at')
-            ->get()
-            ->map(fn (ClienteVentasMensaje $m) => $this->mapMensaje($m));
+            ->orderBy('created_at');
+
+        if ($afterId > 0) {
+            $query->where('id', '>', $afterId);
+        }
+
+        $mensajes = $query->get()->map(fn (ClienteVentasMensaje $m) => $this->mapMensaje($m, $channel));
 
         return response()->json(['success' => true, 'data' => $mensajes]);
     }
 
     public function store(Request $request): JsonResponse
     {
-        $request->validate(['body' => 'required|string|max:5000']);
+        $validated = $request->validate([
+            'body' => 'required|string|max:5000',
+            'channel' => ['nullable', 'string', Rule::in(ChatChannel::all())],
+        ]);
+
+        $channel = ChatChannel::normalize($validated['channel'] ?? ChatChannel::ADMIN);
 
         $mensaje = ClienteVentasMensaje::create([
             'user_id' => Auth::id(),
+            'channel' => $channel,
             'sender_type' => 'customer',
             'seller_id' => null,
-            'body' => $request->input('body'),
+            'body' => $validated['body'],
         ]);
 
         return response()->json([
             'success' => true,
-            'data' => $this->mapMensaje($mensaje),
+            'data' => $this->mapMensaje($mensaje->load('seller'), $channel),
         ], 201);
     }
 
@@ -50,7 +66,7 @@ class ClienteChatController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $this->mapMensaje($mensaje->fresh('seller')),
+            'data' => $this->mapMensaje($mensaje->fresh('seller'), $mensaje->channel),
         ]);
     }
 
@@ -62,26 +78,38 @@ class ClienteChatController extends Controller
             ->firstOrFail();
 
         $mensaje->delete();
+
         return response()->json(['success' => true]);
     }
 
-    private function mapMensaje(ClienteVentasMensaje $m): array
+    private function mapMensaje(ClienteVentasMensaje $m, string $channel): array
     {
-        $senderType = $m->sender_type === 'seller' ? 'admin' : $m->sender_type;
+        $senderType = $m->sender_type;
+        if ($channel === ChatChannel::ADMIN && $senderType === 'seller') {
+            $senderType = 'admin';
+        }
+
         $arr = [
             'id' => $m->id,
+            'channel' => $m->channel ?? $channel,
             'sender_type' => $senderType,
             'body' => $m->body,
             'created_at' => $m->created_at->toIso8601String(),
             'updated_at' => $m->updated_at->toIso8601String(),
         ];
+
         if ($m->seller_id && $m->relationLoaded('seller') && $m->seller) {
-            $arr['admin_name'] = $m->seller->name;
-            $arr['admin_email'] = $m->seller->email;
-            // Compatibilidad temporal para frontend no migrado.
-            $arr['seller_name'] = $m->seller->name;
-            $arr['seller_email'] = $m->seller->email;
+            if ($channel === ChatChannel::VENTAS) {
+                $arr['seller_name'] = $m->seller->name;
+                $arr['seller_email'] = $m->seller->email;
+            } else {
+                $arr['admin_name'] = $m->seller->name;
+                $arr['admin_email'] = $m->seller->email;
+                $arr['seller_name'] = $m->seller->name;
+                $arr['seller_email'] = $m->seller->email;
+            }
         }
+
         return $arr;
     }
 }
