@@ -187,7 +187,7 @@ export default function VentasCorreoEditor({
                         aria-multiline="true"
                         data-placeholder="Escribe tu mensaje aquí…"
                         onInput={() => onCuerpoChange(editorRef.current?.innerHTML ?? '')}
-                        className={`min-h-[10rem] px-3 py-3 text-sm outline-none focus:ring-2 focus:ring-inset focus:ring-violet-400/30 empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400 dark:empty:before:text-violet-400/40 ${
+                        className={`min-h-[10rem] xl:min-h-[14rem] px-3 py-3 text-sm outline-none focus:ring-2 focus:ring-inset focus:ring-violet-400/30 empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400 dark:empty:before:text-violet-400/40 ${
                             darkMode ? 'bg-[#12101a] text-violet-50' : 'bg-white text-gray-900'
                         }`}
                     />
@@ -281,8 +281,7 @@ export default function VentasCorreoEditor({
             <div>
                 <Label htmlFor="ventas-correo-adjuntos">Archivos adjuntos (opcional)</Label>
                 <p className="text-xs text-violet-700/70 dark:text-violet-300/60 mb-2">
-                    Word, Excel, PowerPoint, TXT o imágenes. Adjunta todos los que necesites (el peso total depende de tu
-                    servidor PHP).
+                    Word, Excel, PowerPoint, TXT o imágenes.
                 </p>
                 <input
                     id="ventas-correo-adjuntos"

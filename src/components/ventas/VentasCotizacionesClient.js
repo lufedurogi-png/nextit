@@ -740,7 +740,7 @@ export default function VentasCotizacionesClient() {
         <div className="space-y-8 pb-8">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <h1 className={`text-2xl font-semibold tracking-tight sm:text-3xl ${darkMode ? 'text-gray-100' : 'text-violet-950'}`}>
-                    Cotizaciones
+                    Nueva cotización
                 </h1>
                 <div
                     className={`inline-flex shrink-0 rounded-xl border p-1 ${
@@ -809,20 +809,18 @@ export default function VentasCotizacionesClient() {
 
             {mainTab === 'cotizar' && (
             <div className={card}>
-                <div
-                    className={`border-b px-6 py-5 sm:px-8 ${
-                        darkMode
-                            ? 'border-violet-900/40 bg-gradient-to-r from-[#1a1628] to-[#16131f]/80'
-                            : 'border-violet-100 bg-gradient-to-r from-white to-violet-50/60'
-                    }`}
-                >
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                        <div>
+                {editingId ? (
+                    <div
+                        className={`border-b px-6 py-5 sm:px-8 ${
+                            darkMode
+                                ? 'border-violet-900/40 bg-gradient-to-r from-[#1a1628] to-[#16131f]/80'
+                                : 'border-violet-100 bg-gradient-to-r from-white to-violet-50/60'
+                        }`}
+                    >
+                        <div className="flex flex-wrap items-start justify-between gap-3">
                             <h2 className={`text-lg font-semibold tracking-tight sm:text-xl ${darkMode ? 'text-gray-100' : 'text-violet-950'}`}>
-                                {editingId ? `Editar · ${editingFolio || `#${editingId}`}` : 'Nueva cotización'}
+                                Editar · {editingFolio || `#${editingId}`}
                             </h2>
-                        </div>
-                        {editingId ? (
                             <span
                                 className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${
                                     darkMode ? 'bg-violet-600/25 text-violet-100 ring-1 ring-violet-400/30' : 'bg-violet-100 text-violet-900 ring-1 ring-violet-200/80'
@@ -830,9 +828,9 @@ export default function VentasCotizacionesClient() {
                             >
                                 Modo edición
                             </span>
-                        ) : null}
+                        </div>
                     </div>
-                </div>
+                ) : null}
 
                 <div className="p-5 sm:p-8">
                     <div className="lg:grid lg:grid-cols-[1fr_min(19rem,100%)] lg:gap-8">

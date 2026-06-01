@@ -4,24 +4,46 @@ import { useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useVentasAuth } from '@/hooks/useVentasAuth'
+import { useVentasInboxPendientes } from '@/hooks/useVentasInboxPendientes'
 import { useAdminTheme } from '@/contexts/AdminThemeContext'
 import ThemeToggle from '@/components/ThemeToggle'
+import VentasGlobalSearch from '@/components/ventas/VentasGlobalSearch'
 
 const navItems = [
     { href: '/ventas-dashboard', label: 'Resumen', icon: 'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z' },
     { href: '/ventas-pipeline', label: 'Pipeline', icon: 'M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2' },
     { href: '/ventas-tareas', label: 'Pendientes', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4' },
     { href: '/ventas-calendario', label: 'Calendario', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' },
-    { href: '/ventas-inbox', label: 'Bandeja', icon: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' },
-    { href: '/ventas-clientes', label: 'Clientes', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' },
-    { href: '/ventas-cotizaciones', label: 'Cotizaciones', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
+    { href: '/ventas-inbox', label: 'Chats', icon: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' },
+    { href: '/ventas-clientes', label: 'Historial de cotizaciones', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' },
+    { href: '/ventas-cotizaciones', label: 'Nueva cotización', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
     { href: '/ventas-correos', label: 'Correos', icon: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' },
     { href: '/ventas-correos-historial', label: 'Historial correos', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' },
-    { href: '/ventas-pedidos', label: 'Pedidos', icon: 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z' },
+    { href: '/ventas-pedidos', label: 'Historial de pedidos', icon: 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z' },
     { href: '/ventas-reportes', label: 'Reportes', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' },
     { href: '/ventas-catalogo', label: 'Catálogo', icon: 'M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z' },
-    { href: '/ventas-equipo', label: 'Equipo', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z' },
 ]
+
+const INBOX_HREF = '/ventas-inbox'
+
+function NavBadge({ count, collapsed }) {
+    if (!count || count <= 0) return null
+    const label = count > 99 ? '99+' : String(count)
+    const cls =
+        'inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-rose-500 px-1.5 text-[10px] font-bold leading-none text-white shadow-sm'
+    if (collapsed) {
+        return (
+            <span className={`absolute -top-1.5 -right-1.5 ${cls}`} aria-hidden>
+                {label}
+            </span>
+        )
+    }
+    return (
+        <span className={`ml-auto shrink-0 ${cls}`} aria-label={`${label} mensajes sin contestar`}>
+            {label}
+        </span>
+    )
+}
 
 export default function VentasChrome({ children }) {
     const pathname = usePathname()
@@ -29,6 +51,7 @@ export default function VentasChrome({ children }) {
     const { darkMode, setDarkMode } = useAdminTheme()
     const { user, logout } = useVentasAuth({ middleware: 'auth' })
     const [gateOk, setGateOk] = useState(false)
+    const { count: inboxPendientes, refresh: refreshInboxPendientes } = useVentasInboxPendientes({ enabled: gateOk })
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const [userMenu, setUserMenu] = useState(false)
@@ -45,6 +68,10 @@ export default function VentasChrome({ children }) {
         }
         setGateOk(true)
     }, [router])
+
+    useEffect(() => {
+        if (gateOk) refreshInboxPendientes()
+    }, [pathname, gateOk, refreshInboxPendientes])
 
     useEffect(() => {
         const fn = (e) => {
@@ -72,8 +99,10 @@ export default function VentasChrome({ children }) {
         )
     }
 
+    const isInbox = pathname === '/ventas-inbox' || pathname.startsWith('/ventas-inbox/')
+
     return (
-        <div className="min-h-screen flex bg-[#f4f1fb] text-gray-900 dark:bg-[#12101a] dark:text-gray-100">
+        <div className="h-dvh flex min-h-0 bg-[#f4f1fb] text-gray-900 dark:bg-[#12101a] dark:text-gray-100">
             {mobileMenuOpen && (
                 <button
                     type="button"
@@ -99,6 +128,7 @@ export default function VentasChrome({ children }) {
                 <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5">
                     {navItems.map((item) => {
                         const active = pathname === item.href || pathname.startsWith(`${item.href}/`)
+                        const showInboxBadge = item.href === INBOX_HREF && inboxPendientes > 0
                         return (
                             <Link
                                 key={item.href}
@@ -109,12 +139,28 @@ export default function VentasChrome({ children }) {
                                         ? 'bg-violet-100 text-violet-900 dark:bg-violet-600/25 dark:text-violet-100'
                                         : 'text-gray-600 hover:bg-violet-50 dark:text-violet-200/70 dark:hover:bg-white/5'
                                 }`}
-                                title={sidebarCollapsed ? item.label : undefined}
+                                title={
+                                    sidebarCollapsed
+                                        ? showInboxBadge
+                                            ? `${item.label} (${inboxPendientes} sin contestar)`
+                                            : item.label
+                                        : undefined
+                                }
                             >
-                                <svg className="w-5 h-5 shrink-0 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d={item.icon} />
-                                </svg>
-                                {!sidebarCollapsed && <span>{item.label}</span>}
+                                <span className="relative shrink-0">
+                                    <svg className="w-5 h-5 opacity-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d={item.icon} />
+                                    </svg>
+                                    {showInboxBadge && sidebarCollapsed && (
+                                        <NavBadge count={inboxPendientes} collapsed />
+                                    )}
+                                </span>
+                                {!sidebarCollapsed && (
+                                    <>
+                                        <span className="truncate">{item.label}</span>
+                                        {showInboxBadge && <NavBadge count={inboxPendientes} collapsed={false} />}
+                                    </>
+                                )}
                             </Link>
                         )
                     })}
@@ -130,7 +176,7 @@ export default function VentasChrome({ children }) {
                 </div>
             </aside>
 
-            <div className="flex-1 flex flex-col min-w-0 lg:pl-0">
+            <div className="flex-1 flex flex-col min-w-0 min-h-0 lg:pl-0">
                 <header className="h-16 shrink-0 flex items-center justify-between gap-4 px-4 sm:px-6 border-b border-violet-100 bg-white/90 dark:border-violet-900/40 dark:bg-[#1a1628]/80 backdrop-blur">
                     <div className="flex items-center gap-3 min-w-0">
                         <button
@@ -143,21 +189,8 @@ export default function VentasChrome({ children }) {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                             </svg>
                         </button>
-                        <div className="relative max-w-md flex-1 hidden sm:block">
-                            <input
-                                type="search"
-                                readOnly
-                                placeholder="Buscar en ventas…"
-                                className="w-full rounded-xl border border-violet-100 bg-violet-50/50 py-2 pl-10 pr-3 text-sm text-gray-500 dark:border-violet-800/50 dark:bg-[#12101a] dark:text-violet-300/50"
-                            />
-                            <svg
-                                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-violet-400"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
+                        <div className="min-w-0 flex-1 max-w-md">
+                            <VentasGlobalSearch darkMode={darkMode} />
                         </div>
                     </div>
                     <div className="flex items-center gap-2 sm:gap-3 shrink-0" ref={menuRef}>
@@ -200,7 +233,13 @@ export default function VentasChrome({ children }) {
                         </div>
                     </div>
                 </header>
-                <main className="flex-1 overflow-auto p-4 sm:p-6">{children}</main>
+                <main
+                    className={`flex-1 p-4 sm:p-6 ${
+                        isInbox ? 'flex flex-col min-h-0 overflow-hidden' : 'overflow-auto'
+                    }`}
+                >
+                    {children}
+                </main>
             </div>
         </div>
     )

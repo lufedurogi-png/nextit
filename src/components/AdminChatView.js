@@ -1,8 +1,10 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useRef } from 'react'
 import Image from 'next/image'
 import { formatMessageTime } from '@/lib/chatApi'
+import { useChatAutoScroll } from '@/hooks/useChatAutoScroll'
+import ChatMessageComposer from '@/components/ChatMessageComposer'
 
 const COLOR_CLIENTE = '#FF8000'
 const COLOR_ADMIN = '#059669'
@@ -25,24 +27,27 @@ export default function AdminChatView({
     guardandoId,
     onEliminar,
     eliminandoId,
+    staffColor = COLOR_ADMIN,
+    staffTypes = ['admin', 'seller'],
+    staffName = (m) => m.admin_name || m.seller_name,
+    staffEmail = (m) => m.admin_email || m.seller_email,
+    composerAccent = 'emerald',
+    scrollForceKey = 0,
 }) {
     const scrollRef = useRef(null)
-
-    useEffect(() => {
-        if (scrollRef.current && mensajes?.length) {
-            scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-        }
-    }, [mensajes])
+    useChatAutoScroll(scrollRef, mensajes, { forceKey: scrollForceKey })
 
     const isCliente = (m) => m.sender_type === 'customer'
-    const isAdmin = (m) => m.sender_type === 'admin' || m.sender_type === 'seller'
+    const isStaff = (m) => staffTypes.includes(m.sender_type)
 
     if (!cliente) {
         return (
-            <div className={`flex-1 flex items-center justify-center rounded-xl border-2 ${darkMode ? 'border-gray-700 bg-tienda-elevated/30' : 'border-gray-200 bg-gray-50'}`}>
-                <p className={darkMode ? 'text-gray-400' : 'text-gray-500'}>
-                    Selecciona un cliente para ver el chat.
-                </p>
+            <div
+                className={`flex-1 flex items-center justify-center rounded-xl border-2 ${
+                    darkMode ? 'border-gray-700 bg-tienda-elevated/30' : 'border-gray-200 bg-gray-50'
+                }`}
+            >
+                <p className={darkMode ? 'text-gray-400' : 'text-gray-500'}>Selecciona un cliente para ver el chat.</p>
             </div>
         )
     }
@@ -51,7 +56,7 @@ export default function AdminChatView({
         <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
             <div
                 ref={scrollRef}
-                className={`flex-1 min-h-0 overflow-y-auto overflow-x-hidden rounded-xl border-2 p-4 space-y-4 mb-4 ${
+                className={`flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain rounded-xl border-2 p-4 space-y-4 mb-3 scroll-smooth ${
                     darkMode ? 'border-gray-600 bg-tienda-elevated/40' : 'border-gray-200 bg-gray-50'
                 }`}
             >
@@ -73,8 +78,8 @@ export default function AdminChatView({
                                     backgroundColor: isCliente(m)
                                         ? COLOR_CLIENTE
                                         : darkMode
-                                            ? `${COLOR_ADMIN}99`
-                                            : COLOR_ADMIN,
+                                          ? `${staffColor}99`
+                                          : staffColor,
                                     color: '#fff',
                                 }}
                             >
@@ -84,10 +89,10 @@ export default function AdminChatView({
                                         {m.user_email ? ` (${m.user_email})` : ''}
                                     </div>
                                 )}
-                                {isAdmin(m) && (m.admin_name || m.admin_email || m.seller_name || m.seller_email) && (
+                                {isStaff(m) && (staffName(m) || staffEmail(m)) && (
                                     <div className="text-xs opacity-90 mb-1">
-                                        {m.admin_name || m.seller_name}
-                                        {(m.admin_email || m.seller_email) ? ` (${m.admin_email || m.seller_email})` : ''}
+                                        {staffName(m)}
+                                        {staffEmail(m) ? ` (${staffEmail(m)})` : ''}
                                     </div>
                                 )}
                                 {editandoId === m.id ? (
@@ -106,7 +111,13 @@ export default function AdminChatView({
                                                 className="p-1.5 rounded bg-white/20 hover:bg-white/30"
                                                 title="Guardar"
                                             >
-                                                <Image src="/Imagenes/icon_guardar.png" alt="Guardar" width={18} height={18} className="object-contain invert" />
+                                                <Image
+                                                    src="/Imagenes/icon_guardar.png"
+                                                    alt="Guardar"
+                                                    width={18}
+                                                    height={18}
+                                                    className="object-contain invert"
+                                                />
                                             </button>
                                             <button
                                                 type="button"
@@ -120,13 +131,36 @@ export default function AdminChatView({
                                 ) : (
                                     <div className="flex items-start gap-2 group">
                                         <span className="text-sm whitespace-pre-wrap break-words">{m.body}</span>
-                                        {isAdmin(m) && (
+                                        {isStaff(m) && (
                                             <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <button type="button" onClick={() => onIniciarEdicion(m)} className="p-1 rounded hover:bg-white/20" title="Editar">
-                                                    <Image src="/Imagenes/icon_editar.webp" alt="Editar" width={16} height={16} className="object-contain invert" />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => onIniciarEdicion(m)}
+                                                    className="p-1 rounded hover:bg-white/20"
+                                                    title="Editar"
+                                                >
+                                                    <Image
+                                                        src="/Imagenes/icon_editar.webp"
+                                                        alt="Editar"
+                                                        width={16}
+                                                        height={16}
+                                                        className="object-contain invert"
+                                                    />
                                                 </button>
-                                                <button type="button" onClick={() => onEliminar(m.id)} disabled={eliminandoId === m.id} className="p-1 rounded hover:bg-white/20" title="Eliminar">
-                                                    <Image src="/Imagenes/icon_basura.png" alt="Eliminar" width={16} height={16} className="object-contain invert" />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => onEliminar(m.id)}
+                                                    disabled={eliminandoId === m.id}
+                                                    className="p-1 rounded hover:bg-white/20"
+                                                    title="Eliminar"
+                                                >
+                                                    <Image
+                                                        src="/Imagenes/icon_basura.png"
+                                                        alt="Eliminar"
+                                                        width={16}
+                                                        height={16}
+                                                        className="object-contain invert"
+                                                    />
                                                 </button>
                                             </div>
                                         )}
@@ -141,36 +175,18 @@ export default function AdminChatView({
                     ))
                 )}
             </div>
-            <form
-                onSubmit={(e) => {
-                    e.preventDefault()
-                    onEnviar()
-                }}
-                className={`flex gap-2 items-center rounded-2xl border-2 overflow-hidden focus-within:ring-2 focus-within:ring-emerald-500/50 focus-within:border-emerald-500 transition-shadow ${darkMode ? 'border-gray-600 bg-tienda-elevated/50' : 'border-gray-200 bg-white'}`}
-            >
-                <input
-                    type="text"
-                    value={nuevoTexto}
-                    onChange={(e) => setNuevoTexto(e.target.value)}
-                    placeholder="Escribe tu respuesta…"
-                    maxLength={5000}
-                    className={`flex-1 min-w-0 py-3 px-4 text-sm border-0 focus:ring-0 focus:outline-none transition-colors rounded-2xl ${
-                        nuevoTexto && nuevoTexto.trim()
-                            ? 'bg-[#E5EBFD] text-gray-900 placeholder-gray-600'
-                            : darkMode
-                                ? 'bg-transparent text-white placeholder-gray-400'
-                                : 'bg-transparent text-gray-900 placeholder-gray-500'
-                    }`}
-                />
-                <button
-                    type="submit"
-                    disabled={enviando || !(nuevoTexto || '').trim()}
-                    className="flex items-center justify-center w-12 h-12 shrink-0 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-50 transition-all m-1"
-                    title="Enviar"
-                >
-                    <Image src="/Imagenes/icon_enviar.png" alt="Enviar" width={24} height={24} className="object-contain invert" />
-                </button>
-            </form>
+            <div className="shrink-0">
+                <ChatMessageComposer
+                value={nuevoTexto}
+                onChange={setNuevoTexto}
+                onSubmit={onEnviar}
+                placeholder="Escribe tu respuesta…"
+                disabled={loading}
+                sending={enviando}
+                darkMode={darkMode}
+                accent={composerAccent}
+            />
+            </div>
         </div>
     )
 }

@@ -1,13 +1,23 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useAdminTheme } from '@/contexts/AdminThemeContext'
-import { fetchVentasCorreoHistorial, fetchVentasCorreoHistorialDetalle } from '@/lib/ventasCorreosApi'
+import VentasCorreoHistorialFiltrosFecha from '@/components/ventas/VentasCorreoHistorialFiltrosFecha'
+import VentasCorreosHistorialPaginacion from '@/components/ventas/VentasCorreosHistorialPaginacion'
+import {
+    deleteVentasCorreoHistorial,
+    fetchVentasCorreoHistorial,
+    fetchVentasCorreoHistorialDetalle,
+} from '@/lib/ventasCorreosApi'
+
+const PER_PAGE = 6
 
 const card = 'rounded-2xl border border-violet-100 bg-white p-4 sm:p-5 shadow-sm dark:border-violet-900/40 dark:bg-[#1a1628]/80'
 const ghostBtn =
     'rounded-xl border border-violet-200 px-3 py-2 text-sm font-medium text-violet-900 transition hover:bg-violet-50 dark:border-violet-800/60 dark:text-violet-100 dark:hover:bg-white/5 disabled:opacity-50'
+const dangerBtn =
+    'rounded-xl border border-red-200 px-3 py-2 text-sm font-medium text-red-700 transition hover:bg-red-50 dark:border-red-900/50 dark:text-red-300 dark:hover:bg-red-950/30 disabled:opacity-50'
 
 function formatFechaHora(iso) {
     if (!iso) return '—'
@@ -80,7 +90,7 @@ function VistaCorreoEnviado({ detalle, darkMode }) {
                                 <span className="text-violet-500" aria-hidden>
                                     📎
                                 </span>
-                                <span className="font-medium truncate max-w-[12rem]">{a.nombre}</span>
+                                <span className="font-medium truncate max-w-[12rem] sm:max-w-md xl:max-w-none">{a.nombre}</span>
                                 <span className="text-violet-500/70">{formatBytes(a.tamano_bytes)}</span>
                             </li>
                         ))}
@@ -94,7 +104,7 @@ function VistaCorreoEnviado({ detalle, darkMode }) {
 export default function VentasCorreosHistorialClient() {
     const { darkMode } = useAdminTheme()
     const [envios, setEnvios] = useState([])
-    const [meta, setMeta] = useState({ current_page: 1, last_page: 1, total: 0 })
+    const [meta, setMeta] = useState({ current_page: 1, last_page: 1, total: 0, per_page: PER_PAGE })
     const [page, setPage] = useState(1)
     const [loading, setLoading] = useState(true)
     const [loadError, setLoadError] = useState(null)
@@ -102,30 +112,72 @@ export default function VentasCorreosHistorialClient() {
     const [detalle, setDetalle] = useState(null)
     const [detalleLoading, setDetalleLoading] = useState(false)
 
-    const loadLista = useCallback(async (p = 1) => {
-        setLoadError(null)
-        setLoading(true)
-        try {
-            const data = await fetchVentasCorreoHistorial(p, 10)
-            setEnvios(data.envios || [])
-            setMeta({
-                current_page: data.current_page ?? p,
-                last_page: data.last_page ?? 1,
-                total: data.total ?? 0,
-            })
-            setPage(data.current_page ?? p)
-        } catch (e) {
-            setLoadError(e?.response?.data?.message || e?.message || 'No se pudo cargar el historial.')
-        } finally {
-            setLoading(false)
-        }
-    }, [])
+    const [busqueda, setBusqueda] = useState('')
+    const [busquedaAplicada, setBusquedaAplicada] = useState('')
+    const [filtroAnio, setFiltroAnio] = useState('')
+    const [filtroMes, setFiltroMes] = useState('')
+    const [filtroDia, setFiltroDia] = useState('')
+
+    const [confirmDeleteId, setConfirmDeleteId] = useState(null)
+    const [eliminandoId, setEliminandoId] = useState(null)
+    const [status, setStatus] = useState(null)
+
+    const inputCls = `w-full rounded-xl border px-3 py-2 text-sm transition-colors ${
+        darkMode
+            ? 'border-violet-800/60 bg-[#12101a] text-violet-50 placeholder:text-violet-400/40'
+            : 'border-violet-100 bg-white text-gray-900 placeholder:text-gray-400'
+    }`
+    useEffect(() => {
+        const t = setTimeout(() => setBusquedaAplicada(busqueda.trim()), 400)
+        return () => clearTimeout(t)
+    }, [busqueda])
+
+    const loadLista = useCallback(
+        async (p = 1) => {
+            setLoadError(null)
+            setLoading(true)
+            try {
+                const data = await fetchVentasCorreoHistorial({
+                    page: p,
+                    perPage: PER_PAGE,
+                    q: busquedaAplicada,
+                    anio: filtroAnio,
+                    mes: filtroMes,
+                    dia: filtroDia,
+                })
+                setEnvios(data.envios || [])
+                setMeta({
+                    current_page: data.current_page ?? p,
+                    last_page: data.last_page ?? 1,
+                    total: data.total ?? 0,
+                    per_page: data.per_page ?? PER_PAGE,
+                })
+                setPage(data.current_page ?? p)
+            } catch (e) {
+                setLoadError(e?.response?.data?.message || e?.message || 'No se pudo cargar el historial.')
+            } finally {
+                setLoading(false)
+            }
+        },
+        [busquedaAplicada, filtroAnio, filtroMes, filtroDia],
+    )
 
     useEffect(() => {
         loadLista(1)
     }, [loadLista])
 
+    const limpiarFiltros = () => {
+        setBusqueda('')
+        setBusquedaAplicada('')
+        setFiltroAnio('')
+        setFiltroMes('')
+        setFiltroDia('')
+    }
+
+    const hayFiltros = busqueda !== '' || filtroAnio !== '' || filtroMes !== '' || filtroDia !== ''
+
     const abrirDetalle = async (id) => {
+        if (confirmDeleteId === id) return
         if (detalleId === id) {
             setDetalleId(null)
             setDetalle(null)
@@ -145,19 +197,107 @@ export default function VentasCorreosHistorialClient() {
         }
     }
 
+    const ejecutarEliminar = async (id) => {
+        setEliminandoId(id)
+        setStatus(null)
+        try {
+            const res = await deleteVentasCorreoHistorial(id)
+            setStatus({ type: 'ok', text: res.message || 'Envío eliminado.' })
+            if (detalleId === id) {
+                setDetalleId(null)
+                setDetalle(null)
+            }
+            setConfirmDeleteId(null)
+            const nextPage = envios.length <= 1 && page > 1 ? page - 1 : page
+            await loadLista(nextPage)
+        } catch (e) {
+            setStatus({ type: 'err', text: e?.response?.data?.message || e?.message || 'No se pudo eliminar.' })
+        } finally {
+            setEliminandoId(null)
+        }
+    }
+
+    const rangoTexto = useMemo(() => {
+        if (meta.total === 0) return 'Sin resultados'
+        const desde = (meta.current_page - 1) * meta.per_page + 1
+        const hasta = Math.min(meta.current_page * meta.per_page, meta.total)
+        return `Mostrando ${desde}–${hasta} de ${meta.total}`
+    }, [meta])
+
     return (
-        <div className="space-y-6 max-w-5xl">
-            <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="w-full space-y-6">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-violet-950 dark:text-white">Historial de correos</h1>
                     <p className="text-sm text-violet-800/70 dark:text-violet-200/60 mt-1">
                         Revisa cómo se envió cada mensaje, con imágenes y adjuntos.
                     </p>
                 </div>
-                <Link href="/ventas-correos" className={`${ghostBtn} inline-flex items-center gap-2`}>
+                <Link href="/ventas-correos" className={`${ghostBtn} inline-flex items-center gap-2 shrink-0`}>
                     ← Nuevo envío
                 </Link>
             </div>
+
+            {status && (
+                <div
+                    className={`rounded-xl border px-4 py-3 text-sm ${
+                        status.type === 'ok'
+                            ? 'border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-100'
+                            : 'border-red-200 bg-red-50 text-red-900 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-100'
+                    }`}
+                    role="status"
+                >
+                    {status.text}
+                </div>
+            )}
+
+            <section className={`${card} space-y-4`}>
+                <div className="grid gap-3 lg:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,9rem))_auto] lg:items-end">
+                    <div className="min-w-0 sm:col-span-2 lg:col-span-1">
+                        <label htmlFor="historial-buscar" className="block text-xs font-medium text-violet-800/80 dark:text-violet-300/70 mb-1">
+                            Buscar
+                        </label>
+                        <input
+                            id="historial-buscar"
+                            type="search"
+                            value={busqueda}
+                            onChange={(e) => setBusqueda(e.target.value)}
+                            placeholder="Asunto, mensaje o correo…"
+                            className={inputCls}
+                        />
+                    </div>
+
+                    <VentasCorreoHistorialFiltrosFecha
+                        darkMode={darkMode}
+                        anio={filtroAnio}
+                        mes={filtroMes}
+                        dia={filtroDia}
+                        onAnioChange={(v) => {
+                            setFiltroAnio(v)
+                            if (v === '') {
+                                setFiltroMes('')
+                                setFiltroDia('')
+                            }
+                        }}
+                        onMesChange={(v) => {
+                            setFiltroMes(v)
+                            setFiltroDia('')
+                        }}
+                        onDiaChange={setFiltroDia}
+                    />
+
+                    <div className="flex items-end sm:col-span-2 lg:col-span-1">
+                        <button
+                            type="button"
+                            className={`${ghostBtn} w-full`}
+                            onClick={limpiarFiltros}
+                            disabled={!hayFiltros}
+                        >
+                            Limpiar
+                        </button>
+                    </div>
+                </div>
+            </section>
 
             {loadError && (
                 <div className={`${card} border-red-200 dark:border-red-900/50`}>
@@ -169,94 +309,160 @@ export default function VentasCorreosHistorialClient() {
             )}
 
             <section className={card}>
+                {!loading && meta.total > 0 && (
+                    <p className="text-xs text-violet-700/80 dark:text-violet-300/60 mb-4">{rangoTexto}</p>
+                )}
+
                 {loading ? (
                     <p className="text-sm text-center py-10 text-violet-600/80 dark:text-violet-300/70">Cargando historial…</p>
                 ) : envios.length === 0 ? (
                     <div className="py-12 text-center">
-                        <p className="text-sm text-violet-700/80 dark:text-violet-300/70">Aún no has enviado correos desde ventas.</p>
-                        <Link
-                            href="/ventas-correos"
-                            className="inline-block mt-4 text-sm font-semibold text-violet-700 hover:underline dark:text-violet-300"
-                        >
-                            Ir a redactar correo
-                        </Link>
+                        <p className="text-sm text-violet-700/80 dark:text-violet-300/70">
+                            {hayFiltros || busquedaAplicada
+                                ? 'No hay envíos que coincidan con los filtros.'
+                                : 'Aún no has enviado correos desde ventas.'}
+                        </p>
+                        {hayFiltros ? (
+                            <button type="button" className="inline-block mt-4 text-sm font-semibold text-violet-700 hover:underline dark:text-violet-300" onClick={limpiarFiltros}>
+                                Quitar filtros
+                            </button>
+                        ) : (
+                            <Link
+                                href="/ventas-correos"
+                                className="inline-block mt-4 text-sm font-semibold text-violet-700 hover:underline dark:text-violet-300"
+                            >
+                                Ir a redactar correo
+                            </Link>
+                        )}
                     </div>
                 ) : (
                     <div className="space-y-3">
                         {envios.map((envio) => {
                             const abierto = detalleId === envio.id
                             const ok = (envio.enviados_count || 0) > 0
+                            const confirmando = confirmDeleteId === envio.id
                             return (
                                 <article
                                     key={envio.id}
                                     className={`rounded-xl border transition-colors ${
-                                        abierto
-                                            ? 'border-violet-300 bg-violet-50/50 dark:border-violet-700 dark:bg-violet-950/20'
-                                            : 'border-violet-100 dark:border-violet-900/50 hover:border-violet-200 dark:hover:border-violet-800'
+                                        confirmando
+                                            ? 'border-red-300 bg-red-50/30 dark:border-red-900/50 dark:bg-red-950/15'
+                                            : abierto
+                                              ? 'border-violet-300 bg-violet-50/50 dark:border-violet-700 dark:bg-violet-950/20'
+                                              : 'border-violet-100 dark:border-violet-900/50 hover:border-violet-200 dark:hover:border-violet-800'
                                     }`}
                                 >
-                                    <button
-                                        type="button"
-                                        className="flex w-full flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-4 text-left"
-                                        onClick={() => abrirDetalle(envio.id)}
-                                        aria-expanded={abierto}
-                                    >
-                                        <div className="flex-1 min-w-0">
-                                            <p className="font-semibold text-violet-950 dark:text-white truncate">{envio.asunto}</p>
-                                            <p className="text-xs text-violet-700/70 dark:text-violet-300/60 mt-0.5">
-                                                {formatFechaHora(envio.fecha)}
-                                            </p>
-                                            {envio.cuerpo_preview && (
-                                                <p className="text-sm text-gray-600 dark:text-violet-200/60 mt-2 line-clamp-2">
-                                                    {envio.cuerpo_preview}
+                                    <div className="flex w-full flex-col gap-2 lg:flex-row lg:items-stretch">
+                                        <button
+                                            type="button"
+                                            className="flex flex-1 flex-col gap-3 p-4 text-left lg:flex-row lg:items-center lg:gap-6 min-w-0"
+                                            onClick={() => abrirDetalle(envio.id)}
+                                            aria-expanded={abierto}
+                                            disabled={confirmando}
+                                        >
+                                            <div className="flex-1 min-w-0">
+                                                <p className="font-semibold text-violet-950 dark:text-white truncate">{envio.asunto}</p>
+                                                <p className="text-xs text-violet-700/70 dark:text-violet-300/60 mt-0.5">
+                                                    {formatFechaHora(envio.fecha)}
                                                 </p>
-                                            )}
-                                        </div>
-                                        <div className="flex flex-wrap items-center gap-2 shrink-0">
-                                            <span
-                                                className={`rounded-lg px-2 py-1 text-xs font-medium ${
-                                                    ok
-                                                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-200'
-                                                        : 'bg-red-100 text-red-800 dark:bg-red-950/50 dark:text-red-200'
-                                                }`}
-                                            >
-                                                {envio.enviados_count} enviado(s)
-                                            </span>
-                                            {envio.fallidos_count > 0 && (
-                                                <span className="rounded-lg px-2 py-1 text-xs font-medium bg-amber-100 text-amber-900 dark:bg-amber-950/50 dark:text-amber-200">
-                                                    {envio.fallidos_count} fallido(s)
+                                                {envio.cuerpo_preview && (
+                                                    <p className="text-sm text-gray-600 dark:text-violet-200/60 mt-2 line-clamp-2 lg:line-clamp-1 xl:line-clamp-none xl:max-w-4xl">
+                                                        {envio.cuerpo_preview}
+                                                    </p>
+                                                )}
+                                            </div>
+                                            <div className="flex flex-wrap items-center gap-2 shrink-0 lg:justify-end">
+                                                <span
+                                                    className={`rounded-lg px-2 py-1 text-xs font-medium ${
+                                                        ok
+                                                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-200'
+                                                            : 'bg-red-100 text-red-800 dark:bg-red-950/50 dark:text-red-200'
+                                                    }`}
+                                                >
+                                                    {envio.enviados_count} enviado(s)
                                                 </span>
-                                            )}
-                                            {(envio.imagenes_inline?.length || 0) > 0 && (
-                                                <span className="rounded-lg px-2 py-1 text-xs font-medium bg-indigo-100 text-indigo-900 dark:bg-indigo-950/50 dark:text-indigo-200">
-                                                    {envio.imagenes_inline.length} img
+                                                {envio.fallidos_count > 0 && (
+                                                    <span className="rounded-lg px-2 py-1 text-xs font-medium bg-amber-100 text-amber-900 dark:bg-amber-950/50 dark:text-amber-200">
+                                                        {envio.fallidos_count} fallido(s)
+                                                    </span>
+                                                )}
+                                                {(envio.imagenes_inline?.length || 0) > 0 && (
+                                                    <span className="rounded-lg px-2 py-1 text-xs font-medium bg-indigo-100 text-indigo-900 dark:bg-indigo-950/50 dark:text-indigo-200">
+                                                        {envio.imagenes_inline.length} img
+                                                    </span>
+                                                )}
+                                                {(envio.adjuntos?.length || 0) > 0 && (
+                                                    <span className="rounded-lg px-2 py-1 text-xs font-medium bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-200">
+                                                        {envio.adjuntos.length} adjunto(s)
+                                                    </span>
+                                                )}
+                                                <span
+                                                    className={`text-violet-500 transition-transform ${abierto ? 'rotate-180' : ''}`}
+                                                    aria-hidden
+                                                >
+                                                    ▼
                                                 </span>
-                                            )}
-                                            {(envio.adjuntos?.length || 0) > 0 && (
-                                                <span className="rounded-lg px-2 py-1 text-xs font-medium bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-200">
-                                                    {envio.adjuntos.length} adjunto(s)
-                                                </span>
-                                            )}
-                                            <span
-                                                className={`text-violet-500 transition-transform ${abierto ? 'rotate-180' : ''}`}
-                                                aria-hidden
-                                            >
-                                                ▼
-                                            </span>
-                                        </div>
-                                    </button>
+                                            </div>
+                                        </button>
+                                        {!confirmando && (
+                                            <div className="flex items-center justify-end px-4 pb-4 lg:px-0 lg:pb-0 lg:pr-4 lg:items-center">
+                                                <button
+                                                    type="button"
+                                                    className={`${dangerBtn} text-xs`}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        setConfirmDeleteId(envio.id)
+                                                        setStatus(null)
+                                                    }}
+                                                >
+                                                    Eliminar
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
 
-                                    {abierto && (
-                                        <div className="border-t border-violet-100 dark:border-violet-900/50 px-4 pb-5 pt-4 space-y-5">
+                                    {confirmando && (
+                                        <div
+                                            className="mx-4 mb-4 rounded-xl border border-red-200 bg-red-50/80 px-4 py-3 dark:border-red-900/50 dark:bg-red-950/25"
+                                            role="region"
+                                            aria-label="Confirmar eliminación"
+                                        >
+                                            <p className="text-sm font-medium text-red-900 dark:text-red-100">
+                                                ¿Eliminar este envío del historial?
+                                            </p>
+                                            <p className="text-xs text-red-800/80 dark:text-red-200/70 mt-1">
+                                                Se borrará el registro, destinatarios y archivos guardados. No se puede deshacer.
+                                            </p>
+                                            <div className="flex flex-wrap gap-2 mt-3">
+                                                <button
+                                                    type="button"
+                                                    className={`${dangerBtn} text-sm font-semibold`}
+                                                    disabled={eliminandoId === envio.id}
+                                                    onClick={() => ejecutarEliminar(envio.id)}
+                                                >
+                                                    {eliminandoId === envio.id ? 'Eliminando…' : 'Sí, eliminar'}
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className={ghostBtn}
+                                                    disabled={eliminandoId === envio.id}
+                                                    onClick={() => setConfirmDeleteId(null)}
+                                                >
+                                                    Cancelar
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {abierto && !confirmando && (
+                                        <div className="border-t border-violet-100 dark:border-violet-900/50 px-4 pb-5 pt-4">
                                             {detalleLoading ? (
-                                                <p className="text-sm text-violet-600/80 dark:text-violet-300/70">
-                                                    Cargando detalle…
-                                                </p>
+                                                <p className="text-sm text-violet-600/80 dark:text-violet-300/70">Cargando detalle…</p>
                                             ) : detalle ? (
-                                                <>
+                                                <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(280px,22rem)] 2xl:grid-cols-[minmax(0,1fr)_24rem]">
                                                     <VistaCorreoEnviado detalle={detalle} darkMode={darkMode} />
 
-                                                    <div>
+                                                    <div className="xl:sticky xl:top-4 xl:self-start xl:max-h-[calc(100vh-7rem)] xl:overflow-y-auto">
                                                         <h3 className="text-xs font-semibold uppercase tracking-wide text-violet-700/80 dark:text-violet-300/70 mb-2">
                                                             Destinatarios ({detalle.destinatarios?.length || 0})
                                                         </h3>
@@ -271,7 +477,7 @@ export default function VentasCorreosHistorialClient() {
                                                                     }`}
                                                                 >
                                                                     <div className="flex flex-wrap items-start justify-between gap-2">
-                                                                        <span className="font-medium text-violet-900 dark:text-violet-100">
+                                                                        <span className="font-medium text-violet-900 dark:text-violet-100 break-all">
                                                                             {d.nombre ? `${d.nombre} · ` : ''}
                                                                             {d.email}
                                                                         </span>
@@ -294,7 +500,7 @@ export default function VentasCorreosHistorialClient() {
                                                             ))}
                                                         </ul>
                                                     </div>
-                                                </>
+                                                </div>
                                             ) : null}
                                         </div>
                                     )}
@@ -304,24 +510,12 @@ export default function VentasCorreosHistorialClient() {
                     </div>
                 )}
 
-                {!loading && meta.last_page > 1 && (
-                    <div className="flex items-center justify-between gap-3 mt-6 pt-4 border-t border-violet-100 dark:border-violet-900/40">
-                        <button type="button" className={ghostBtn} disabled={page <= 1} onClick={() => loadLista(page - 1)}>
-                            Anterior
-                        </button>
-                        <span className="text-xs text-violet-700/80 dark:text-violet-300/60">
-                            Página {meta.current_page} de {meta.last_page} ({meta.total} envíos)
-                        </span>
-                        <button
-                            type="button"
-                            className={ghostBtn}
-                            disabled={page >= meta.last_page}
-                            onClick={() => loadLista(page + 1)}
-                        >
-                            Siguiente
-                        </button>
-                    </div>
-                )}
+                <VentasCorreosHistorialPaginacion
+                    darkMode={darkMode}
+                    currentPage={meta.current_page}
+                    lastPage={meta.last_page}
+                    onPageChange={(p) => loadLista(p)}
+                />
             </section>
         </div>
     )

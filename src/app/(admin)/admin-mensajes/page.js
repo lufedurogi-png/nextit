@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import Image from 'next/image'
 import {
     getChatClientesAdmin,
@@ -9,7 +9,14 @@ import {
     actualizarMensajeAdmin,
     eliminarMensajeAdmin,
 } from '@/lib/chatApi'
+import {
+    maxChatMessageId,
+    setChatMessagesFromServer,
+    appendChatMessagesFromServer,
+} from '@/lib/chatMerge'
 import AdminChatView from '@/components/AdminChatView'
+
+const POLL_MS = 8000
 
 export default function AdminMensajesPage() {
     const [darkMode, setDarkMode] = useState(true)
@@ -24,6 +31,11 @@ export default function AdminMensajesPage() {
     const [editandoTexto, setEditandoTexto] = useState('')
     const [guardandoId, setGuardandoId] = useState(null)
     const [eliminandoId, setEliminandoId] = useState(null)
+    const [scrollBump, setScrollBump] = useState(0)
+    const mensajesRef = useRef([])
+    const pollingRef = useRef(false)
+
+    mensajesRef.current = mensajes
 
     useEffect(() => {
         setDarkMode(JSON.parse(localStorage.getItem('darkMode') ?? 'true'))
@@ -55,28 +67,22 @@ export default function AdminMensajesPage() {
             setMensajes([])
             return
         }
+        if (pollingRef.current && silent) return
+        if (silent) pollingRef.current = true
         if (!silent) setLoadingMensajes(true)
         try {
-            const { mensajes: list } = await getChatMensajesAdmin(userId)
+            const afterId = silent ? maxChatMessageId(mensajesRef.current) : 0
+            const { mensajes: list } = await getChatMensajesAdmin(userId, afterId)
             const arr = Array.isArray(list) ? list : []
-            if (silent) {
-                setMensajes((prev) => {
-                    const pending = prev.filter((m) => m.pending || String(m.id).startsWith('temp-'))
-                    const merged = [...arr]
-                    pending.forEach((p) => {
-                        const inServer = arr.some((m) => m.body === p.body && Math.abs(new Date(m.created_at) - new Date(p.created_at)) < 15000)
-                        if (!inServer) merged.push(p)
-                    })
-                    merged.sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
-                    return merged
-                })
-            } else {
-                setMensajes(arr)
-            }
+            setMensajes((prev) => {
+                if (!silent || afterId === 0) return setChatMessagesFromServer(prev, arr)
+                return appendChatMessagesFromServer(prev, arr)
+            })
         } catch {
             if (!silent) setMensajes([])
         } finally {
             if (!silent) setLoadingMensajes(false)
+            if (silent) pollingRef.current = false
         }
     }, [])
 
@@ -91,12 +97,12 @@ export default function AdminMensajesPage() {
     useEffect(() => {
         if (!clienteSeleccionado?.id) return
         const interval = setInterval(() => {
-            if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+            if (typeof document !== 'undefined' && document.visibilityState === 'visible' && editandoId == null) {
                 cargarMensajes(clienteSeleccionado.id, true)
             }
-        }, 5000)
+        }, POLL_MS)
         return () => clearInterval(interval)
-    }, [clienteSeleccionado?.id, cargarMensajes])
+    }, [clienteSeleccionado?.id, cargarMensajes, editandoId])
 
     const handleEnviar = async () => {
         const userId = clienteSeleccionado?.id
@@ -116,6 +122,7 @@ export default function AdminMensajesPage() {
         }
         setMensajes((prev) => [...prev, tempMsg])
         setNuevoTexto('')
+        setScrollBump((b) => b + 1)
         setEnviando(true)
         try {
             const m = await enviarMensajeAdmin(userId, texto)
@@ -276,6 +283,7 @@ export default function AdminMensajesPage() {
                             guardandoId={guardandoId}
                             onEliminar={handleEliminar}
                             eliminandoId={eliminandoId}
+                            scrollForceKey={`${clienteSeleccionado?.id ?? 0}-${scrollBump}`}
                         />
                     </div>
                 </div>

@@ -77,7 +77,7 @@ function DashboardInner() {
         if (typeof window !== 'undefined') {
             const params = new URLSearchParams(window.location.search)
             const tab = params.get('tab')
-            if (tab && ['pedidos', 'contacto', 'facturacion', 'password', 'cotizaciones', 'chat', 'privacidad'].includes(tab)) {
+            if (tab && ['pedidos', 'contacto', 'facturacion', 'password', 'cotizaciones', 'chat', 'chat-vendedor', 'privacidad'].includes(tab)) {
                 setActiveTab(tab)
             }
         }
@@ -596,6 +596,7 @@ function DashboardInner() {
         { id: 'contacto', label: 'Contacto / Envío', icon: 'icon_contacto.png' },
         { id: 'facturacion', label: 'Datos de facturación', icon: 'icon_facturacion.webp' },
         { id: 'chat', label: 'Chat con administración', icon: 'icon_mensaje.png' },
+        { id: 'chat-vendedor', label: 'Chat con vendedor', icon: 'icon_mensaje.png' },
         { id: 'privacidad', label: 'Aviso de privacidad', icon: 'icon_documento.png' },
         { id: 'password', label: 'Cambiar contraseña', icon: 'icon_contraseña.webp' }
     ]
@@ -2846,7 +2847,28 @@ function DashboardInner() {
                                 <p className={`text-sm mb-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                                     Escribe aquí y un administrador te responderá. Tus mensajes aparecen en naranja; las respuestas de administración en verde.
                                 </p>
-                                <ChatVentasCliente darkMode={darkMode} />
+                                <ChatVentasCliente darkMode={darkMode} channel="admin" />
+                            </div>
+                        )}
+
+                        {activeTab === 'chat-vendedor' && (
+                            <div className={`rounded-xl shadow-2xl p-6 md:p-8 border-2 transition-all duration-300 animate-in fade-in slide-in-from-bottom-4 ${
+                                darkMode
+                                    ? 'bg-gradient-to-br from-tienda-elevated via-gray-800 to-tienda-canvas border-gray-700 shadow-[#FF8000]/10'
+                                    : 'bg-gradient-to-br from-white via-gray-50 to-white border-gray-200 shadow-[#FF8000]/5'
+                            }`}>
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-500/20">
+                                        <Image src="/Imagenes/icon_mensaje.png" alt="" width={24} height={24} className="object-contain" />
+                                    </div>
+                                    <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                                        Chat con vendedor
+                                    </h2>
+                                </div>
+                                <p className={`text-sm mb-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                                    Escribe aquí y un vendedor te responderá. Tus mensajes aparecen en naranja; las respuestas del equipo de ventas en morado.
+                                </p>
+                                <ChatVentasCliente darkMode={darkMode} channel="ventas" />
                             </div>
                         )}
 

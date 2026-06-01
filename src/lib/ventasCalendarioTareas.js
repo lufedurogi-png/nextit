@@ -78,3 +78,49 @@ export function tasksInNext48Hours(tareas, now = new Date()) {
 
     return out.sort((a, b) => a._sort - b._sort)
 }
+
+export function sortTareasByDateTime(tareas) {
+    return tareas.slice().sort((a, b) => {
+        if (a.dateISO !== b.dateISO) return a.dateISO.localeCompare(b.dateISO)
+        const ta = a.time?.trim() || ''
+        const tb = b.time?.trim() || ''
+        if (!ta && !tb) return 0
+        if (!ta) return 1
+        if (!tb) return -1
+        return ta.localeCompare(tb, undefined, { numeric: true })
+    })
+}
+
+export function tasksForToday(tareas, now = new Date()) {
+    return tasksForDateISO(tareas, toISODate(now))
+}
+
+export function tasksThisWeek(tareas, now = new Date()) {
+    const start = startOfWeekMonday(now)
+    const end = addDays(start, 6)
+    const startISO = toISODate(start)
+    const endISO = toISODate(end)
+    return sortTareasByDateTime(
+        tareas.filter((t) => t.dateISO >= startISO && t.dateISO <= endISO),
+    )
+}
+
+export function tasksOverdue(tareas, now = new Date()) {
+    const todayISO = toISODate(now)
+    return sortTareasByDateTime(tareas.filter((t) => t.dateISO < todayISO))
+}
+
+export function formatTareaVence(t, now = new Date()) {
+    const todayISO = toISODate(now)
+    const tomorrow = toISODate(addDays(now, 1))
+    if (t.dateISO === todayISO) {
+        return t.time?.trim() ? `Hoy · ${t.time}` : 'Hoy'
+    }
+    if (t.dateISO === tomorrow) {
+        return t.time?.trim() ? `Mañana · ${t.time}` : 'Mañana'
+    }
+    const [y, mo, d] = t.dateISO.split('-').map(Number)
+    const dt = new Date(y, mo - 1, d)
+    const fecha = dt.toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short' })
+    return t.time?.trim() ? `${fecha} · ${t.time}` : fecha
+}

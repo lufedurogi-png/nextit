@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import Image from 'next/image'
 import {
     formatMessageTime,
@@ -9,11 +9,20 @@ import {
     actualizarMensajeCliente,
     eliminarMensajeCliente,
 } from '@/lib/chatApi'
+import {
+    maxChatMessageId,
+    setChatMessagesFromServer,
+    appendChatMessagesFromServer,
+} from '@/lib/chatMerge'
+import { useChatAutoScroll } from '@/hooks/useChatAutoScroll'
+import ChatMessageComposer from '@/components/ChatMessageComposer'
 
 const COLOR_CLIENTE = '#FF8000'
 const COLOR_ADMIN = '#059669'
+const COLOR_VENDEDOR = '#7c3aed'
+const POLL_MS = 8000
 
-export default function ChatVentasCliente({ darkMode }) {
+export default function ChatVentasCliente({ darkMode, channel = 'admin' }) {
     const [mensajes, setMensajes] = useState([])
     const [loading, setLoading] = useState(true)
     const [nuevoTexto, setNuevoTexto] = useState('')
@@ -24,57 +33,59 @@ export default function ChatVentasCliente({ darkMode }) {
     const [eliminandoId, setEliminandoId] = useState(null)
     const [errorEnvio, setErrorEnvio] = useState(null)
     const scrollRef = useRef(null)
+    const mensajesRef = useRef([])
+    const pollingRef = useRef(false)
 
-    const cargarMensajes = async (silent = false) => {
-        if (!silent) {
-            setLoading(true)
-            setErrorEnvio(null)
-        }
-        try {
-            const lista = await getChatMensajesCliente()
-            const list = Array.isArray(lista) ? lista : []
-            if (silent) {
-                setMensajes((prev) => {
-                    const pending = prev.filter((m) => m.pending || String(m.id).startsWith('temp-'))
-                    const merged = [...list]
-                    pending.forEach((p) => {
-                        const inServer = list.some((m) => m.body === p.body && Math.abs(new Date(m.created_at) - new Date(p.created_at)) < 15000)
-                        if (!inServer) merged.push(p)
-                    })
-                    merged.sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
-                    return merged
-                })
-            } else {
-                setMensajes(list)
+    mensajesRef.current = mensajes
+
+    const { scrollToBottom } = useChatAutoScroll(scrollRef, mensajes, { forceKey: channel })
+
+    const cargarMensajes = useCallback(
+        async (silent = false) => {
+            if (pollingRef.current && silent) return
+            if (silent) pollingRef.current = true
+
+            if (!silent) {
+                setLoading(true)
+                setErrorEnvio(null)
             }
-        } catch {
-            if (!silent) setMensajes([])
-        } finally {
-            if (!silent) setLoading(false)
-        }
-    }
+
+            try {
+                const afterId = silent ? maxChatMessageId(mensajesRef.current) : 0
+                const lista = await getChatMensajesCliente(channel, afterId)
+                const list = Array.isArray(lista) ? lista : []
+
+                setMensajes((prev) => {
+                    if (!silent || afterId === 0) {
+                        return setChatMessagesFromServer(prev, list)
+                    }
+                    return appendChatMessagesFromServer(prev, list)
+                })
+            } catch {
+                if (!silent) setMensajes([])
+            } finally {
+                if (!silent) setLoading(false)
+                if (silent) pollingRef.current = false
+            }
+        },
+        [channel]
+    )
 
     useEffect(() => {
-        cargarMensajes()
-    }, [])
+        setMensajes([])
+        cargarMensajes(false)
+    }, [channel, cargarMensajes])
 
     useEffect(() => {
         const interval = setInterval(() => {
-            if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
-                cargarMensajes(true)
-            }
-        }, 5000)
+            if (typeof document === 'undefined' || document.visibilityState !== 'visible') return
+            if (editandoId != null) return
+            cargarMensajes(true)
+        }, POLL_MS)
         return () => clearInterval(interval)
-    }, [])
+    }, [channel, cargarMensajes, editandoId])
 
-    useEffect(() => {
-        if (scrollRef.current && mensajes.length) {
-            scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-        }
-    }, [mensajes])
-
-    const handleEnviar = async (e) => {
-        e?.preventDefault()
+    const handleEnviar = async () => {
         const texto = (nuevoTexto || '').trim()
         if (!texto || enviando) return
         setErrorEnvio(null)
@@ -89,9 +100,10 @@ export default function ChatVentasCliente({ darkMode }) {
         }
         setMensajes((prev) => [...prev, tempMsg])
         setNuevoTexto('')
+        scrollToBottom('smooth')
         setEnviando(true)
         try {
-            const m = await enviarMensajeCliente(texto)
+            const m = await enviarMensajeCliente(texto, channel)
             if (m) {
                 setMensajes((prev) => prev.map((x) => (x.id === tempId ? { ...m, pending: false } : x)))
             } else {
@@ -131,7 +143,7 @@ export default function ChatVentasCliente({ darkMode }) {
             }
             cancelarEdicion()
         } catch {
-            // error
+            //
         } finally {
             setGuardandoId(null)
         }
@@ -144,28 +156,37 @@ export default function ChatVentasCliente({ darkMode }) {
             const ok = await eliminarMensajeCliente(id)
             if (ok) setMensajes((prev) => prev.filter((x) => x.id !== id))
         } catch {
-            // error
+            //
         } finally {
             setEliminandoId(null)
         }
     }
 
     const isCliente = (m) => m.sender_type === 'customer'
+    const isStaff = (m) => m.sender_type === 'admin' || m.sender_type === 'seller'
+    const staffColor = channel === 'ventas' ? COLOR_VENDEDOR : COLOR_ADMIN
+    const staffLabel = (m) => {
+        if (channel === 'ventas') return m.seller_name || 'Vendedor'
+        return m.admin_name || m.seller_name || 'Administración'
+    }
+
+    const emptyHint =
+        channel === 'ventas'
+            ? 'Aún no hay mensajes. Escribe algo y un vendedor te responderá.'
+            : 'Aún no hay mensajes. Escribe algo y un administrador te responderá.'
 
     return (
         <div className="flex flex-col min-h-[420px]" style={{ height: 'min(520px, 55vh)' }}>
             <div
                 ref={scrollRef}
-                className={`flex-1 overflow-y-auto rounded-2xl border-2 p-4 space-y-4 mb-4 ${
+                className={`flex-1 overflow-y-auto rounded-2xl border-2 p-4 space-y-4 mb-4 scroll-smooth ${
                     darkMode ? 'border-gray-600 bg-tienda-elevated/40' : 'border-gray-200 bg-gray-50'
                 }`}
             >
                 {loading ? (
                     <p className={darkMode ? 'text-gray-400' : 'text-gray-500'}>Cargando…</p>
                 ) : mensajes.length === 0 ? (
-                    <p className={darkMode ? 'text-gray-400' : 'text-gray-500'}>
-                        Aún no hay mensajes. Escribe algo y un administrador te responderá.
-                    </p>
+                    <p className={darkMode ? 'text-gray-400' : 'text-gray-500'}>{emptyHint}</p>
                 ) : (
                     mensajes.map((m) => (
                         <div
@@ -174,23 +195,19 @@ export default function ChatVentasCliente({ darkMode }) {
                         >
                             <div
                                 className={`max-w-[85%] rounded-2xl px-4 py-2.5 shadow-lg ${
-                                    isCliente(m)
-                                        ? 'rounded-br-sm'
-                                        : 'rounded-bl-sm'
+                                    isCliente(m) ? 'rounded-br-sm' : 'rounded-bl-sm'
                                 } ${m.pending ? 'opacity-90' : ''}`}
                                 style={{
                                     backgroundColor: isCliente(m)
-                                        ? `${COLOR_CLIENTE}`
+                                        ? COLOR_CLIENTE
                                         : darkMode
-                                            ? `${COLOR_ADMIN}99`
-                                            : COLOR_ADMIN,
+                                          ? `${staffColor}99`
+                                          : staffColor,
                                     color: '#fff',
                                 }}
                             >
-                                {!isCliente(m) && (
-                                    <div className="text-xs opacity-90 mb-1">
-                                        {m.admin_name || m.seller_name || 'Admin'}
-                                    </div>
+                                {isStaff(m) && (
+                                    <div className="text-xs opacity-90 mb-1">{staffLabel(m)}</div>
                                 )}
                                 {editandoId === m.id ? (
                                     <div className="flex flex-col gap-2">
@@ -227,9 +244,7 @@ export default function ChatVentasCliente({ darkMode }) {
                                     </div>
                                 ) : (
                                     <div className="flex items-start gap-2 group">
-                                        <span className="text-sm whitespace-pre-wrap break-words">
-                                            {m.body}
-                                        </span>
+                                        <span className="text-sm whitespace-pre-wrap break-words">{m.body}</span>
                                         {isCliente(m) && (
                                             <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <button
@@ -279,37 +294,16 @@ export default function ChatVentasCliente({ darkMode }) {
                     {errorEnvio}
                 </p>
             )}
-            <form onSubmit={handleEnviar} className={`flex gap-2 items-center rounded-2xl border-2 overflow-hidden focus-within:ring-2 focus-within:ring-[#FF8000]/50 focus-within:border-[#FF8000] transition-all ${darkMode ? 'border-gray-600 bg-tienda-elevated/50' : 'border-gray-200 bg-white'}`}>
-                <input
-                    type="text"
-                    value={nuevoTexto}
-                    onChange={(e) => setNuevoTexto(e.target.value)}
-                    placeholder="Escribe tu mensaje..."
-                    maxLength={5000}
-                    className={
-                        'flex-1 min-w-0 py-3 px-4 text-sm border-0 focus:ring-0 focus:outline-none transition-colors rounded-2xl ' +
-                        (nuevoTexto && nuevoTexto.trim()
-                            ? 'bg-[#E5EBFD] text-gray-900 placeholder-gray-600'
-                            : darkMode
-                                ? 'bg-transparent text-white placeholder-gray-400'
-                                : 'bg-transparent text-gray-900 placeholder-gray-500')
-                    }
-                />
-                <button
-                    type="submit"
-                    disabled={enviando || !String(nuevoTexto || '').trim()}
-                    className="flex items-center justify-center w-12 h-12 shrink-0 rounded-xl bg-[#FF8000] hover:bg-[#e67300] text-white disabled:opacity-50 transition-all m-1"
-                    title="Enviar"
-                >
-                    <Image
-                        src="/Imagenes/icon_enviar.png"
-                        alt="Enviar"
-                        width={24}
-                        height={24}
-                        className="object-contain invert"
-                    />
-                </button>
-            </form>
+            <ChatMessageComposer
+                value={nuevoTexto}
+                onChange={setNuevoTexto}
+                onSubmit={handleEnviar}
+                placeholder="Escribe tu mensaje…"
+                disabled={loading}
+                sending={enviando}
+                darkMode={darkMode}
+                accent={channel === 'ventas' ? 'violet' : 'orange'}
+            />
         </div>
     )
 }
