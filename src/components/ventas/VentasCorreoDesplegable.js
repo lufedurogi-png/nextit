@@ -34,18 +34,18 @@ export default function VentasCorreoDesplegable({
         disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
     } ${
         darkMode
-            ? 'border-violet-800/60 bg-[#12101a] text-violet-50 hover:border-violet-600'
-            : 'border-violet-200 bg-white text-violet-950 hover:border-violet-300 hover:bg-violet-50/80'
-    } ${abierto ? (darkMode ? 'border-violet-500 ring-1 ring-violet-500/40' : 'border-violet-400 ring-1 ring-violet-300/60') : ''}`
+            ? 'border-orange-800/60 bg-[#202020] text-orange-50 hover:border-orange-600'
+            : 'border-orange-200 bg-white text-orange-950 hover:border-orange-300 hover:bg-orange-50/80'
+    } ${abierto ? (darkMode ? 'border-orange-500 ring-1 ring-orange-500/40' : 'border-orange-400 ring-1 ring-orange-300/60') : ''}`
 
     const panel = `absolute z-30 mt-1.5 w-full min-w-[10rem] max-h-52 overflow-y-auto rounded-xl border py-1 shadow-lg ${
-        darkMode ? 'border-violet-800/60 bg-[#1a1628]' : 'border-violet-200 bg-white'
+        darkMode ? 'border-orange-800/60 bg-[#262626]' : 'border-orange-200 bg-white'
     }`
 
     return (
         <div ref={ref} className="relative min-w-0">
             {label ? (
-                <label htmlFor={id} className="block text-xs font-medium text-violet-800/80 dark:text-violet-300/70 mb-1">
+                <label htmlFor={id} className="block text-xs font-medium text-orange-800/80 dark:text-orange-300/70 mb-1">
                     {label}
                 </label>
             ) : null}
@@ -58,11 +58,11 @@ export default function VentasCorreoDesplegable({
                 aria-haspopup="listbox"
                 onClick={() => !disabled && setAbierto((o) => !o)}
             >
-                <span className={`truncate ${!seleccionado ? 'text-violet-500/80 dark:text-violet-400/70' : ''}`}>
+                <span className={`truncate ${!seleccionado ? 'text-orange-500/80 dark:text-orange-400/70' : ''}`}>
                     {textoMostrado}
                 </span>
                 <span
-                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-violet-100/80 text-violet-700 dark:bg-violet-900/40 dark:text-violet-200 text-[10px] transition-transform ${
+                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-orange-100/80 text-orange-700 dark:bg-orange-900/40 dark:text-orange-200 text-[10px] transition-transform ${
                         abierto ? 'rotate-180' : ''
                     }`}
                     aria-hidden
@@ -83,11 +83,11 @@ export default function VentasCorreoDesplegable({
                                     className={`w-full px-3 py-2 text-left text-sm transition ${
                                         activo
                                             ? darkMode
-                                                ? 'bg-violet-800/60 text-white font-semibold'
-                                                : 'bg-violet-200/90 text-violet-950 font-semibold'
+                                                ? 'bg-orange-800/60 text-white font-semibold'
+                                                : 'bg-orange-200/90 text-orange-950 font-semibold'
                                             : darkMode
-                                              ? 'text-violet-100 hover:bg-violet-900/40'
-                                              : 'text-violet-900 hover:bg-violet-50'
+                                              ? 'text-orange-100 hover:bg-orange-900/40'
+                                              : 'text-orange-900 hover:bg-orange-50'
                                     }`}
                                     onClick={() => {
                                         onChange(String(opt.value))

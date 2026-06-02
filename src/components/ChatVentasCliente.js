@@ -19,7 +19,7 @@ import ChatMessageComposer from '@/components/ChatMessageComposer'
 
 const COLOR_CLIENTE = '#FF8000'
 const COLOR_ADMIN = '#059669'
-const COLOR_VENDEDOR = '#7c3aed'
+const COLOR_VENDEDOR = '#FF8000'
 const POLL_MS = 8000
 
 export default function ChatVentasCliente({ darkMode, channel = 'admin' }) {
@@ -302,7 +302,7 @@ export default function ChatVentasCliente({ darkMode, channel = 'admin' }) {
                 disabled={loading}
                 sending={enviando}
                 darkMode={darkMode}
-                accent={channel === 'ventas' ? 'violet' : 'orange'}
+                accent="orange"
             />
         </div>
     )

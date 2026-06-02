@@ -18,14 +18,14 @@ import VentasFichaDetalleModal from '@/components/ventas/VentasFichaDetalleModal
 import { useAdminTheme } from '@/contexts/AdminThemeContext'
 
 const card =
-    'rounded-2xl border border-violet-100 bg-white shadow-sm dark:border-violet-900/40 dark:bg-[#1a1628]/80 overflow-hidden'
+    'rounded-2xl border border-orange-100 bg-white shadow-sm dark:border-orange-900/40 dark:bg-[#262626]/80 overflow-hidden'
 const inputCls =
-    'w-full min-w-[200px] flex-1 rounded-xl border border-violet-100 bg-violet-50/50 px-3 py-2 text-sm dark:border-violet-800 dark:bg-[#12101a] dark:text-violet-100'
+    'w-full min-w-[200px] flex-1 rounded-xl border border-orange-100 bg-orange-50/50 px-3 py-2 text-sm dark:border-orange-800 dark:bg-[#202020] dark:text-orange-100'
 const ghostBtn =
-    'rounded-xl border border-violet-200 px-3 py-1.5 text-xs font-medium text-violet-900 transition hover:bg-violet-50 dark:border-violet-700 dark:text-violet-100 dark:hover:bg-white/5 disabled:opacity-50'
-const purpleBtn =
+    'rounded-xl border border-orange-200 px-3 py-1.5 text-xs font-medium text-orange-900 transition hover:bg-orange-50 dark:border-orange-700 dark:text-orange-100 dark:hover:bg-white/5 disabled:opacity-50'
+const brandBtn =
     'rounded-xl px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:opacity-95 disabled:opacity-50'
-const purpleStyle = { background: 'linear-gradient(90deg, #5b4d7a, #8b7cb8)' }
+const brandStyle = { background: 'linear-gradient(90deg, #FF8000, #e67300)' }
 
 const TAB_EMPTY = {
     q: '',
@@ -49,8 +49,8 @@ function clienteKey(row) {
 
 function BarraFiltros({ label, q, setQ, onBuscar, onLimpiar, puedeLimpiar }) {
     return (
-        <div className="border-b border-violet-100 px-4 py-3 dark:border-violet-900/40 bg-violet-50/30 dark:bg-violet-950/20">
-            <p className="text-xs font-semibold uppercase text-violet-700/80 dark:text-violet-300/70 mb-2">{label}</p>
+        <div className="border-b border-orange-100 px-4 py-3 dark:border-orange-900/40 bg-orange-50/30 dark:bg-orange-950/20">
+            <p className="text-xs font-semibold uppercase text-orange-700/80 dark:text-orange-300/70 mb-2">{label}</p>
             <div className="flex flex-wrap items-center gap-2">
                 <input
                     type="search"
@@ -78,7 +78,7 @@ function SeparadorPaginacion({ darkMode, page, meta, onPageChange, loading }) {
     const lastPage = Math.max(1, meta.last_page ?? 1)
     if (lastPage <= 1) return null
     return (
-        <div className="border-t border-violet-100 px-4 py-4 dark:border-violet-900/40">
+        <div className="border-t border-orange-100 px-4 py-4 dark:border-orange-900/40">
             <VentasCorreosHistorialPaginacion
                 darkMode={darkMode}
                 currentPage={page}
@@ -131,27 +131,27 @@ function HistorialCotizaciones({ darkMode, tab, cliente, expanded, onVerCotizaci
     if (!expanded) return null
 
     return (
-        <tr className="bg-violet-50/40 dark:bg-violet-950/20">
+        <tr className="bg-orange-50/40 dark:bg-orange-950/20">
             <td colSpan={7} className="px-4 py-3">
-                <p className="text-xs font-semibold uppercase text-violet-700/80 dark:text-violet-300/70 mb-2">
+                <p className="text-xs font-semibold uppercase text-orange-700/80 dark:text-orange-300/70 mb-2">
                     Cotizaciones
                 </p>
                 {loading ? (
-                    <p className="text-sm text-violet-600/70 dark:text-violet-300/60">Cargando…</p>
+                    <p className="text-sm text-orange-600/70 dark:text-orange-300/60">Cargando…</p>
                 ) : error ? (
                     <p className="text-sm text-rose-600 dark:text-rose-400">{error}</p>
                 ) : rows.length === 0 ? (
-                    <p className="text-sm text-gray-500 dark:text-violet-300/50">Sin cotizaciones.</p>
+                    <p className="text-sm text-gray-500 dark:text-orange-300/50">Sin cotizaciones.</p>
                 ) : (
                     <ul className="space-y-1.5">
                         {rows.map((c) => (
                             <li
                                 key={`${c.tipo}-${c.id}`}
-                                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-violet-100 bg-white px-3 py-2 dark:border-violet-800/40 dark:bg-[#12101a]/60"
+                                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-orange-100 bg-white px-3 py-2 dark:border-orange-800/40 dark:bg-[#202020]/60"
                             >
                                 <div className="min-w-0">
-                                    <p className="text-sm font-medium text-violet-950 dark:text-violet-100">{c.folio}</p>
-                                    <p className="text-xs text-gray-500 dark:text-violet-400/60">
+                                    <p className="text-sm font-medium text-orange-950 dark:text-orange-100">{c.folio}</p>
+                                    <p className="text-xs text-gray-500 dark:text-orange-400/60">
                                         {formatHistorialFecha(c.created_at)} · {fmtMoney(c.total)}
                                     </p>
                                 </div>
@@ -163,7 +163,7 @@ function HistorialCotizaciones({ darkMode, tab, cliente, expanded, onVerCotizaci
                     </ul>
                 )}
                 {!loading && meta?.total > 0 && (
-                    <div className="mt-3 border-t border-violet-100 pt-3 dark:border-violet-800/40">
+                    <div className="mt-3 border-t border-orange-100 pt-3 dark:border-orange-800/40">
                         <VentasCorreosHistorialPaginacion
                             compact
                             darkMode={darkMode}
@@ -193,7 +193,7 @@ function TablaClientes({
         <div className="overflow-x-auto">
             <table className="w-full min-w-[880px] text-sm">
                 <thead>
-                    <tr className="bg-violet-50/90 text-left text-xs font-semibold text-violet-900 dark:bg-violet-950/50 dark:text-violet-100">
+                    <tr className="bg-orange-50/90 text-left text-xs font-semibold text-orange-900 dark:bg-orange-950/50 dark:text-orange-100">
                         <th className="px-4 py-3">Cliente</th>
                         <th className="px-4 py-3">Email</th>
                         <th className="px-4 py-3">Tipo</th>
@@ -203,16 +203,16 @@ function TablaClientes({
                         <th className="px-4 py-3 text-right">Acciones</th>
                     </tr>
                 </thead>
-                <tbody className="divide-y divide-violet-50 dark:divide-violet-900/30">
+                <tbody className="divide-y divide-orange-50 dark:divide-orange-900/30">
                     {loading ? (
                         <tr>
-                            <td colSpan={7} className="px-4 py-8 text-center text-violet-600/70 dark:text-violet-300/60">
+                            <td colSpan={7} className="px-4 py-8 text-center text-orange-600/70 dark:text-orange-300/60">
                                 Cargando clientes…
                             </td>
                         </tr>
                     ) : rows.length === 0 ? (
                         <tr>
-                            <td colSpan={7} className="px-4 py-8 text-center text-gray-500 dark:text-violet-300/50">
+                            <td colSpan={7} className="px-4 py-8 text-center text-gray-500 dark:text-orange-300/50">
                                 {emptyMessage}
                             </td>
                         </tr>
@@ -222,18 +222,18 @@ function TablaClientes({
                             const expanded = expandedKey === key
                             return (
                                 <Fragment key={key}>
-                                    <tr className="hover:bg-violet-50/30 dark:hover:bg-white/[0.02]">
-                                        <td className="px-4 py-3 font-medium text-violet-900 dark:text-violet-100">
+                                    <tr className="hover:bg-orange-50/30 dark:hover:bg-white/[0.02]">
+                                        <td className="px-4 py-3 font-medium text-orange-900 dark:text-orange-100">
                                             {row.name || '—'}
                                             {row.telefono && (
-                                                <p className="text-xs font-normal text-gray-500 dark:text-violet-400/60">
+                                                <p className="text-xs font-normal text-gray-500 dark:text-orange-400/60">
                                                     {row.telefono}
                                                 </p>
                                             )}
                                         </td>
-                                        <td className="px-4 py-3 text-violet-700/80 dark:text-violet-300/70">{row.email || '—'}</td>
+                                        <td className="px-4 py-3 text-orange-700/80 dark:text-orange-300/70">{row.email || '—'}</td>
                                         <td className="px-4 py-3">
-                                            <span className="rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-800 dark:bg-violet-600/25 dark:text-violet-100">
+                                            <span className="rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-800 dark:bg-orange-600/25 dark:text-orange-100">
                                                 {tab === 'crm'
                                                     ? row.kind === 'invitado'
                                                         ? 'Prospecto'
@@ -242,7 +242,7 @@ function TablaClientes({
                                             </span>
                                         </td>
                                         <td className="px-4 py-3 text-center font-semibold">{row.cotizaciones_count ?? 0}</td>
-                                        <td className="px-4 py-3 text-gray-600 dark:text-violet-300/70">
+                                        <td className="px-4 py-3 text-gray-600 dark:text-orange-300/70">
                                             {formatHistorialFecha(row.ultima_cotizacion_at)}
                                         </td>
                                         <td className="px-4 py-3 text-right font-semibold text-gray-900 dark:text-white">
@@ -260,8 +260,8 @@ function TablaClientes({
                                                 {row.puede_chat && row.cliente_user_id && (
                                                     <Link
                                                         href={`/ventas-inbox?cliente=${row.cliente_user_id}`}
-                                                        className={`${purpleBtn} inline-flex items-center`}
-                                                        style={purpleStyle}
+                                                        className={`${brandBtn} inline-flex items-center`}
+                                                        style={brandStyle}
                                                     >
                                                         Chat
                                                     </Link>
@@ -392,21 +392,21 @@ export default function VentasClientesClient() {
     return (
         <div className="space-y-4">
             <div>
-                <h1 className="text-2xl font-bold text-violet-950 dark:text-white">Historial de cotizaciones</h1>
-                <p className="text-sm text-violet-800/70 dark:text-violet-200/60 mt-1">
+                <h1 className="text-2xl font-bold text-orange-950 dark:text-white">Historial de cotizaciones</h1>
+                <p className="text-sm text-orange-800/70 dark:text-orange-200/60 mt-1">
                     Contactos con historial de cotizaciones CRM o desde la tienda.
                 </p>
             </div>
 
             <div className={card}>
-                <div className="flex flex-wrap gap-2 border-b border-violet-100 px-4 py-3 dark:border-violet-900/40">
+                <div className="flex flex-wrap gap-2 border-b border-orange-100 px-4 py-3 dark:border-orange-900/40">
                     <button
                         type="button"
                         onClick={() => setTab('crm')}
                         className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
                             tab === 'crm'
-                                ? 'bg-violet-600 text-white'
-                                : 'border border-violet-200 text-violet-800 dark:border-violet-700 dark:text-violet-200 hover:bg-violet-50 dark:hover:bg-white/5'
+                                ? 'bg-orange-600 text-white'
+                                : 'border border-orange-200 text-orange-800 dark:border-orange-700 dark:text-orange-200 hover:bg-orange-50 dark:hover:bg-white/5'
                         }`}
                     >
                         Cotizaciones CRM
@@ -419,8 +419,8 @@ export default function VentasClientesClient() {
                         onClick={() => setTab('tienda')}
                         className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
                             tab === 'tienda'
-                                ? 'bg-violet-600 text-white'
-                                : 'border border-violet-200 text-violet-800 dark:border-violet-700 dark:text-violet-200 hover:bg-violet-50 dark:hover:bg-white/5'
+                                ? 'bg-orange-600 text-white'
+                                : 'border border-orange-200 text-orange-800 dark:border-orange-700 dark:text-orange-200 hover:bg-orange-50 dark:hover:bg-white/5'
                         }`}
                     >
                         Cotizaciones tienda
@@ -441,7 +441,7 @@ export default function VentasClientesClient() {
                             puedeLimpiar={Boolean(crm.q || crm.qAplicado)}
                         />
                         {crm.error && (
-                            <div className="px-4 py-3 text-sm text-rose-600 dark:text-rose-400 border-b border-violet-100 dark:border-violet-900/40">
+                            <div className="px-4 py-3 text-sm text-rose-600 dark:text-rose-400 border-b border-orange-100 dark:border-orange-900/40">
                                 {crm.error}
                                 <button
                                     type="button"
@@ -487,7 +487,7 @@ export default function VentasClientesClient() {
                             puedeLimpiar={Boolean(tienda.q || tienda.qAplicado)}
                         />
                         {tienda.error && (
-                            <div className="px-4 py-3 text-sm text-rose-600 dark:text-rose-400 border-b border-violet-100 dark:border-violet-900/40">
+                            <div className="px-4 py-3 text-sm text-rose-600 dark:text-rose-400 border-b border-orange-100 dark:border-orange-900/40">
                                 {tienda.error}
                                 <button
                                     type="button"

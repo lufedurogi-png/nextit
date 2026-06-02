@@ -9,9 +9,9 @@ import { useVentasAuth } from '@/hooks/useVentasAuth'
 import { useAdminTheme } from '@/contexts/AdminThemeContext'
 import { useState, useEffect } from 'react'
 
-/** Morado suave (no neón): gradiente principal del CRM ventas */
-const purpleFrom = '#5b4d7a'
-const purpleTo = '#8b7cb8'
+/** Naranja marca (misma paleta que la tienda) */
+const brandFrom = '#FF8000'
+const brandTo = '#e67300'
 
 export default function VentasLoginPage() {
     const { login } = useVentasAuth({
@@ -38,7 +38,7 @@ export default function VentasLoginPage() {
         login({ email, password, setErrors })
     }
 
-    const panelBg = `linear-gradient(135deg, ${purpleFrom} 0%, ${purpleTo} 100%)`
+    const panelBg = `linear-gradient(135deg, ${brandFrom} 0%, ${brandTo} 100%)`
 
     return (
         <div className="relative w-full overflow-hidden" style={{ height: 'calc(100vh - 4rem)' }}>
@@ -52,14 +52,14 @@ export default function VentasLoginPage() {
                     }}
                 >
                     <div className="text-center px-6 sm:px-8 md:px-12 py-8 lg:py-0">
-                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-violet-100/80 mb-3">NXT.IT</p>
+                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-orange-100/80 mb-3">NXT.IT</p>
                         <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight">Ventas</h2>
                     </div>
                 </div>
 
                 <div
                     className={`flex-1 flex items-center justify-center p-6 sm:p-8 lg:p-10 transition-all duration-500 ease-in-out min-w-0 order-2 w-full ${
-                        darkMode ? 'bg-[#16131f]' : 'bg-[#f7f5fc]'
+                        darkMode ? 'bg-[#1c1c1c]' : 'bg-[#fafafa]'
                     }`}
                 >
                     <div className="w-full max-w-sm">
@@ -78,14 +78,14 @@ export default function VentasLoginPage() {
                                         id="ventas-email"
                                         type="email"
                                         value={email}
-                                        className={`block w-full px-4 py-3 pl-11 rounded-lg text-sm border-2 transition-colors focus:ring-2 focus:ring-violet-400/35 focus:border-violet-400 ${
+                                        className={`block w-full px-4 py-3 pl-11 rounded-lg text-sm border-2 transition-colors focus:ring-2 focus:ring-orange-400/35 focus:border-orange-400 ${
                                             darkMode
                                                 ? email.trim()
-                                                    ? 'bg-[#E8E4F7] border-violet-800/50 text-gray-900'
-                                                    : 'bg-[#2a2540] border-violet-800/40 text-white'
+                                                    ? 'bg-[#E8E4F7] border-orange-800/50 text-gray-900'
+                                                    : 'bg-[#333333] border-orange-800/40 text-white'
                                                 : email.trim()
-                                                  ? 'bg-[#E8E4F7] border-violet-200 text-gray-900'
-                                                  : 'bg-white border-violet-100 text-gray-900'
+                                                  ? 'bg-[#E8E4F7] border-orange-200 text-gray-900'
+                                                  : 'bg-white border-orange-100 text-gray-900'
                                         }`}
                                         onChange={(e) => setEmail(e.target.value)}
                                         required
@@ -94,7 +94,7 @@ export default function VentasLoginPage() {
                                     />
                                     <div className="absolute left-3.5 top-1/2 -translate-y-1/2">
                                         <svg
-                                            className={`w-5 h-5 ${darkMode ? 'text-violet-300/80' : 'text-violet-400'}`}
+                                            className={`w-5 h-5 ${darkMode ? 'text-orange-300/80' : 'text-orange-400'}`}
                                             fill="none"
                                             stroke="currentColor"
                                             viewBox="0 0 24 24"
@@ -123,14 +123,14 @@ export default function VentasLoginPage() {
                                         id="ventas-password"
                                         type={showPassword ? 'text' : 'password'}
                                         value={password}
-                                        className={`block w-full px-4 py-3 pl-11 pr-12 rounded-lg text-sm border-2 transition-colors focus:ring-2 focus:ring-violet-400/35 focus:border-violet-400 ${
+                                        className={`block w-full px-4 py-3 pl-11 pr-12 rounded-lg text-sm border-2 transition-colors focus:ring-2 focus:ring-orange-400/35 focus:border-orange-400 ${
                                             darkMode
                                                 ? password.trim()
-                                                    ? 'bg-[#E8E4F7] border-violet-800/50 text-gray-900'
-                                                    : 'bg-[#2a2540] border-violet-800/40 text-white'
+                                                    ? 'bg-[#E8E4F7] border-orange-800/50 text-gray-900'
+                                                    : 'bg-[#333333] border-orange-800/40 text-white'
                                                 : password.trim()
-                                                  ? 'bg-[#E8E4F7] border-violet-200 text-gray-900'
-                                                  : 'bg-white border-violet-100 text-gray-900'
+                                                  ? 'bg-[#E8E4F7] border-orange-200 text-gray-900'
+                                                  : 'bg-white border-orange-100 text-gray-900'
                                         }`}
                                         onChange={(e) => setPassword(e.target.value)}
                                         required
@@ -138,7 +138,7 @@ export default function VentasLoginPage() {
                                     />
                                     <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
                                         <svg
-                                            className={`w-5 h-5 ${darkMode ? 'text-violet-300/80' : 'text-violet-400'}`}
+                                            className={`w-5 h-5 ${darkMode ? 'text-orange-300/80' : 'text-orange-400'}`}
                                             fill="none"
                                             stroke="currentColor"
                                             viewBox="0 0 24 24"
@@ -154,7 +154,7 @@ export default function VentasLoginPage() {
                                     <button
                                         type="button"
                                         onClick={() => setShowPassword((s) => !s)}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-violet-400/50"
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-orange-400/50"
                                         aria-label={showPassword ? 'Ocultar contraseña' : 'Ver contraseña'}
                                         tabIndex={0}
                                     >
@@ -176,7 +176,7 @@ export default function VentasLoginPage() {
                                 type="submit"
                                 className="w-full text-white px-6 py-3 rounded-lg text-sm font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-[1.02] transform mt-2 border-0"
                                 style={{
-                                    background: `linear-gradient(90deg, ${purpleFrom}, ${purpleTo})`,
+                                    background: `linear-gradient(90deg, ${brandFrom}, ${brandTo})`,
                                 }}
                             >
                                 INICIAR SESIÓN

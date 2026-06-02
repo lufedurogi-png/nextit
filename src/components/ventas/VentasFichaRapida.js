@@ -17,16 +17,16 @@ import VentasCorreosHistorialPaginacion from '@/components/ventas/VentasCorreosH
 import VentasFichaDetalleModal from '@/components/ventas/VentasFichaDetalleModal'
 import { useAdminTheme } from '@/contexts/AdminThemeContext'
 
-const purpleBtn =
+const brandBtn =
     'rounded-xl px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:opacity-95 disabled:opacity-50'
-const purpleStyle = { background: 'linear-gradient(90deg, #5b4d7a, #8b7cb8)' }
+const brandStyle = { background: 'linear-gradient(90deg, #FF8000, #e67300)' }
 const inputCls =
-    'w-full rounded-lg border border-violet-100 bg-violet-50/50 px-2.5 py-1.5 text-xs dark:border-violet-800 dark:bg-[#12101a] dark:text-violet-100'
+    'w-full rounded-lg border border-orange-100 bg-orange-50/50 px-2.5 py-1.5 text-xs dark:border-orange-800 dark:bg-[#202020] dark:text-orange-100'
 
 function Seccion({ title, children }) {
     return (
         <div className="space-y-2">
-            <p className="text-xs font-semibold uppercase text-gray-500 dark:text-violet-400/60">{title}</p>
+            <p className="text-xs font-semibold uppercase text-gray-500 dark:text-orange-400/60">{title}</p>
             {children}
         </div>
     )
@@ -245,7 +245,7 @@ export default function VentasFichaRapida({ clienteId, clienteFallback }) {
 
     if (!clienteId) {
         return (
-            <p className="text-xs text-violet-700/70 dark:text-violet-300/60 p-4 shrink-0">
+            <p className="text-xs text-orange-700/70 dark:text-orange-300/60 p-4 shrink-0">
                 Selecciona un cliente para ver su ficha.
             </p>
         )
@@ -258,15 +258,15 @@ export default function VentasFichaRapida({ clienteId, clienteFallback }) {
         <>
             <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 space-y-5 text-sm">
                 {loadingCliente && !activo ? (
-                    <p className="text-xs text-violet-700/70 dark:text-violet-300/60">Cargando ficha…</p>
+                    <p className="text-xs text-orange-700/70 dark:text-orange-300/60">Cargando ficha…</p>
                 ) : (
                     <>
                         <div className="flex flex-col items-center text-center">
-                            <div className="h-16 w-16 rounded-full bg-gradient-to-br from-violet-200 to-violet-400 dark:from-violet-700 dark:to-violet-500 mb-2 flex items-center justify-center text-xl font-bold text-white">
+                            <div className="h-16 w-16 rounded-full bg-gradient-to-br from-orange-200 to-orange-400 dark:from-orange-700 dark:to-orange-500 mb-2 flex items-center justify-center text-xl font-bold text-white">
                                 {initial}
                             </div>
                             <p className="font-semibold">{activo?.name || '—'}</p>
-                            <p className="text-xs text-violet-700 dark:text-violet-300/70">{activo?.email || '—'}</p>
+                            <p className="text-xs text-orange-700 dark:text-orange-300/70">{activo?.email || '—'}</p>
                             {activo?.telefono && <p className="text-xs text-gray-500 mt-1">{activo.telefono}</p>}
                         </div>
 
@@ -301,24 +301,24 @@ export default function VentasFichaRapida({ clienteId, clienteFallback }) {
                                 type="button"
                                 onClick={handleGuardarComentario}
                                 disabled={guardandoCom || !comentarioNuevo.trim()}
-                                className={`${purpleBtn} w-full`}
-                                style={purpleStyle}
+                                className={`${brandBtn} w-full`}
+                                style={brandStyle}
                             >
                                 {guardandoCom ? 'Guardando…' : 'Agregar comentario'}
                             </button>
                             {loadingCom ? (
-                                <p className="text-xs text-violet-600/70">Cargando…</p>
+                                <p className="text-xs text-orange-600/70">Cargando…</p>
                             ) : comentarios.length === 0 ? (
-                                <p className="text-xs text-gray-500 dark:text-violet-300/50">Sin comentarios aún.</p>
+                                <p className="text-xs text-gray-500 dark:text-orange-300/50">Sin comentarios aún.</p>
                             ) : (
                                 <ul className="space-y-2">
                                     {comentarios.map((c) => (
                                         <li
                                             key={c.id}
-                                            className="rounded-xl border border-violet-100 bg-violet-50/40 p-2 text-xs dark:border-violet-800/50 dark:bg-[#12101a]/60"
+                                            className="rounded-xl border border-orange-100 bg-orange-50/40 p-2 text-xs dark:border-orange-800/50 dark:bg-[#202020]/60"
                                         >
-                                            <p className="whitespace-pre-wrap text-gray-700 dark:text-violet-100/90">{c.body}</p>
-                                            <p className="mt-1 text-[10px] text-gray-400 dark:text-violet-400/50">
+                                            <p className="whitespace-pre-wrap text-gray-700 dark:text-orange-100/90">{c.body}</p>
+                                            <p className="mt-1 text-[10px] text-gray-400 dark:text-orange-400/50">
                                                 {formatHistorialFecha(c.created_at)}
                                             </p>
                                         </li>
@@ -356,19 +356,19 @@ export default function VentasFichaRapida({ clienteId, clienteFallback }) {
                                 </select>
                             </div>
                             {loadingPed ? (
-                                <p className="text-xs text-violet-600/70">Cargando…</p>
+                                <p className="text-xs text-orange-600/70">Cargando…</p>
                             ) : pedidos.length === 0 ? (
-                                <p className="text-xs text-gray-500 dark:text-violet-300/50">Sin pedidos.</p>
+                                <p className="text-xs text-gray-500 dark:text-orange-300/50">Sin pedidos.</p>
                             ) : (
                                 <ul className="space-y-1.5">
                                     {pedidos.map((p) => (
                                         <li
                                             key={p.id}
-                                            className="flex items-center justify-between gap-2 rounded-lg border border-violet-100 px-2 py-1.5 dark:border-violet-800/40"
+                                            className="flex items-center justify-between gap-2 rounded-lg border border-orange-100 px-2 py-1.5 dark:border-orange-800/40"
                                         >
                                             <div className="min-w-0 flex-1">
                                                 <p className="text-xs font-medium truncate">{p.folio}</p>
-                                                <p className="text-[10px] text-gray-500 dark:text-violet-400/60">
+                                                <p className="text-[10px] text-gray-500 dark:text-orange-400/60">
                                                     {formatHistorialFecha(p.created_at)}
                                                     {p.estatus_pedido ? ` · ${p.estatus_pedido}` : ''}
                                                 </p>
@@ -376,7 +376,7 @@ export default function VentasFichaRapida({ clienteId, clienteFallback }) {
                                             <button
                                                 type="button"
                                                 onClick={() => abrirPedido(p)}
-                                                className="shrink-0 rounded-lg border border-violet-200 px-2 py-1 text-[10px] font-semibold text-violet-800 dark:border-violet-700 dark:text-violet-200 hover:bg-violet-50 dark:hover:bg-white/5"
+                                                className="shrink-0 rounded-lg border border-orange-200 px-2 py-1 text-[10px] font-semibold text-orange-800 dark:border-orange-700 dark:text-orange-200 hover:bg-orange-50 dark:hover:bg-white/5"
                                             >
                                                 Ver
                                             </button>
@@ -413,19 +413,19 @@ export default function VentasFichaRapida({ clienteId, clienteFallback }) {
                                 </select>
                             </div>
                             {loadingCot ? (
-                                <p className="text-xs text-violet-600/70">Cargando…</p>
+                                <p className="text-xs text-orange-600/70">Cargando…</p>
                             ) : cotizaciones.length === 0 ? (
-                                <p className="text-xs text-gray-500 dark:text-violet-300/50">Sin cotizaciones.</p>
+                                <p className="text-xs text-gray-500 dark:text-orange-300/50">Sin cotizaciones.</p>
                             ) : (
                                 <ul className="space-y-1.5">
                                     {cotizaciones.map((c) => (
                                         <li
                                             key={`${c.tipo}-${c.id}`}
-                                            className="flex items-center justify-between gap-2 rounded-lg border border-violet-100 px-2 py-1.5 dark:border-violet-800/40"
+                                            className="flex items-center justify-between gap-2 rounded-lg border border-orange-100 px-2 py-1.5 dark:border-orange-800/40"
                                         >
                                             <div className="min-w-0 flex-1">
                                                 <p className="text-xs font-medium truncate">{c.folio}</p>
-                                                <p className="text-[10px] text-gray-500 dark:text-violet-400/60">
+                                                <p className="text-[10px] text-gray-500 dark:text-orange-400/60">
                                                     {c.tipo === 'ventas' ? 'Ventas' : 'Tienda'} ·{' '}
                                                     {formatHistorialFecha(c.created_at)}
                                                 </p>
@@ -433,7 +433,7 @@ export default function VentasFichaRapida({ clienteId, clienteFallback }) {
                                             <button
                                                 type="button"
                                                 onClick={() => abrirCotizacion(c)}
-                                                className="shrink-0 rounded-lg border border-violet-200 px-2 py-1 text-[10px] font-semibold text-violet-800 dark:border-violet-700 dark:text-violet-200 hover:bg-violet-50 dark:hover:bg-white/5"
+                                                className="shrink-0 rounded-lg border border-orange-200 px-2 py-1 text-[10px] font-semibold text-orange-800 dark:border-orange-700 dark:text-orange-200 hover:bg-orange-50 dark:hover:bg-white/5"
                                             >
                                                 Ver
                                             </button>

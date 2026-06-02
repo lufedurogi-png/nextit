@@ -12,10 +12,6 @@ const ACCENTS = {
         ring: 'focus-within:ring-emerald-500/40 focus-within:border-emerald-500',
         btn: 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/25',
     },
-    violet: {
-        ring: 'focus-within:ring-violet-500/40 focus-within:border-violet-500',
-        btn: 'bg-violet-600 hover:bg-violet-700 shadow-violet-600/25',
-    },
 }
 
 export default function ChatMessageComposer({
@@ -52,7 +48,7 @@ export default function ChatMessageComposer({
         <div
             className={`rounded-2xl border-2 p-2 transition-all focus-within:ring-2 ${accentStyles.ring} ${
                 darkMode
-                    ? 'border-gray-600/80 bg-[#1a1628]/60 backdrop-blur-sm'
+                    ? 'border-gray-600/80 bg-[#262626]/60 backdrop-blur-sm'
                     : 'border-gray-200/90 bg-white shadow-sm'
             }`}
         >
@@ -68,9 +64,9 @@ export default function ChatMessageComposer({
                     disabled={disabled || sending}
                     className={`flex-1 min-w-0 max-h-40 resize-none rounded-xl px-4 py-3 text-sm leading-relaxed border-0 focus:ring-0 focus:outline-none transition-colors ${
                         darkMode
-                            ? 'bg-[#12101a]/50 text-gray-100 placeholder-gray-500'
+                            ? 'bg-[#202020]/50 text-gray-100 placeholder-gray-500'
                             : 'bg-gray-50/80 text-gray-900 placeholder-gray-400'
-                    } ${trimmed ? (darkMode ? 'bg-[#12101a]/80' : 'bg-[#EEF2FF]') : ''}`}
+                    } ${trimmed ? (darkMode ? 'bg-[#202020]/80' : 'bg-[#EEF2FF]') : ''}`}
                 />
                 <button
                     type="button"

@@ -5,7 +5,7 @@ import VentasInboxClient from '@/components/ventas/VentasInboxClient'
 
 export default function VentasInboxPage() {
     return (
-        <Suspense fallback={<p className="text-sm text-violet-600 dark:text-violet-300/70">Cargando bandeja…</p>}>
+        <Suspense fallback={<p className="text-sm text-orange-600 dark:text-orange-300/70">Cargando bandeja…</p>}>
             <VentasInboxClient />
         </Suspense>
     )

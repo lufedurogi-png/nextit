@@ -33,10 +33,10 @@ export default function VentasGlobalSearch({ darkMode }) {
     const inputRef = useRef(null)
     const debouncedQ = useDebounce(query, 320)
 
-    const inputCls = `w-full rounded-xl border py-2 pl-10 pr-3 text-sm outline-none transition focus:ring-2 focus:ring-violet-500/40 ${
+    const inputCls = `w-full rounded-xl border py-2 pl-10 pr-3 text-sm outline-none transition focus:ring-2 focus:ring-orange-500/40 ${
         darkMode
-            ? 'border-violet-800/60 bg-[#12101a]/90 text-white placeholder:text-violet-400/50'
-            : 'border-violet-100 bg-violet-50/50 text-gray-900 placeholder:text-violet-500/60'
+            ? 'border-orange-800/60 bg-[#202020]/90 text-white placeholder:text-orange-400/50'
+            : 'border-orange-100 bg-orange-50/50 text-gray-900 placeholder:text-orange-500/60'
     }`
 
     useEffect(() => {
@@ -152,22 +152,22 @@ export default function VentasGlobalSearch({ darkMode }) {
                 className={`flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left transition ${
                     active
                         ? darkMode
-                            ? 'bg-violet-600/30'
-                            : 'bg-violet-100'
+                            ? 'bg-orange-600/30'
+                            : 'bg-orange-100'
                         : darkMode
-                          ? 'hover:bg-violet-900/35'
-                          : 'hover:bg-violet-50'
+                          ? 'hover:bg-orange-900/35'
+                          : 'hover:bg-orange-50'
                 }`}
             >
                 <span
                     className={`mt-0.5 shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
                         item.type === 'vista'
                             ? darkMode
-                                ? 'bg-violet-500/25 text-violet-200'
-                                : 'bg-violet-200 text-violet-900'
+                                ? 'bg-orange-500/25 text-orange-200'
+                                : 'bg-orange-200 text-orange-900'
                             : darkMode
-                              ? 'bg-[#2a2540] text-violet-300'
-                              : 'bg-violet-50 text-violet-700'
+                              ? 'bg-[#333333] text-orange-300'
+                              : 'bg-orange-50 text-orange-700'
                     }`}
                 >
                     {item.vista || TYPE_LABEL[item.type] || item.type}
@@ -177,7 +177,7 @@ export default function VentasGlobalSearch({ darkMode }) {
                         {item.title}
                     </span>
                     {item.subtitle ? (
-                        <span className={`block truncate text-xs ${darkMode ? 'text-violet-300/70' : 'text-gray-500'}`}>{item.subtitle}</span>
+                        <span className={`block truncate text-xs ${darkMode ? 'text-orange-300/70' : 'text-gray-500'}`}>{item.subtitle}</span>
                     ) : null}
                 </span>
             </button>
@@ -207,7 +207,7 @@ export default function VentasGlobalSearch({ darkMode }) {
                 autoComplete="off"
             />
             <svg
-                className={`pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 ${darkMode ? 'text-violet-400' : 'text-violet-500'}`}
+                className={`pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 ${darkMode ? 'text-orange-400' : 'text-orange-500'}`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -219,21 +219,21 @@ export default function VentasGlobalSearch({ darkMode }) {
             {showPanel ? (
                 <div
                     className={`absolute left-0 right-0 top-full z-[60] mt-2 max-h-[min(70vh,28rem)] overflow-y-auto rounded-2xl border p-2 shadow-2xl ${
-                        darkMode ? 'border-violet-800/60 bg-[#191429]' : 'border-violet-200 bg-white'
+                        darkMode ? 'border-orange-800/60 bg-[#262626]' : 'border-orange-200 bg-white'
                     }`}
                     role="listbox"
                 >
                     {loading ? (
-                        <p className={`px-3 py-4 text-center text-sm ${darkMode ? 'text-violet-300/70' : 'text-violet-600'}`}>Buscando…</p>
+                        <p className={`px-3 py-4 text-center text-sm ${darkMode ? 'text-orange-300/70' : 'text-orange-600'}`}>Buscando…</p>
                     ) : results.length === 0 ? (
-                        <p className={`px-3 py-4 text-center text-sm ${darkMode ? 'text-violet-300/70' : 'text-gray-500'}`}>
+                        <p className={`px-3 py-4 text-center text-sm ${darkMode ? 'text-orange-300/70' : 'text-gray-500'}`}>
                             Sin coincidencias (tolerancia ~70 %).
                         </p>
                     ) : (
                         <>
                             {vistas.length > 0 ? (
                                 <div className="mb-2">
-                                    <p className={`px-2 py-1 text-[10px] font-bold uppercase tracking-wider ${darkMode ? 'text-violet-400' : 'text-violet-600'}`}>
+                                    <p className={`px-2 py-1 text-[10px] font-bold uppercase tracking-wider ${darkMode ? 'text-orange-400' : 'text-orange-600'}`}>
                                         Vistas y secciones
                                     </p>
                                     {vistas.map((item) => renderItem(item, runningIdx++))}
@@ -241,7 +241,7 @@ export default function VentasGlobalSearch({ darkMode }) {
                             ) : null}
                             {registros.length > 0 ? (
                                 <div>
-                                    <p className={`px-2 py-1 text-[10px] font-bold uppercase tracking-wider ${darkMode ? 'text-violet-400' : 'text-violet-600'}`}>
+                                    <p className={`px-2 py-1 text-[10px] font-bold uppercase tracking-wider ${darkMode ? 'text-orange-400' : 'text-orange-600'}`}>
                                         Registros
                                     </p>
                                     {registros.map((item) => renderItem(item, runningIdx++))}
@@ -249,7 +249,7 @@ export default function VentasGlobalSearch({ darkMode }) {
                             ) : null}
                         </>
                     )}
-                    <p className={`mt-2 border-t px-2 pt-2 text-[10px] ${darkMode ? 'border-violet-900/50 text-violet-500' : 'border-violet-100 text-violet-500'}`}>
+                    <p className={`mt-2 border-t px-2 pt-2 text-[10px] ${darkMode ? 'border-orange-900/50 text-orange-500' : 'border-orange-100 text-orange-500'}`}>
                         Enter para abrir · ↑↓ navegar · Esc cerrar
                     </p>
                 </div>

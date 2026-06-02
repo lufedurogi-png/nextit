@@ -92,8 +92,8 @@ export default function VentasChrome({ children }) {
 
     if (!gateOk) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center bg-[#16131f] text-violet-200 gap-3">
-                <div className="h-10 w-10 rounded-full border-2 border-violet-400/30 border-t-violet-400 animate-spin" />
+            <div className="min-h-screen flex flex-col items-center justify-center bg-[#1c1c1c] text-orange-200 gap-3">
+                <div className="h-10 w-10 rounded-full border-2 border-orange-400/30 border-t-orange-400 animate-spin" />
                 <p className="text-sm">Comprobando sesión…</p>
             </div>
         )
@@ -102,28 +102,28 @@ export default function VentasChrome({ children }) {
     const isInbox = pathname === '/ventas-inbox' || pathname.startsWith('/ventas-inbox/')
 
     return (
-        <div className="h-dvh flex min-h-0 bg-[#f4f1fb] text-gray-900 dark:bg-[#12101a] dark:text-gray-100">
+        <div className="h-dvh flex min-h-0 bg-[#f5f5f5] text-gray-900 dark:bg-tienda-canvas dark:text-gray-100">
             {mobileMenuOpen && (
                 <button
                     type="button"
-                    className="fixed inset-0 z-30 bg-black/40 lg:hidden"
+                    className="fixed inset-0 z-30 bg-black/40 md:hidden"
                     aria-label="Cerrar menú"
                     onClick={() => setMobileMenuOpen(false)}
                 />
             )}
 
             <aside
-                className={`fixed inset-y-0 left-0 z-40 flex flex-col border-r transition-transform duration-300 lg:static lg:translate-x-0 ${
-                    mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-                } w-60 border-violet-200/80 bg-white/95 dark:border-violet-950/50 dark:bg-[#1a1628]/95 backdrop-blur-md ${
-                    sidebarCollapsed ? 'lg:w-16' : 'lg:w-60'
+                className={`fixed inset-y-0 left-0 z-40 flex flex-col border-r transition-transform duration-300 md:static md:translate-x-0 ${
+                    mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+                } w-60 border-orange-200/80 bg-white/95 dark:border-orange-950/50 dark:bg-[#262626]/95 backdrop-blur-md ${
+                    sidebarCollapsed ? 'md:w-16' : 'md:w-60'
                 }`}
             >
-                <div className="h-16 flex items-center gap-2 px-4 border-b border-violet-100 dark:border-violet-900/40">
-                    <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-[#5b4d7a] to-[#8b7cb8] flex items-center justify-center text-white font-bold text-xs shrink-0">
+                <div className="h-16 flex items-center gap-2 px-4 border-b border-orange-100 dark:border-orange-900/40">
+                    <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-[#FF8000] to-[#e67300] flex items-center justify-center text-white font-bold text-xs shrink-0">
                         V
                     </div>
-                    {!sidebarCollapsed && <span className="font-semibold text-violet-950 dark:text-violet-100 truncate">Ventas</span>}
+                    {!sidebarCollapsed && <span className="font-semibold text-orange-950 dark:text-orange-100 truncate">Ventas</span>}
                 </div>
                 <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5">
                     {navItems.map((item) => {
@@ -136,8 +136,8 @@ export default function VentasChrome({ children }) {
                                 onClick={() => setMobileMenuOpen(false)}
                                 className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
                                     active
-                                        ? 'bg-violet-100 text-violet-900 dark:bg-violet-600/25 dark:text-violet-100'
-                                        : 'text-gray-600 hover:bg-violet-50 dark:text-violet-200/70 dark:hover:bg-white/5'
+                                        ? 'bg-orange-100 text-orange-900 dark:bg-orange-600/25 dark:text-orange-100'
+                                        : 'text-gray-600 hover:bg-orange-50 dark:text-orange-200/70 dark:hover:bg-white/5'
                                 }`}
                                 title={
                                     sidebarCollapsed
@@ -165,23 +165,23 @@ export default function VentasChrome({ children }) {
                         )
                     })}
                 </nav>
-                <div className="p-2 border-t border-violet-100 dark:border-violet-900/40 hidden lg:block">
+                <div className="p-2 border-t border-orange-100 dark:border-orange-900/40 hidden md:block">
                     <button
                         type="button"
                         onClick={() => setSidebarCollapsed((o) => !o)}
-                        className="w-full rounded-lg py-2 text-xs text-violet-700 dark:text-violet-300 hover:bg-violet-50 dark:hover:bg-white/5"
+                        className="w-full rounded-lg py-2 text-xs text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-white/5"
                     >
                         {sidebarCollapsed ? '»' : '« Contraer'}
                     </button>
                 </div>
             </aside>
 
-            <div className="flex-1 flex flex-col min-w-0 min-h-0 lg:pl-0">
-                <header className="h-16 shrink-0 flex items-center justify-between gap-4 px-4 sm:px-6 border-b border-violet-100 bg-white/90 dark:border-violet-900/40 dark:bg-[#1a1628]/80 backdrop-blur">
+            <div className="flex-1 flex flex-col min-w-0 min-h-0 md:pl-0">
+                <header className="h-16 shrink-0 flex items-center justify-between gap-4 px-4 sm:px-6 border-b border-orange-100 bg-white/90 dark:border-orange-900/40 dark:bg-[#262626]/80 backdrop-blur">
                     <div className="flex items-center gap-3 min-w-0">
                         <button
                             type="button"
-                            className="lg:hidden p-2 rounded-lg text-violet-800 dark:text-violet-200 hover:bg-violet-50 dark:hover:bg-white/10"
+                            className="md:hidden p-2 rounded-lg text-orange-800 dark:text-orange-200 hover:bg-orange-50 dark:hover:bg-white/10"
                             onClick={() => setMobileMenuOpen(true)}
                             aria-label="Abrir menú"
                         >
@@ -196,36 +196,36 @@ export default function VentasChrome({ children }) {
                     <div className="flex items-center gap-2 sm:gap-3 shrink-0" ref={menuRef}>
                         <div
                             className={`hidden sm:inline-flex items-center gap-1.5 rounded-xl px-2 py-1.5 text-xs font-medium ${
-                                darkMode ? 'bg-[#2a2540]/80 text-violet-100/90' : 'bg-violet-50 text-violet-900'
+                                darkMode ? 'bg-[#333333]/80 text-orange-100/90' : 'bg-orange-50 text-orange-900'
                             }`}
                         >
                             <span className="hidden md:inline">Tema</span>
-                            <ThemeToggle dark={darkMode} onToggle={() => setDarkMode((d) => !d)} />
+                            <ThemeToggle variant="brand" dark={darkMode} onToggle={() => setDarkMode((d) => !d)} />
                         </div>
                         <div className="sm:hidden">
-                            <ThemeToggle dark={darkMode} onToggle={() => setDarkMode((d) => !d)} />
+                            <ThemeToggle variant="brand" dark={darkMode} onToggle={() => setDarkMode((d) => !d)} />
                         </div>
-                        <span className="hidden sm:inline text-sm text-violet-900/70 dark:text-violet-200/80 truncate max-w-[10rem]">{displayName}</span>
+                        <span className="hidden sm:inline text-sm text-orange-900/70 dark:text-orange-200/80 truncate max-w-[10rem]">{displayName}</span>
                         <div className="relative">
                             <button
                                 type="button"
                                 onClick={() => setUserMenu((v) => !v)}
-                                className="flex items-center gap-2 rounded-xl border border-violet-100 dark:border-violet-800/60 px-2 py-1.5 hover:bg-violet-50 dark:hover:bg-white/5"
+                                className="flex items-center gap-2 rounded-xl border border-orange-100 dark:border-orange-800/60 px-2 py-1.5 hover:bg-orange-50 dark:hover:bg-white/5"
                             >
-                                <span className="h-8 w-8 rounded-full bg-gradient-to-br from-[#5b4d7a] to-[#8b7cb8] text-white text-xs font-bold flex items-center justify-center">
+                                <span className="h-8 w-8 rounded-full bg-gradient-to-br from-[#FF8000] to-[#e67300] text-white text-xs font-bold flex items-center justify-center">
                                     {displayName.charAt(0).toUpperCase()}
                                 </span>
                             </button>
                             {userMenu && (
-                                <div className="absolute right-0 mt-2 w-48 rounded-xl border border-violet-100 bg-white py-1 shadow-xl dark:border-violet-800 dark:bg-[#1e1830] z-50">
+                                <div className="absolute right-0 mt-2 w-48 rounded-xl border border-orange-100 bg-white py-1 shadow-xl dark:border-orange-800 dark:bg-[#262626] z-50">
                                     <button
                                         type="button"
-                                        className="w-full text-left px-4 py-2 text-sm hover:bg-violet-50 dark:hover:bg-white/10"
+                                        className="w-full text-left px-4 py-2 text-sm hover:bg-orange-50 dark:hover:bg-white/10"
                                         onClick={() => logout()}
                                     >
                                         Cerrar sesión
                                     </button>
-                                    <Link href="/" className="block px-4 py-2 text-sm hover:bg-violet-50 dark:hover:bg-white/10" onClick={() => setUserMenu(false)}>
+                                    <Link href="/" className="block px-4 py-2 text-sm hover:bg-orange-50 dark:hover:bg-white/10" onClick={() => setUserMenu(false)}>
                                         Ir a la tienda
                                     </Link>
                                 </div>

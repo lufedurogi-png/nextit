@@ -14,12 +14,12 @@ import {
     sendVentasCorreos,
 } from '@/lib/ventasCorreosApi'
 
-const card = 'rounded-2xl border border-violet-100 bg-white p-4 sm:p-5 shadow-sm dark:border-violet-900/40 dark:bg-[#1a1628]/80'
-const purpleBtn =
-    'rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-violet-400/40 disabled:opacity-50 disabled:cursor-not-allowed'
-const purpleStyle = { background: 'linear-gradient(90deg, #5b4d7a, #8b7cb8)' }
+const card = 'rounded-2xl border border-orange-100 bg-white p-4 sm:p-5 shadow-sm dark:border-orange-900/40 dark:bg-[#262626]/80'
+const brandBtn =
+    'rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-orange-400/40 disabled:opacity-50 disabled:cursor-not-allowed'
+const brandStyle = { background: 'linear-gradient(90deg, #FF8000, #e67300)' }
 const ghostBtn =
-    'rounded-xl border border-violet-200 px-3 py-2 text-sm font-medium text-violet-900 transition hover:bg-violet-50 dark:border-violet-800/60 dark:text-violet-100 dark:hover:bg-white/5 disabled:opacity-50'
+    'rounded-xl border border-orange-200 px-3 py-2 text-sm font-medium text-orange-900 transition hover:bg-orange-50 dark:border-orange-800/60 dark:text-orange-100 dark:hover:bg-white/5 disabled:opacity-50'
 const dangerBtn =
     'rounded-xl border border-red-200 px-3 py-2 text-sm font-medium text-red-700 transition hover:bg-red-50 dark:border-red-900/50 dark:text-red-300 dark:hover:bg-red-950/30 disabled:opacity-50'
 
@@ -61,8 +61,8 @@ export default function VentasCorreosClient() {
 
     const inputCls = `w-full rounded-xl border px-3 py-2 text-sm transition-colors ${
         darkMode
-            ? 'border-violet-800/60 bg-[#12101a] text-violet-50 placeholder:text-violet-400/40'
-            : 'border-violet-100 bg-white text-gray-900 placeholder:text-gray-400'
+            ? 'border-orange-800/60 bg-[#202020] text-orange-50 placeholder:text-orange-400/40'
+            : 'border-orange-100 bg-white text-gray-900 placeholder:text-gray-400'
     }`
 
     const refresh = useCallback(async () => {
@@ -155,13 +155,13 @@ export default function VentasCorreosClient() {
     return (
         <div className="w-full space-y-6">
             <div>
-                <h1 className="text-2xl font-bold text-violet-950 dark:text-white">Correos</h1>
-                <p className="text-sm text-violet-800/70 dark:text-violet-200/60 mt-1">
+                <h1 className="text-2xl font-bold text-orange-950 dark:text-white">Correos</h1>
+                <p className="text-sm text-orange-800/70 dark:text-orange-200/60 mt-1">
                     Organiza contactos por grupo, redacta tu mensaje y envía a uno o varios destinatarios.
                 </p>
                 <Link
                     href="/ventas-correos-historial"
-                    className="inline-block mt-2 text-sm font-medium text-violet-700 hover:underline dark:text-violet-300"
+                    className="inline-block mt-2 text-sm font-medium text-orange-700 hover:underline dark:text-orange-300"
                 >
                     Ver historial de envíos →
                 </Link>
@@ -191,12 +191,12 @@ export default function VentasCorreosClient() {
                 </div>
             )}
 
-            <div className="grid gap-6 xl:grid-cols-[minmax(320px,26rem)_minmax(0,1fr)] 2xl:grid-cols-[28rem_minmax(0,1fr)]">
+            <div className="grid gap-6 md:grid-cols-[minmax(320px,26rem)_minmax(0,1fr)] 2xl:grid-cols-[28rem_minmax(0,1fr)]">
                 <VentasCorreoDestinatariosPanel
                     darkMode={darkMode}
                     card={card}
-                    purpleBtn={purpleBtn}
-                    purpleStyle={purpleStyle}
+                    brandBtn={brandBtn}
+                    brandStyle={brandStyle}
                     ghostBtn={ghostBtn}
                     dangerBtn={dangerBtn}
                     inputCls={inputCls}
@@ -211,7 +211,7 @@ export default function VentasCorreosClient() {
                     onTablaAbiertaChange={setTablaAbierta}
                 />
 
-                <div className="order-2 xl:order-2 min-w-0">
+                <div className="order-2 md:order-2 min-w-0">
                     <VentasCorreoEditor
                         darkMode={darkMode}
                         asunto={asunto}
@@ -233,8 +233,8 @@ export default function VentasCorreosClient() {
                         algunDestinatarioSeleccionado={algunSeleccionado}
                         inputCls={inputCls}
                         card={card}
-                        purpleBtn={purpleBtn}
-                        purpleStyle={purpleStyle}
+                        brandBtn={brandBtn}
+                        brandStyle={brandStyle}
                         ghostBtn={ghostBtn}
                     />
                 </div>

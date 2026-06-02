@@ -23,7 +23,7 @@ const ETAPAS = [
 ]
 
 const ETAPA_DOT = {
-    nuevo: 'bg-violet-400',
+    nuevo: 'bg-orange-400',
     contactado: 'bg-sky-400',
     seguimiento: 'bg-amber-400',
     negociacion: 'bg-orange-400',
@@ -32,7 +32,7 @@ const ETAPA_DOT = {
 }
 
 const ETAPA_COLUMN = {
-    nuevo: 'from-violet-500/15 to-transparent border-violet-300/40 dark:border-violet-700/50',
+    nuevo: 'from-orange-500/15 to-transparent border-orange-300/40 dark:border-orange-700/50',
     contactado: 'from-sky-500/15 to-transparent border-sky-300/40 dark:border-sky-800/50',
     seguimiento: 'from-amber-500/15 to-transparent border-amber-300/40 dark:border-amber-800/50',
     negociacion: 'from-orange-500/15 to-transparent border-orange-300/40 dark:border-orange-800/50',
@@ -55,7 +55,7 @@ function etapaOptions(includeAll = false) {
         dotClass: ETAPA_DOT[e.key],
     }))
     if (!includeAll) return base
-    return [{ value: '', label: 'Todas las etapas', dotClass: 'bg-violet-300' }, ...base]
+    return [{ value: '', label: 'Todas las etapas', dotClass: 'bg-orange-300' }, ...base]
 }
 
 function prioridadOptions(includeAll = false) {
@@ -65,7 +65,7 @@ function prioridadOptions(includeAll = false) {
         { value: 'baja', label: 'Baja', dotClass: PRIORIDAD_DOT.baja },
     ]
     if (!includeAll) return base
-    return [{ value: '', label: 'Todas las prioridades', dotClass: 'bg-violet-300' }, ...base]
+    return [{ value: '', label: 'Todas las prioridades', dotClass: 'bg-orange-300' }, ...base]
 }
 
 export default function VentasPipelinePage() {
@@ -86,13 +86,13 @@ export default function VentasPipelinePage() {
     const debouncedQ = useDebounce(q, 400)
 
     const panel = darkMode
-        ? 'rounded-2xl border border-violet-900/40 bg-[#1a1628]/90 shadow-lg shadow-black/20'
-        : 'rounded-2xl border border-violet-100 bg-white shadow-md shadow-violet-900/5'
+        ? 'rounded-2xl border border-orange-900/40 bg-[#262626]/90 shadow-lg shadow-black/20'
+        : 'rounded-2xl border border-orange-100 bg-white shadow-md shadow-orange-900/5'
 
-    const inputCls = `w-full rounded-xl border px-3 py-2.5 text-sm outline-none transition focus:ring-2 focus:ring-violet-500/35 ${
+    const inputCls = `w-full rounded-xl border px-3 py-2.5 text-sm outline-none transition focus:ring-2 focus:ring-orange-500/35 ${
         darkMode
-            ? 'border-violet-800/60 bg-[#12101a]/90 text-white placeholder:text-violet-400/50'
-            : 'border-violet-200 bg-white text-gray-900 placeholder:text-violet-400/70'
+            ? 'border-orange-800/60 bg-[#202020]/90 text-white placeholder:text-orange-400/50'
+            : 'border-orange-200 bg-white text-gray-900 placeholder:text-orange-400/70'
     }`
 
     const loadResumen = useCallback(async () => {
@@ -189,10 +189,10 @@ export default function VentasPipelinePage() {
         <div className="space-y-6">
             <div className="flex flex-wrap items-end justify-between gap-4">
                 <div>
-                    <h1 className={`text-2xl font-bold tracking-tight ${darkMode ? 'text-white' : 'text-violet-950'}`}>
+                    <h1 className={`text-2xl font-bold tracking-tight ${darkMode ? 'text-white' : 'text-orange-950'}`}>
                         Pipeline comercial
                     </h1>
-                    <p className={`mt-1 text-sm ${darkMode ? 'text-violet-200/60' : 'text-violet-800/70'}`}>
+                    <p className={`mt-1 text-sm ${darkMode ? 'text-orange-200/60' : 'text-orange-800/70'}`}>
                         Gestiona oportunidades desde cotización hasta cierre.
                     </p>
                 </div>
@@ -204,28 +204,28 @@ export default function VentasPipelinePage() {
                         key={k.label}
                         className={`${panel} p-4 ${k.alert ? (darkMode ? 'ring-1 ring-rose-500/40' : 'ring-1 ring-rose-200') : ''}`}
                     >
-                        <p className={`text-[11px] font-semibold uppercase tracking-wide ${darkMode ? 'text-violet-300/70' : 'text-violet-600/90'}`}>
+                        <p className={`text-[11px] font-semibold uppercase tracking-wide ${darkMode ? 'text-orange-300/70' : 'text-orange-600/90'}`}>
                             {k.label}
                         </p>
                         <p className={`mt-1 text-2xl font-bold ${k.alert ? 'text-rose-500' : darkMode ? 'text-white' : 'text-gray-900'}`}>
                             {k.value}
                         </p>
-                        <p className={`mt-0.5 text-xs ${darkMode ? 'text-violet-400/70' : 'text-gray-500'}`}>{k.sub}</p>
+                        <p className={`mt-0.5 text-xs ${darkMode ? 'text-orange-400/70' : 'text-gray-500'}`}>{k.sub}</p>
                     </div>
                 ))}
             </div>
 
             <div className={`${panel} p-4`}>
-                <p className={`mb-3 text-xs font-semibold uppercase tracking-wide ${darkMode ? 'text-violet-300/80' : 'text-violet-700'}`}>
+                <p className={`mb-3 text-xs font-semibold uppercase tracking-wide ${darkMode ? 'text-orange-300/80' : 'text-orange-700'}`}>
                     Filtros
                 </p>
-                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                    <div className="md:col-span-2 xl:col-span-2">
-                        <label className={`mb-1.5 block text-[11px] font-semibold uppercase tracking-wide ${darkMode ? 'text-violet-300/70' : 'text-violet-600/90'}`}>
+                <div className="grid gap-3 md:grid-cols-4">
+                    <div className="md:col-span-2">
+                        <label className={`mb-1.5 block text-[11px] font-semibold uppercase tracking-wide ${darkMode ? 'text-orange-300/70' : 'text-orange-600/90'}`}>
                             Buscar
                         </label>
                         <div className="relative">
-                            <span className={`pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 ${darkMode ? 'text-violet-400' : 'text-violet-500'}`}>
+                            <span className={`pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 ${darkMode ? 'text-orange-400' : 'text-orange-500'}`}>
                                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z" />
                                 </svg>
@@ -254,7 +254,7 @@ export default function VentasPipelinePage() {
                         darkMode={darkMode}
                     />
                 </div>
-                <div className={`mt-4 flex flex-wrap items-center justify-between gap-3 border-t pt-4 ${darkMode ? 'border-violet-900/40' : 'border-violet-100'}`}>
+                <div className={`mt-4 flex flex-wrap items-center justify-between gap-3 border-t pt-4 ${darkMode ? 'border-orange-900/40' : 'border-orange-100'}`}>
                     <div className="flex items-center gap-3">
                         <SwitchToggle
                             checked={soloVencidas}
@@ -262,7 +262,7 @@ export default function VentasPipelinePage() {
                             darkMode={darkMode}
                             aria-label="Solo vencidas"
                         />
-                        <span className={`text-sm font-medium ${darkMode ? 'text-violet-100' : 'text-violet-900'}`}>Solo vencidas</span>
+                        <span className={`text-sm font-medium ${darkMode ? 'text-orange-100' : 'text-orange-900'}`}>Solo vencidas</span>
                     </div>
                     {(etapa || prioridad || q || soloVencidas) && (
                         <button
@@ -274,7 +274,7 @@ export default function VentasPipelinePage() {
                                 setSoloVencidas(false)
                             }}
                             className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
-                                darkMode ? 'bg-violet-900/50 text-violet-200 hover:bg-violet-800/60' : 'bg-violet-100 text-violet-800 hover:bg-violet-200'
+                                darkMode ? 'bg-orange-900/50 text-orange-200 hover:bg-orange-800/60' : 'bg-orange-100 text-orange-800 hover:bg-orange-200'
                             }`}
                         >
                             Limpiar filtros
@@ -284,7 +284,7 @@ export default function VentasPipelinePage() {
             </div>
 
             {loading ? (
-                <div className={`${panel} p-8 text-center text-sm ${darkMode ? 'text-violet-300/70' : 'text-violet-600'}`}>
+                <div className={`${panel} p-8 text-center text-sm ${darkMode ? 'text-orange-300/70' : 'text-orange-600'}`}>
                     Cargando embudo…
                 </div>
             ) : (
@@ -297,21 +297,21 @@ export default function VentasPipelinePage() {
                             <div
                                 key={st.key}
                                 className={`flex min-h-[380px] w-[min(100%,260px)] shrink-0 snap-start flex-col rounded-2xl border bg-gradient-to-b ${colAccent} ${
-                                    active ? 'ring-2 ring-violet-500/50' : ''
-                                } ${darkMode ? 'bg-[#1a1628]/70' : 'bg-violet-50/40'}`}
+                                    active ? 'ring-2 ring-orange-500/50' : ''
+                                } ${darkMode ? 'bg-[#262626]/70' : 'bg-orange-50/40'}`}
                             >
                                 <button
                                     type="button"
                                     onClick={() => setEtapa(active ? '' : st.key)}
                                     className={`sticky top-0 z-10 rounded-t-2xl border-b px-3 py-3 text-left backdrop-blur-sm ${
-                                        darkMode ? 'border-violet-900/50 bg-[#1f1930]/90' : 'border-violet-200/80 bg-white/80'
+                                        darkMode ? 'border-orange-900/50 bg-[#1f1930]/90' : 'border-orange-200/80 bg-white/80'
                                     }`}
                                 >
                                     <div className="flex items-center gap-2">
                                         <span className={`h-2.5 w-2.5 rounded-full ${ETAPA_DOT[st.key]}`} />
                                         <h2 className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>{st.label}</h2>
                                     </div>
-                                    <p className={`mt-1 text-xs font-medium ${darkMode ? 'text-violet-300/80' : 'text-violet-700/90'}`}>
+                                    <p className={`mt-1 text-xs font-medium ${darkMode ? 'text-orange-300/80' : 'text-orange-700/90'}`}>
                                         {fmtMoney(block.monto)} · {block.count} opp.
                                     </p>
                                 </button>
@@ -321,8 +321,8 @@ export default function VentasPipelinePage() {
                                             key={it.id}
                                             className={`group rounded-xl border p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
                                                 darkMode
-                                                    ? 'border-violet-800/50 bg-[#221c36] hover:border-violet-600/60'
-                                                    : 'border-violet-100 bg-white hover:border-violet-300'
+                                                    ? 'border-orange-800/50 bg-[#221c36] hover:border-orange-600/60'
+                                                    : 'border-orange-100 bg-white hover:border-orange-300'
                                             }`}
                                         >
                                             <div className="flex items-start justify-between gap-2">
@@ -333,8 +333,8 @@ export default function VentasPipelinePage() {
                                                     className={`mt-0.5 h-2.5 w-2.5 shrink-0 rounded-full ${PRIORIDAD_DOT[it.pipeline_prioridad] || PRIORIDAD_DOT.media}`}
                                                 />
                                             </div>
-                                            <p className={`mt-1 truncate text-xs ${darkMode ? 'text-violet-300/60' : 'text-gray-500'}`}>{it.cliente}</p>
-                                            <p className="mt-2 text-xs font-bold text-violet-600 dark:text-violet-300">{fmtMoney(it.monto)}</p>
+                                            <p className={`mt-1 truncate text-xs ${darkMode ? 'text-orange-300/60' : 'text-gray-500'}`}>{it.cliente}</p>
+                                            <p className="mt-2 text-xs font-bold text-orange-600 dark:text-orange-300">{fmtMoney(it.monto)}</p>
                                             {it.vencida ? (
                                                 <span className="mt-2 inline-block rounded-full bg-rose-500/15 px-2 py-0.5 text-[10px] font-bold uppercase text-rose-500">
                                                     Vencida
@@ -348,8 +348,8 @@ export default function VentasPipelinePage() {
                                             onClick={() => setEtapa(st.key)}
                                             className={`rounded-xl border border-dashed py-2.5 text-xs font-semibold transition ${
                                                 darkMode
-                                                    ? 'border-violet-700 text-violet-300 hover:bg-violet-900/30'
-                                                    : 'border-violet-300 text-violet-700 hover:bg-violet-100/80'
+                                                    ? 'border-orange-700 text-orange-300 hover:bg-orange-900/30'
+                                                    : 'border-orange-300 text-orange-700 hover:bg-orange-100/80'
                                             }`}
                                         >
                                             Ver todas ({block.count})
@@ -363,11 +363,11 @@ export default function VentasPipelinePage() {
             )}
 
             <div className={`${panel} overflow-hidden`}>
-                <div className={`flex flex-wrap items-center justify-between gap-3 border-b px-5 py-4 ${darkMode ? 'border-violet-900/40 bg-violet-950/20' : 'border-violet-100 bg-violet-50/50'}`}>
-                    <h2 className={`text-sm font-semibold uppercase tracking-wide ${darkMode ? 'text-violet-200' : 'text-violet-900'}`}>
+                <div className={`flex flex-wrap items-center justify-between gap-3 border-b px-5 py-4 ${darkMode ? 'border-orange-900/40 bg-orange-950/20' : 'border-orange-100 bg-orange-50/50'}`}>
+                    <h2 className={`text-sm font-semibold uppercase tracking-wide ${darkMode ? 'text-orange-200' : 'text-orange-900'}`}>
                         Tabla operativa
                     </h2>
-                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${darkMode ? 'bg-violet-900/60 text-violet-200' : 'bg-violet-100 text-violet-800'}`}>
+                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${darkMode ? 'bg-orange-900/60 text-orange-200' : 'bg-orange-100 text-orange-800'}`}>
                         {meta.total ?? 0} registros
                     </span>
                 </div>
@@ -375,13 +375,13 @@ export default function VentasPipelinePage() {
                 <div className="p-4">
                     {error ? <p className="mb-3 text-sm text-rose-500">{error}</p> : null}
                     {loadingTable ? (
-                        <p className={`py-8 text-center text-sm ${darkMode ? 'text-violet-300/70' : 'text-gray-500'}`}>Cargando oportunidades…</p>
+                        <p className={`py-8 text-center text-sm ${darkMode ? 'text-orange-300/70' : 'text-gray-500'}`}>Cargando oportunidades…</p>
                     ) : (
                         <>
-                            <div className="overflow-x-auto rounded-xl border border-violet-100 dark:border-violet-900/40">
+                            <div className="overflow-x-auto rounded-xl border border-orange-100 dark:border-orange-900/40">
                                 <table className="min-w-full text-sm">
                                     <thead>
-                                        <tr className={darkMode ? 'bg-violet-950/40 text-violet-200/90' : 'bg-violet-50 text-violet-900'}>
+                                        <tr className={darkMode ? 'bg-orange-950/40 text-orange-200/90' : 'bg-orange-50 text-orange-900'}>
                                             {['Oportunidad', 'Cliente', 'Monto', 'Etapa', 'Prioridad', 'Próximo contacto', 'Acciones'].map((h) => (
                                                 <th key={h} className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide">
                                                     {h}
@@ -392,7 +392,7 @@ export default function VentasPipelinePage() {
                                     <tbody>
                                         {items.length === 0 ? (
                                             <tr>
-                                                <td colSpan={7} className={`px-3 py-10 text-center ${darkMode ? 'text-violet-300/70' : 'text-gray-500'}`}>
+                                                <td colSpan={7} className={`px-3 py-10 text-center ${darkMode ? 'text-orange-300/70' : 'text-gray-500'}`}>
                                                     Sin oportunidades con estos filtros.
                                                 </td>
                                             </tr>
@@ -402,13 +402,13 @@ export default function VentasPipelinePage() {
                                                     key={row.id}
                                                     className={`border-t transition ${
                                                         darkMode
-                                                            ? 'border-violet-900/30 hover:bg-violet-900/20'
-                                                            : 'border-violet-50 hover:bg-violet-50/60'
+                                                            ? 'border-orange-900/30 hover:bg-orange-900/20'
+                                                            : 'border-orange-50 hover:bg-orange-50/60'
                                                     } ${row.vencida ? (darkMode ? 'bg-rose-950/20' : 'bg-rose-50/40') : ''}`}
                                                 >
                                                     <td className="px-3 py-3">
                                                         <p className="font-medium">{row.titulo}</p>
-                                                        <p className={`text-xs ${darkMode ? 'text-violet-400' : 'text-gray-500'}`}>{row.folio}</p>
+                                                        <p className={`text-xs ${darkMode ? 'text-orange-400' : 'text-gray-500'}`}>{row.folio}</p>
                                                         {row.vencida ? (
                                                             <span className="mt-1 inline-block rounded-full bg-rose-500/15 px-2 py-0.5 text-[10px] font-bold uppercase text-rose-500">
                                                                 Vencida
@@ -417,9 +417,9 @@ export default function VentasPipelinePage() {
                                                     </td>
                                                     <td className="px-3 py-3">
                                                         <p>{row.cliente}</p>
-                                                        <p className={`text-xs ${darkMode ? 'text-violet-400' : 'text-gray-500'}`}>{row.email || '—'}</p>
+                                                        <p className={`text-xs ${darkMode ? 'text-orange-400' : 'text-gray-500'}`}>{row.email || '—'}</p>
                                                     </td>
-                                                    <td className="px-3 py-3 font-bold text-violet-700 dark:text-violet-300">{fmtMoney(row.monto)}</td>
+                                                    <td className="px-3 py-3 font-bold text-orange-700 dark:text-orange-300">{fmtMoney(row.monto)}</td>
                                                     <td className="px-3 py-3">
                                                         <VentasFancySelect
                                                             compact
@@ -474,8 +474,8 @@ export default function VentasPipelinePage() {
                                                                     href={`/ventas-inbox?cliente=${row.cliente_user_id}`}
                                                                     className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
                                                                         darkMode
-                                                                            ? 'bg-violet-800/50 text-violet-100 hover:bg-violet-700/60'
-                                                                            : 'bg-violet-100 text-violet-800 hover:bg-violet-200'
+                                                                            ? 'bg-orange-800/50 text-orange-100 hover:bg-orange-700/60'
+                                                                            : 'bg-orange-100 text-orange-800 hover:bg-orange-200'
                                                                     }`}
                                                                 >
                                                                     Chat
@@ -485,8 +485,8 @@ export default function VentasPipelinePage() {
                                                                 href="/ventas-cotizaciones"
                                                                 className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
                                                                     darkMode
-                                                                        ? 'bg-violet-800/50 text-violet-100 hover:bg-violet-700/60'
-                                                                        : 'bg-violet-100 text-violet-800 hover:bg-violet-200'
+                                                                        ? 'bg-orange-800/50 text-orange-100 hover:bg-orange-700/60'
+                                                                        : 'bg-orange-100 text-orange-800 hover:bg-orange-200'
                                                                 }`}
                                                             >
                                                                 Cotizaciones
@@ -514,9 +514,9 @@ export default function VentasPipelinePage() {
 
             {motivoModal ? (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-                    <div className={`w-full max-w-md rounded-2xl border p-6 shadow-2xl ${darkMode ? 'border-violet-800 bg-[#1a1628]' : 'border-violet-100 bg-white'}`}>
+                    <div className={`w-full max-w-md rounded-2xl border p-6 shadow-2xl ${darkMode ? 'border-orange-800 bg-[#262626]' : 'border-orange-100 bg-white'}`}>
                         <h3 className={`text-lg font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>Motivo de pérdida</h3>
-                        <p className={`mt-1 text-sm ${darkMode ? 'text-violet-300/70' : 'text-gray-500'}`}>
+                        <p className={`mt-1 text-sm ${darkMode ? 'text-orange-300/70' : 'text-gray-500'}`}>
                             Obligatorio para mover la oportunidad a <strong>Perdido</strong>.
                         </p>
                         <input
@@ -535,13 +535,13 @@ export default function VentasPipelinePage() {
                             <button
                                 type="button"
                                 onClick={() => setMotivoModal(null)}
-                                className={`rounded-xl px-4 py-2 text-sm font-medium ${darkMode ? 'text-violet-200 hover:bg-violet-900/40' : 'text-violet-800 hover:bg-violet-50'}`}
+                                className={`rounded-xl px-4 py-2 text-sm font-medium ${darkMode ? 'text-orange-200 hover:bg-orange-900/40' : 'text-orange-800 hover:bg-orange-50'}`}
                             >
                                 Cancelar
                             </button>
                             <button
                                 type="button"
-                                className="rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-violet-900/20 hover:bg-violet-500"
+                                className="rounded-xl bg-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-orange-900/20 hover:bg-orange-500"
                                 onClick={() => {
                                     const el = document.getElementById('motivo-perdida-input')
                                     applyEtapa(motivoModal.id, motivoModal.etapa, el?.value || '')

@@ -39,22 +39,22 @@ function FancySelect({
     }, [])
 
     const btnClass = darkMode
-        ? 'w-full rounded-xl border border-violet-800/50 bg-[#12101a]/80 px-3 py-2 text-left text-sm text-gray-100 transition hover:border-violet-600/60'
-        : 'w-full rounded-xl border border-violet-100 bg-white px-3 py-2 text-left text-sm text-gray-900 transition hover:border-violet-300/80'
+        ? 'w-full rounded-xl border border-orange-800/50 bg-[#202020]/80 px-3 py-2 text-left text-sm text-gray-100 transition hover:border-orange-600/60'
+        : 'w-full rounded-xl border border-orange-100 bg-white px-3 py-2 text-left text-sm text-gray-900 transition hover:border-orange-300/80'
 
     const menuClass = darkMode
-        ? 'absolute z-30 mt-1.5 max-h-64 w-full overflow-y-auto rounded-xl border border-violet-800/60 bg-[#191429] p-1 shadow-2xl'
-        : 'absolute z-30 mt-1.5 max-h-64 w-full overflow-y-auto rounded-xl border border-violet-200 bg-white p-1 shadow-xl'
+        ? 'absolute z-30 mt-1.5 max-h-64 w-full overflow-y-auto rounded-xl border border-orange-800/60 bg-[#262626] p-1 shadow-2xl'
+        : 'absolute z-30 mt-1.5 max-h-64 w-full overflow-y-auto rounded-xl border border-orange-200 bg-white p-1 shadow-xl'
 
     const itemClass = (active) =>
         `w-full rounded-lg px-2.5 py-2 text-left text-sm transition ${
             active
                 ? darkMode
-                    ? 'bg-violet-600/30 text-violet-100'
-                    : 'bg-violet-100 text-violet-900'
+                    ? 'bg-orange-600/30 text-orange-100'
+                    : 'bg-orange-100 text-orange-900'
                 : darkMode
-                  ? 'text-violet-100/90 hover:bg-violet-900/40'
-                  : 'text-gray-800 hover:bg-violet-50'
+                  ? 'text-orange-100/90 hover:bg-orange-900/40'
+                  : 'text-gray-800 hover:bg-orange-50'
         }`
 
     return (
@@ -68,7 +68,7 @@ function FancySelect({
                 <span className="block truncate">{selected?.label || placeholder}</span>
                 <span
                     className={`pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs ${
-                        darkMode ? 'text-violet-300/70' : 'text-violet-500'
+                        darkMode ? 'text-orange-300/70' : 'text-orange-500'
                     }`}
                 >
                     ▾
@@ -117,22 +117,22 @@ function buildPaginationSlots(current, last) {
     return out
 }
 
-function VentasPaginationPurple({ current, lastPage, onPageChange, darkMode }) {
+function VentasPaginationBrand({ current, lastPage, onPageChange, darkMode }) {
     if (lastPage <= 1) return null
     const slots = buildPaginationSlots(current, lastPage)
     const btnBase =
         'inline-flex h-10 min-w-[2.5rem] items-center justify-center rounded-xl text-sm font-semibold transition-all duration-200 disabled:opacity-35 disabled:pointer-events-none'
     const inactive = darkMode
-        ? 'bg-[#1e1830]/90 text-violet-100/80 hover:bg-violet-950/50 border border-violet-800/50'
-        : 'bg-violet-50/80 text-violet-950 hover:bg-violet-100 border border-violet-100'
+        ? 'bg-[#262626]/90 text-orange-100/80 hover:bg-orange-950/50 border border-orange-800/50'
+        : 'bg-orange-50/80 text-orange-950 hover:bg-orange-100 border border-orange-100'
     const active = darkMode
-        ? 'bg-gradient-to-br from-[#5b4d7a] to-[#8b7cb8] text-white border border-violet-400/25 shadow-md shadow-black/30'
-        : 'bg-gradient-to-br from-[#5b4d7a] to-[#8b7cb8] text-white border border-violet-300/40 shadow-md shadow-violet-900/15'
+        ? 'bg-gradient-to-br from-[#FF8000] to-[#e67300] text-white border border-orange-400/25 shadow-md shadow-black/30'
+        : 'bg-gradient-to-br from-[#FF8000] to-[#e67300] text-white border border-orange-300/40 shadow-md shadow-orange-900/15'
 
     return (
         <div
             className={`flex flex-wrap items-center justify-center gap-1.5 rounded-2xl px-3 py-3.5 ${
-                darkMode ? 'border border-violet-900/40 bg-[#16131f]/80' : 'border border-violet-100 bg-violet-50/50'
+                darkMode ? 'border border-orange-900/40 bg-[#1c1c1c]/80' : 'border border-orange-100 bg-orange-50/50'
             }`}
         >
             <button
@@ -158,7 +158,7 @@ function VentasPaginationPurple({ current, lastPage, onPageChange, darkMode }) {
                     <span
                         key={`e-${idx}`}
                         className={`inline-flex h-10 min-w-[2.5rem] items-center justify-center rounded-xl text-sm ${
-                            darkMode ? 'text-violet-400/70' : 'text-violet-400'
+                            darkMode ? 'text-orange-400/70' : 'text-orange-400'
                         }`}
                     >
                         …
@@ -256,8 +256,8 @@ export default function VentasCatalogoPage() {
     )
 
     const inputClass = darkMode
-        ? 'w-full rounded-xl border border-violet-800/50 bg-[#12101a]/80 px-3 py-2 text-sm text-gray-100 placeholder:text-violet-400/60'
-        : 'w-full rounded-xl border border-violet-100 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400'
+        ? 'w-full rounded-xl border border-orange-800/50 bg-[#202020]/80 px-3 py-2 text-sm text-gray-100 placeholder:text-orange-400/60'
+        : 'w-full rounded-xl border border-orange-100 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400'
 
     const categoriaOptions = useMemo(
         () => [{ value: '', label: 'Todas' }, ...categorias.map((c) => ({ value: c.id, label: c.nombre }))],
@@ -442,20 +442,20 @@ export default function VentasCatalogoPage() {
     return (
         <div className="space-y-6">
             <div>
-                <h1 className="text-2xl font-bold text-violet-950 dark:text-white">Catálogo</h1>
-                <p className="text-sm text-violet-800/70 dark:text-violet-200/60 mt-1">
+                <h1 className="text-2xl font-bold text-orange-950 dark:text-white">Catálogo</h1>
+                <p className="text-sm text-orange-800/70 dark:text-orange-200/60 mt-1">
                     Productos para cotizar en formato de cuadrícula.
                 </p>
             </div>
 
             <div
                 className={`rounded-2xl border p-4 md:p-5 ${
-                    darkMode ? 'border-violet-900/40 bg-[#1a1628]/90' : 'border-violet-100 bg-white'
+                    darkMode ? 'border-orange-900/40 bg-[#262626]/90' : 'border-orange-100 bg-white'
                 }`}
             >
                 <div className="flex flex-wrap items-end gap-2 md:gap-3">
                     <div className="min-w-[220px] flex-1">
-                        <label className="block text-xs mb-1 text-violet-800/80 dark:text-violet-200/70">Buscar</label>
+                        <label className="block text-xs mb-1 text-orange-800/80 dark:text-orange-200/70">Buscar</label>
                         <input
                             value={searchQ}
                             onChange={(e) => setSearchQ(e.target.value)}
@@ -464,7 +464,7 @@ export default function VentasCatalogoPage() {
                         />
                     </div>
                     <div className="min-w-[170px]">
-                        <label className="block text-xs mb-1 text-violet-800/80 dark:text-violet-200/70">Categoría</label>
+                        <label className="block text-xs mb-1 text-orange-800/80 dark:text-orange-200/70">Categoría</label>
                         <FancySelect
                             value={catPrincipal}
                             onChange={(v) => {
@@ -476,7 +476,7 @@ export default function VentasCatalogoPage() {
                         />
                     </div>
                     <div className="min-w-[170px]">
-                        <label className="block text-xs mb-1 text-violet-800/80 dark:text-violet-200/70">Subcategoría</label>
+                        <label className="block text-xs mb-1 text-orange-800/80 dark:text-orange-200/70">Subcategoría</label>
                         <FancySelect
                             value={subcategoria}
                             onChange={setSubcategoria}
@@ -486,7 +486,7 @@ export default function VentasCatalogoPage() {
                         />
                     </div>
                     <div className="min-w-[170px]">
-                        <label className="block text-xs mb-1 text-violet-800/80 dark:text-violet-200/70">Marca</label>
+                        <label className="block text-xs mb-1 text-orange-800/80 dark:text-orange-200/70">Marca</label>
                         <FancySelect value={marca} onChange={setMarca} options={marcaOptions} darkMode={darkMode} />
                     </div>
                     <label className="inline-flex items-center gap-2 px-2 pb-2">
@@ -497,7 +497,7 @@ export default function VentasCatalogoPage() {
                             darkMode={darkMode}
                             aria-label={soloStock ? 'Con stock' : 'Sin stock'}
                         />
-                        <span className="text-sm text-violet-800/80 dark:text-violet-200/80 select-none">
+                        <span className="text-sm text-orange-800/80 dark:text-orange-200/80 select-none">
                             {soloStock ? 'Con stock' : 'Sin stock'}
                         </span>
                     </label>
@@ -506,8 +506,8 @@ export default function VentasCatalogoPage() {
                         onClick={handleLimpiar}
                         className={`rounded-xl border px-4 py-2 text-sm font-semibold ${
                             darkMode
-                                ? 'border-violet-700 text-violet-200 hover:bg-violet-900/40'
-                                : 'border-violet-200 text-violet-900 hover:bg-violet-50'
+                                ? 'border-orange-700 text-orange-200 hover:bg-orange-900/40'
+                                : 'border-orange-200 text-orange-900 hover:bg-orange-50'
                         }`}
                     >
                         Limpiar
@@ -515,21 +515,21 @@ export default function VentasCatalogoPage() {
                 </div>
 
                 {loadingFiltrosDinamicos ? (
-                    <div className={`mt-4 border-t pt-4 text-xs ${darkMode ? 'border-violet-900/40 text-violet-300/70' : 'border-violet-100 text-violet-700/80'}`}>
+                    <div className={`mt-4 border-t pt-4 text-xs ${darkMode ? 'border-orange-900/40 text-orange-300/70' : 'border-orange-100 text-orange-700/80'}`}>
                         Cargando filtros dinámicos…
                     </div>
                 ) : filtrosDinamicosEntries.length > 0 ? (
                     <div
                         className={`mt-4 border-t pt-4 ${
-                            darkMode ? 'border-violet-900/40' : 'border-violet-100'
+                            darkMode ? 'border-orange-900/40' : 'border-orange-100'
                         }`}
                     >
-                        <p className="mb-2 text-xs uppercase tracking-wide text-violet-700/80 dark:text-violet-300/70">
+                        <p className="mb-2 text-xs uppercase tracking-wide text-orange-700/80 dark:text-orange-300/70">
                             Filtros dinámicos
                         </p>
                         <div
                             className={`rounded-xl border px-2 py-2 ${
-                                darkMode ? 'border-violet-900/40 bg-[#141024]/65' : 'border-violet-100 bg-violet-50/35'
+                                darkMode ? 'border-orange-900/40 bg-[#202020]/65' : 'border-orange-100 bg-orange-50/35'
                             }`}
                         >
                             <div className="overflow-x-auto pb-1">
@@ -540,10 +540,10 @@ export default function VentasCatalogoPage() {
                                                 <div
                                                     key={etiqueta}
                                                     className={`w-[200px] rounded-lg p-1.5 ${
-                                                        darkMode ? 'bg-violet-950/30' : 'bg-white/80'
+                                                        darkMode ? 'bg-orange-950/30' : 'bg-white/80'
                                                     }`}
                                                 >
-                                                    <label className="block text-[11px] mb-1 text-violet-800/80 dark:text-violet-200/70 truncate">
+                                                    <label className="block text-[11px] mb-1 text-orange-800/80 dark:text-orange-200/70 truncate">
                                                         {etiqueta}
                                                     </label>
                                                     <FancySelect
@@ -578,9 +578,9 @@ export default function VentasCatalogoPage() {
             ) : null}
 
             {loading ? (
-                <div className="py-10 text-sm text-violet-700/80 dark:text-violet-300/70">Cargando productos…</div>
+                <div className="py-10 text-sm text-orange-700/80 dark:text-orange-300/70">Cargando productos…</div>
             ) : visibleRows.length === 0 ? (
-                <div className={`rounded-2xl border px-4 py-10 text-center text-sm ${darkMode ? 'border-violet-900/40 text-violet-300/70' : 'border-violet-100 bg-violet-50/50 text-violet-900/75'}`}>
+                <div className={`rounded-2xl border px-4 py-10 text-center text-sm ${darkMode ? 'border-orange-900/40 text-orange-300/70' : 'border-orange-100 bg-orange-50/50 text-orange-900/75'}`}>
                     Sin resultados para esos filtros.
                 </div>
             ) : (
@@ -596,10 +596,10 @@ export default function VentasCatalogoPage() {
                     </ProductGrid>
 
                     <div className="flex flex-wrap items-center justify-between gap-3">
-                        <p className={`text-xs ${darkMode ? 'text-violet-300/65' : 'text-violet-800/70'}`}>
+                        <p className={`text-xs ${darkMode ? 'text-orange-300/65' : 'text-orange-800/70'}`}>
                             Página {currentPage} de {lastPage} · {totalRows} resultados
                         </p>
-                        <VentasPaginationPurple
+                        <VentasPaginationBrand
                             current={currentPage}
                             lastPage={lastPage}
                             onPageChange={(p) => {

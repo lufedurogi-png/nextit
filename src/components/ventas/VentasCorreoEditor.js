@@ -55,8 +55,8 @@ export default function VentasCorreoEditor({
     algunDestinatarioSeleccionado,
     inputCls,
     card,
-    purpleBtn,
-    purpleStyle,
+    brandBtn,
+    brandStyle,
     ghostBtn,
 }) {
     const imagenInputRef = useRef(null)
@@ -69,8 +69,8 @@ export default function VentasCorreoEditor({
         onCuerpoChange('')
     }, [mensajeResetKey, editorRef, onCuerpoChange])
 
-    const toolbarBtn = `rounded-lg px-2.5 py-1.5 text-sm font-bold transition hover:bg-violet-200/80 dark:hover:bg-violet-800/50 ${
-        darkMode ? 'text-violet-100' : 'text-violet-900'
+    const toolbarBtn = `rounded-lg px-2.5 py-1.5 text-sm font-bold transition hover:bg-orange-200/80 dark:hover:bg-orange-800/50 ${
+        darkMode ? 'text-orange-100' : 'text-orange-900'
     }`
 
     const aplicarFormato = (cmd) => {
@@ -119,8 +119,8 @@ export default function VentasCorreoEditor({
 
     const imagenesConArchivo = imagenesSlots.filter((s) => s.file)
 
-    const tileBorder = darkMode ? 'border-violet-700/60' : 'border-violet-200'
-    const tileAddBg = darkMode ? 'bg-[#12101a]/80 hover:bg-violet-950/60' : 'bg-violet-50/80 hover:bg-violet-100'
+    const tileBorder = darkMode ? 'border-orange-700/60' : 'border-orange-200'
+    const tileAddBg = darkMode ? 'bg-[#202020]/80 hover:bg-orange-950/60' : 'bg-orange-50/80 hover:bg-orange-100'
 
     return (
         <div className={`${card} space-y-4`}>
@@ -142,19 +142,19 @@ export default function VentasCorreoEditor({
 
             <div>
                 <Label>Cuerpo del mensaje</Label>
-                <p className="text-xs text-violet-700/70 dark:text-violet-300/60 mb-2">
+                <p className="text-xs text-orange-700/70 dark:text-orange-300/60 mb-2">
                     Selecciona texto y usa negrita, cursiva o subrayado. Inserta{' '}
-                    <code className="rounded bg-violet-100/80 px-1 py-0.5 text-[11px] dark:bg-violet-900/50">{ETIQUETA_USUARIOS}</code>{' '}
+                    <code className="rounded bg-orange-100/80 px-1 py-0.5 text-[11px] dark:bg-orange-900/50">{ETIQUETA_USUARIOS}</code>{' '}
                     para que cada destinatario vea su nombre registrado.
                 </p>
                 <div
                     className={`rounded-xl border overflow-hidden ${
-                        darkMode ? 'border-violet-800/60' : 'border-violet-100'
+                        darkMode ? 'border-orange-800/60' : 'border-orange-100'
                     }`}
                 >
                     <div
                         className={`flex flex-wrap items-center gap-1 border-b px-2 py-1.5 ${
-                            darkMode ? 'border-violet-800/60 bg-[#12101a]' : 'border-violet-100 bg-violet-50/80'
+                            darkMode ? 'border-orange-800/60 bg-[#202020]' : 'border-orange-100 bg-orange-50/80'
                         }`}
                         role="toolbar"
                         aria-label="Formato de texto"
@@ -168,7 +168,7 @@ export default function VentasCorreoEditor({
                         <button type="button" className={toolbarBtn} onClick={() => aplicarFormato('underline')} title="Subrayado">
                             <span className="underline">U</span>
                         </button>
-                        <span className="mx-1 h-5 w-px bg-violet-200 dark:bg-violet-800/80" aria-hidden />
+                        <span className="mx-1 h-5 w-px bg-orange-200 dark:bg-orange-800/80" aria-hidden />
                         <button
                             type="button"
                             className={`${toolbarBtn} font-mono text-xs font-semibold normal-case tracking-tight`}
@@ -187,13 +187,13 @@ export default function VentasCorreoEditor({
                         aria-multiline="true"
                         data-placeholder="Escribe tu mensaje aquí…"
                         onInput={() => onCuerpoChange(editorRef.current?.innerHTML ?? '')}
-                        className={`min-h-[10rem] xl:min-h-[14rem] px-3 py-3 text-sm outline-none focus:ring-2 focus:ring-inset focus:ring-violet-400/30 empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400 dark:empty:before:text-violet-400/40 ${
-                            darkMode ? 'bg-[#12101a] text-violet-50' : 'bg-white text-gray-900'
+                        className={`min-h-[10rem] xl:min-h-[14rem] px-3 py-3 text-sm outline-none focus:ring-2 focus:ring-inset focus:ring-orange-400/30 empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400 dark:empty:before:text-orange-400/40 ${
+                            darkMode ? 'bg-[#202020] text-orange-50' : 'bg-white text-gray-900'
                         }`}
                     />
                 </div>
                 {tieneEtiquetaUsuarios && (
-                    <p className="mt-2 text-xs text-violet-700/90 dark:text-violet-300/80 rounded-lg bg-violet-50/90 dark:bg-violet-950/40 px-3 py-2 border border-violet-100 dark:border-violet-900/50">
+                    <p className="mt-2 text-xs text-orange-700/90 dark:text-orange-300/80 rounded-lg bg-orange-50/90 dark:bg-orange-950/40 px-3 py-2 border border-orange-100 dark:border-orange-900/50">
                         {ejemploDestinatario ? (
                             <>
                                 Vista previa (ejemplo con{' '}
@@ -214,7 +214,7 @@ export default function VentasCorreoEditor({
 
             <div>
                 <Label>Imágenes en el correo</Label>
-                <p className="text-xs text-violet-700/70 dark:text-violet-300/60 mb-3">
+                <p className="text-xs text-orange-700/70 dark:text-orange-300/60 mb-3">
                     Toca el recuadro + para añadir fotos. Se envían debajo del texto, en el orden que las agregues.
                 </p>
 
@@ -233,7 +233,7 @@ export default function VentasCorreoEditor({
 
                 <div
                     className={`flex items-center gap-2 overflow-x-auto pb-1 -mx-1 px-1 snap-x snap-mandatory scrollbar-thin ${
-                        darkMode ? 'scrollbar-thumb-violet-800' : 'scrollbar-thumb-violet-200'
+                        darkMode ? 'scrollbar-thumb-orange-800' : 'scrollbar-thumb-orange-200'
                     }`}
                 >
                     {imagenesSlots.map((slot, index) => (
@@ -245,7 +245,7 @@ export default function VentasCorreoEditor({
                             {slot.preview ? (
                                 <img src={slot.preview} alt="" className="h-full w-full object-cover" />
                             ) : (
-                                <div className="h-full w-full bg-violet-100 dark:bg-violet-950/50" />
+                                <div className="h-full w-full bg-orange-100 dark:bg-orange-950/50" />
                             )}
                             <button
                                 type="button"
@@ -264,15 +264,15 @@ export default function VentasCorreoEditor({
                         className={`${STORY_TILE} snap-start rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-0.5 transition-colors ${tileBorder} ${tileAddBg}`}
                         aria-label="Agregar imagen"
                     >
-                        <span className="text-2xl font-light text-violet-500 dark:text-violet-300 leading-none">+</span>
-                        <span className="text-[9px] font-medium uppercase tracking-wide text-violet-600/80 dark:text-violet-400/80">
+                        <span className="text-2xl font-light text-orange-500 dark:text-orange-300 leading-none">+</span>
+                        <span className="text-[9px] font-medium uppercase tracking-wide text-orange-600/80 dark:text-orange-400/80">
                             Añadir
                         </span>
                     </button>
                 </div>
 
                 {imagenesConArchivo.length > 0 && (
-                    <p className="text-[11px] text-violet-600/70 dark:text-violet-400/60 mt-2">
+                    <p className="text-[11px] text-orange-600/70 dark:text-orange-400/60 mt-2">
                         {imagenesConArchivo.length} imagen{imagenesConArchivo.length !== 1 ? 'es' : ''} · desliza para ver más
                     </p>
                 )}
@@ -280,7 +280,7 @@ export default function VentasCorreoEditor({
 
             <div>
                 <Label htmlFor="ventas-correo-adjuntos">Archivos adjuntos (opcional)</Label>
-                <p className="text-xs text-violet-700/70 dark:text-violet-300/60 mb-2">
+                <p className="text-xs text-orange-700/70 dark:text-orange-300/60 mb-2">
                     Word, Excel, PowerPoint, TXT o imágenes.
                 </p>
                 <input
@@ -307,23 +307,23 @@ export default function VentasCorreoEditor({
                         e.target.value = ''
                     }}
                     className={`block w-full text-sm file:mr-3 file:rounded-lg file:border-0 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white ${
-                        darkMode ? 'file:bg-violet-700' : 'file:bg-violet-800'
+                        darkMode ? 'file:bg-orange-700' : 'file:bg-orange-800'
                     }`}
                 />
                 {adjuntos.length > 0 && (
                     <>
-                        <p className="text-[11px] text-violet-600/70 dark:text-violet-400/60 mt-2">
+                        <p className="text-[11px] text-orange-600/70 dark:text-orange-400/60 mt-2">
                             {adjuntos.length} archivo{adjuntos.length !== 1 ? 's' : ''} · puedes seguir añadiendo más
                         </p>
                         <ul className="mt-2 max-h-48 space-y-1.5 overflow-y-auto">
                             {adjuntos.map((f, i) => (
                                 <li
                                     key={`${f.name}-${f.size}-${f.lastModified}-${i}`}
-                                    className="flex items-center justify-between gap-2 rounded-lg bg-violet-50/80 px-3 py-2 text-xs dark:bg-[#12101a]/80"
+                                    className="flex items-center justify-between gap-2 rounded-lg bg-orange-50/80 px-3 py-2 text-xs dark:bg-[#202020]/80"
                                 >
-                                    <span className="truncate text-violet-900 dark:text-violet-100">{f.name}</span>
+                                    <span className="truncate text-orange-900 dark:text-orange-100">{f.name}</span>
                                     <div className="flex shrink-0 items-center gap-2">
-                                        <span className="text-violet-600/80">{formatBytes(f.size)}</span>
+                                        <span className="text-orange-600/80">{formatBytes(f.size)}</span>
                                         <button
                                             type="button"
                                             className="text-red-600 hover:underline dark:text-red-400"
@@ -345,26 +345,26 @@ export default function VentasCorreoEditor({
             {confirmacionAbierta && (
                 <div
                     className={`rounded-xl border-2 p-4 space-y-3 ${
-                        darkMode ? 'border-violet-500/50 bg-violet-950/30' : 'border-violet-300 bg-violet-50'
+                        darkMode ? 'border-orange-500/50 bg-orange-950/30' : 'border-orange-300 bg-orange-50'
                     }`}
                     role="dialog"
                     aria-labelledby="confirmar-envio-titulo"
                 >
-                    <h3 id="confirmar-envio-titulo" className="font-semibold text-violet-950 dark:text-white">
+                    <h3 id="confirmar-envio-titulo" className="font-semibold text-orange-950 dark:text-white">
                         Confirmar envío
                     </h3>
-                    <p className="text-sm text-violet-900/80 dark:text-violet-200/80">
+                    <p className="text-sm text-orange-900/80 dark:text-orange-200/80">
                         Se enviará a <strong>{destinatariosSeleccionados.length}</strong> destinatario(s):
                     </p>
                     {tieneEtiquetaUsuarios && (
-                        <p className="text-xs text-violet-800/90 dark:text-violet-200/70">
+                        <p className="text-xs text-orange-800/90 dark:text-orange-200/70">
                             Cada persona verá su nombre donde usaste{' '}
                             <code className="font-mono rounded bg-white/60 px-1 dark:bg-black/20">{ETIQUETA_USUARIOS}</code>.
                         </p>
                     )}
-                    <ul className="max-h-32 overflow-y-auto text-sm rounded-lg bg-white/60 dark:bg-[#12101a]/60 px-3 py-2 space-y-1">
+                    <ul className="max-h-32 overflow-y-auto text-sm rounded-lg bg-white/60 dark:bg-[#202020]/60 px-3 py-2 space-y-1">
                         {destinatariosSeleccionados.map((d) => (
-                            <li key={d.id} className="text-violet-900 dark:text-violet-100">
+                            <li key={d.id} className="text-orange-900 dark:text-orange-100">
                                 {d.nombre ? `${d.nombre} · ` : ''}
                                 {d.email}
                             </li>
@@ -376,18 +376,18 @@ export default function VentasCorreoEditor({
                                 {imagenesConArchivo.slice(0, 5).map((s) => (
                                     <div
                                         key={s.id}
-                                        className="h-10 w-8 shrink-0 rounded-md overflow-hidden border border-violet-200 dark:border-violet-800"
+                                        className="h-10 w-8 shrink-0 rounded-md overflow-hidden border border-orange-200 dark:border-orange-800"
                                     >
                                         <img src={s.preview} alt="" className="h-full w-full object-cover" />
                                     </div>
                                 ))}
                             </div>
                             {imagenesConArchivo.length > 5 && (
-                                <span className="text-xs text-violet-600 dark:text-violet-300">
+                                <span className="text-xs text-orange-600 dark:text-orange-300">
                                     +{imagenesConArchivo.length - 5}
                                 </span>
                             )}
-                            <span className="text-xs text-violet-700/80 dark:text-violet-300/70">
+                            <span className="text-xs text-orange-700/80 dark:text-orange-300/70">
                                 {imagenesConArchivo.length} en el mensaje
                             </span>
                         </div>
@@ -395,8 +395,8 @@ export default function VentasCorreoEditor({
                     <div className="flex flex-wrap gap-2 pt-1">
                         <button
                             type="button"
-                            className={purpleBtn}
-                            style={purpleStyle}
+                            className={brandBtn}
+                            style={brandStyle}
                             disabled={enviando}
                             onClick={onConfirmarEnvio}
                         >
@@ -409,8 +409,8 @@ export default function VentasCorreoEditor({
                 </div>
             )}
 
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-violet-100 dark:border-violet-900/40">
-                <p className="text-xs text-violet-700/80 dark:text-violet-300/60">
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-orange-100 dark:border-orange-900/40">
+                <p className="text-xs text-orange-700/80 dark:text-orange-300/60">
                     {algunDestinatarioSeleccionado
                         ? `${destinatariosSeleccionados.length} destinatario(s) seleccionado(s).`
                         : 'Selecciona destinatarios en la tabla.'}
@@ -418,8 +418,8 @@ export default function VentasCorreoEditor({
                 {!confirmacionAbierta && (
                     <button
                         type="button"
-                        className={purpleBtn}
-                        style={purpleStyle}
+                        className={brandBtn}
+                        style={brandStyle}
                         disabled={enviando || !algunDestinatarioSeleccionado}
                         onClick={onSubmitPedirConfirmacion}
                     >

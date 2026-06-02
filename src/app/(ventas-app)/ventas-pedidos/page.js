@@ -8,7 +8,7 @@ import { useDebounce } from '@/hooks/useDebounce'
 import { useAdminTheme } from '@/contexts/AdminThemeContext'
 
 const card =
-    'rounded-2xl border border-violet-100 bg-white shadow-sm dark:border-violet-900/40 dark:bg-[#1a1628]/80 overflow-hidden'
+    'rounded-2xl border border-orange-100 bg-white shadow-sm dark:border-orange-900/40 dark:bg-[#262626]/80 overflow-hidden'
 
 const PER_PAGE_OPTIONS = [5, 10, 25, 50, 100]
 
@@ -57,7 +57,7 @@ function PagoBadge({ estado, darkMode }) {
 
     if (e === 'pagado') {
         return (
-            <span className={`${base} ${darkMode ? 'bg-violet-500/15 text-violet-300 border-violet-500/40' : 'bg-violet-50 text-violet-800 border-violet-200'}`}>
+            <span className={`${base} ${darkMode ? 'bg-orange-500/15 text-orange-300 border-orange-500/40' : 'bg-orange-50 text-orange-800 border-orange-200'}`}>
                 Pagado
             </span>
         )
@@ -110,8 +110,8 @@ export default function VentasPedidosPage() {
         'w-full min-w-0 px-3 py-2 rounded-lg border text-sm transition focus:outline-none focus:ring-2'
     const filterInputClass = (active = false) =>
         darkMode
-            ? `${filterInputBase} ${active ? 'bg-tienda-elevated border-violet-600/60 focus:ring-violet-400/40 text-gray-100' : 'bg-tienda-canvas/70 border-gray-600 focus:ring-violet-400/25 text-gray-100'}`
-            : `${filterInputBase} ${active ? 'bg-white border-violet-300/80 focus:ring-violet-400/30 text-gray-900' : 'bg-white border-gray-300 focus:ring-violet-400/20 text-gray-900'}`
+            ? `${filterInputBase} ${active ? 'bg-tienda-elevated border-orange-600/60 focus:ring-orange-400/40 text-gray-100' : 'bg-tienda-canvas/70 border-gray-600 focus:ring-orange-400/25 text-gray-100'}`
+            : `${filterInputBase} ${active ? 'bg-white border-orange-300/80 focus:ring-orange-400/30 text-gray-900' : 'bg-white border-gray-300 focus:ring-orange-400/20 text-gray-900'}`
 
     const headCellMutedClass = darkMode ? 'text-gray-300' : 'text-slate-800'
     const rowMutedClass = darkMode ? 'text-gray-500' : 'text-gray-600'
@@ -225,27 +225,27 @@ export default function VentasPedidosPage() {
     const { pedidos, total, current_page, last_page } = pedidosData
 
     const rowSelectClass = darkMode
-        ? 'w-full max-w-[220px] px-2 py-1.5 text-sm rounded-lg border bg-tienda-canvas/70 border-gray-600 text-gray-100 focus:ring-2 focus:ring-violet-500/40 disabled:opacity-50'
-        : 'w-full max-w-[220px] px-2 py-1.5 text-sm rounded-lg border bg-white border-gray-300 text-gray-900 focus:ring-2 focus:ring-violet-500/30 disabled:opacity-50'
+        ? 'w-full max-w-[220px] px-2 py-1.5 text-sm rounded-lg border bg-tienda-canvas/70 border-gray-600 text-gray-100 focus:ring-2 focus:ring-orange-500/40 disabled:opacity-50'
+        : 'w-full max-w-[220px] px-2 py-1.5 text-sm rounded-lg border bg-white border-gray-300 text-gray-900 focus:ring-2 focus:ring-orange-500/30 disabled:opacity-50'
 
-    const activePill = darkMode ? 'bg-violet-600/15 text-violet-300 border-violet-500/30' : 'bg-violet-100 text-violet-800 border-violet-200'
+    const activePill = darkMode ? 'bg-orange-600/15 text-orange-300 border-orange-500/30' : 'bg-orange-100 text-orange-800 border-orange-200'
 
     return (
         <div className="space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                    <h1 className="text-2xl font-bold text-violet-950 dark:text-white">Historial de pedidos</h1>
-                    <p className="text-sm text-violet-800/70 dark:text-violet-200/60 mt-1">Consulta y seguimiento de pedidos.</p>
+                    <h1 className="text-2xl font-bold text-orange-950 dark:text-white">Historial de pedidos</h1>
+                    <p className="text-sm text-orange-800/70 dark:text-orange-200/60 mt-1">Consulta y seguimiento de pedidos.</p>
                 </div>
             </div>
 
             <div className={card}>
-                <div className={`px-5 py-4 border-b ${darkMode ? 'border-violet-900/30 bg-violet-600/15' : 'border-violet-100 bg-violet-50/70'}`}>
+                <div className={`px-5 py-4 border-b ${darkMode ? 'border-orange-900/30 bg-orange-600/15' : 'border-orange-100 bg-orange-50/70'}`}>
                     <div className="flex flex-wrap items-center justify-between gap-3">
                         <div className="flex items-center gap-3">
                             <span
                                 className={`flex h-9 w-9 items-center justify-center rounded-lg ${
-                                    darkMode ? 'bg-violet-500/30 text-violet-300' : 'bg-violet-100 text-violet-700'
+                                    darkMode ? 'bg-orange-500/30 text-orange-300' : 'bg-orange-100 text-orange-700'
                                 }`}
                             >
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -271,18 +271,18 @@ export default function VentasPedidosPage() {
                 <div className="overflow-x-auto">
                     <table className={`w-full text-sm border-collapse min-w-[1120px] ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
                         <thead>
-                            <tr className={darkMode ? 'border-b-2 border-violet-900/30 bg-violet-950/30' : 'border-b-2 border-violet-100 bg-violet-50/60'}>
-                                <th className={`align-top px-2 py-3.5 border-r border-violet-100/50 dark:border-violet-900/30 w-[1%] min-w-[200px] max-w-[280px]`}>
+                            <tr className={darkMode ? 'border-b-2 border-orange-900/30 bg-orange-950/30' : 'border-b-2 border-orange-100 bg-orange-50/60'}>
+                                <th className={`align-top px-2 py-3.5 border-r border-orange-100/50 dark:border-orange-900/30 w-[1%] min-w-[200px] max-w-[280px]`}>
                                     <div className={`text-xs font-bold ${headCellMutedClass} mb-2`}>Fecha</div>
                                     <div className="grid grid-cols-2 gap-x-2 w-full min-w-0">
                                         <div className="min-w-0">
-                                            <div className="mb-1 flex items-center gap-1 justify-start text-[11px] font-bold uppercase tracking-wide text-violet-700/80 dark:text-violet-200/70">
+                                            <div className="mb-1 flex items-center gap-1 justify-start text-[11px] font-bold uppercase tracking-wide text-orange-700/80 dark:text-orange-200/70">
                                                 Desde
                                             </div>
                                             <input type="date" value={fechaDesde} onChange={(e) => setFechaDesde(e.target.value)} className={filterInputClass(!!fechaDesde)} />
                                         </div>
                                         <div className="min-w-0">
-                                            <div className="mb-1 flex items-center gap-1 justify-end text-[11px] font-bold uppercase tracking-wide text-violet-700/80 dark:text-violet-200/70">
+                                            <div className="mb-1 flex items-center gap-1 justify-end text-[11px] font-bold uppercase tracking-wide text-orange-700/80 dark:text-orange-200/70">
                                                 Hasta
                                             </div>
                                             <input type="date" value={fechaHasta} onChange={(e) => setFechaHasta(e.target.value)} className={filterInputClass(!!fechaHasta)} />
@@ -290,8 +290,8 @@ export default function VentasPedidosPage() {
                                     </div>
                                 </th>
 
-                                <th className={`align-top px-3 py-3.5 border-r border-violet-100/50 dark:border-violet-900/30 min-w-[108px]`}>
-                                    <div className="text-xs font-bold text-violet-950 dark:text-violet-100 mb-2">Folio</div>
+                                <th className={`align-top px-3 py-3.5 border-r border-orange-100/50 dark:border-orange-900/30 min-w-[108px]`}>
+                                    <div className="text-xs font-bold text-orange-950 dark:text-orange-100 mb-2">Folio</div>
                                     <input
                                         type="text"
                                         placeholder="Buscar…"
@@ -301,8 +301,8 @@ export default function VentasPedidosPage() {
                                     />
                                 </th>
 
-                                <th className={`align-top px-3 py-3.5 border-r border-violet-100/50 dark:border-violet-900/30 min-w-[148px]`}>
-                                    <div className="text-xs font-bold text-violet-950 dark:text-violet-100 mb-2">Cliente</div>
+                                <th className={`align-top px-3 py-3.5 border-r border-orange-100/50 dark:border-orange-900/30 min-w-[148px]`}>
+                                    <div className="text-xs font-bold text-orange-950 dark:text-orange-100 mb-2">Cliente</div>
                                     <input
                                         type="text"
                                         placeholder="Nombre o email"
@@ -312,12 +312,12 @@ export default function VentasPedidosPage() {
                                     />
                                 </th>
 
-                                <th className={`align-top px-3 py-3.5 border-r border-violet-100/50 dark:border-violet-900/30 w-[76px]`}>
-                                    <div className="text-xs font-bold text-violet-950 dark:text-violet-100 mb-2 text-right">Monto</div>
+                                <th className={`align-top px-3 py-3.5 border-r border-orange-100/50 dark:border-orange-900/30 w-[76px]`}>
+                                    <div className="text-xs font-bold text-orange-950 dark:text-orange-100 mb-2 text-right">Monto</div>
                                 </th>
 
-                                <th className={`align-top px-3 py-3.5 border-r border-violet-100/50 dark:border-violet-900/30 min-w-[128px]`}>
-                                    <div className="text-xs font-bold text-violet-950 dark:text-violet-100 mb-2">Método pago</div>
+                                <th className={`align-top px-3 py-3.5 border-r border-orange-100/50 dark:border-orange-900/30 min-w-[128px]`}>
+                                    <div className="text-xs font-bold text-orange-950 dark:text-orange-100 mb-2">Método pago</div>
                                     <select value={metodoPagoFiltro} onChange={(e) => setMetodoPagoFiltro(e.target.value)} className={filterInputClass(metodoPagoFiltro !== 'todos')}>
                                         {METODO_PAGO_FILTRO_OPTIONS.map((o) => (
                                             <option key={o.value} value={o.value}>
@@ -327,8 +327,8 @@ export default function VentasPedidosPage() {
                                     </select>
                                 </th>
 
-                                <th className={`align-top px-3 py-3.5 border-r border-violet-100/50 dark:border-violet-900/30 min-w-[118px]`}>
-                                    <div className="text-xs font-bold text-violet-950 dark:text-violet-100 mb-2">Pago</div>
+                                <th className={`align-top px-3 py-3.5 border-r border-orange-100/50 dark:border-orange-900/30 min-w-[118px]`}>
+                                    <div className="text-xs font-bold text-orange-950 dark:text-orange-100 mb-2">Pago</div>
                                     <select value={pagoFiltro} onChange={(e) => setPagoFiltro(e.target.value)} className={filterInputClass(pagoFiltro !== 'todos')}>
                                         <option value="todos">Todos</option>
                                         <option value="pagado">Pagado</option>
@@ -337,8 +337,8 @@ export default function VentasPedidosPage() {
                                     </select>
                                 </th>
 
-                                <th className={`align-top px-3 py-3.5 border-r border-violet-100/50 dark:border-violet-900/30 min-w-[168px]`}>
-                                    <div className="text-xs font-bold text-violet-950 dark:text-violet-100 mb-2">Estatus</div>
+                                <th className={`align-top px-3 py-3.5 border-r border-orange-100/50 dark:border-orange-900/30 min-w-[168px]`}>
+                                    <div className="text-xs font-bold text-orange-950 dark:text-orange-100 mb-2">Estatus</div>
                                     <select value={estatusFiltro} onChange={(e) => setEstatusFiltro(e.target.value)} className={filterInputClass(estatusFiltro !== 'todos')}>
                                         {ESTATUS_PEDIDO_FILTRO.map((o) => (
                                             <option key={o.value} value={o.value}>
@@ -348,12 +348,12 @@ export default function VentasPedidosPage() {
                                     </select>
                                 </th>
 
-                                <th className={`align-top px-3 py-3.5 border-r border-violet-100/50 dark:border-violet-900/30 min-w-[120px]`}>
-                                    <div className="text-xs font-bold text-violet-950 dark:text-violet-100 mb-2 text-left">Envío</div>
+                                <th className={`align-top px-3 py-3.5 border-r border-orange-100/50 dark:border-orange-900/30 min-w-[120px]`}>
+                                    <div className="text-xs font-bold text-orange-950 dark:text-orange-100 mb-2 text-left">Envío</div>
                                 </th>
 
                                 <th className={`align-top px-3 py-3.5`}>
-                                    <div className="text-xs font-bold text-violet-950 dark:text-violet-100 mb-2 text-right">Acciones</div>
+                                    <div className="text-xs font-bold text-orange-950 dark:text-orange-100 mb-2 text-right">Acciones</div>
                                 </th>
                             </tr>
                         </thead>
@@ -363,7 +363,7 @@ export default function VentasPedidosPage() {
                                 <tr>
                                     <td colSpan={9} className={`px-4 py-12 text-center ${rowMutedClass}`}>
                                         <div className="flex flex-col items-center gap-3">
-                                            <svg className="animate-spin h-8 w-8 text-violet-500" fill="none" viewBox="0 0 24 24" aria-hidden>
+                                            <svg className="animate-spin h-8 w-8 text-orange-500" fill="none" viewBox="0 0 24 24" aria-hidden>
                                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                                             </svg>
@@ -380,35 +380,35 @@ export default function VentasPedidosPage() {
                                     <tr
                                         key={pedido.id}
                                         className={`border-b transition-colors ${
-                                            darkMode ? `hover:bg-gray-700/25 border-violet-900/20` : `hover:bg-violet-50/30 border-violet-100/60`
-                                        } ${i % 2 === 1 ? (darkMode ? 'bg-tienda-elevated/35' : 'bg-violet-50/20') : ''}`}
+                                            darkMode ? `hover:bg-gray-700/25 border-orange-900/20` : `hover:bg-orange-50/30 border-orange-100/60`
+                                        } ${i % 2 === 1 ? (darkMode ? 'bg-tienda-elevated/35' : 'bg-orange-50/20') : ''}`}
                                     >
-                                        <td className={`py-3 px-4 border-r border-violet-100/60 dark:border-violet-900/30 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                                        <td className={`py-3 px-4 border-r border-orange-100/60 dark:border-orange-900/30 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
                                             {pedido.fecha}
                                         </td>
-                                        <td className={`py-3 px-4 border-r border-violet-100/60 dark:border-violet-900/30 font-medium ${darkMode ? 'text-violet-200' : 'text-violet-900'}`}>
+                                        <td className={`py-3 px-4 border-r border-orange-100/60 dark:border-orange-900/30 font-medium ${darkMode ? 'text-orange-200' : 'text-orange-900'}`}>
                                             {pedido.folio}
                                         </td>
-                                        <td className={`py-3 px-4 border-r border-violet-100/60 dark:border-violet-900/30 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                                        <td className={`py-3 px-4 border-r border-orange-100/60 dark:border-orange-900/30 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
                                             <div className="flex flex-col">
                                                 <span className="font-medium">{pedido.user_name || '—'}</span>
                                                 {pedido.user_email && <span className={`text-xs ${rowMutedClass}`}>{pedido.user_email}</span>}
                                             </div>
                                         </td>
 
-                                        <td className={`py-3 px-4 border-r border-violet-100/60 dark:border-violet-900/30 text-right font-semibold text-violet-500`}>
+                                        <td className={`py-3 px-4 border-r border-orange-100/60 dark:border-orange-900/30 text-right font-semibold text-orange-500`}>
                                             $ {montoFmt(pedido.monto)}
                                         </td>
 
-                                        <td className={`py-3 px-4 border-r border-violet-100/60 dark:border-violet-900/30 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                                        <td className={`py-3 px-4 border-r border-orange-100/60 dark:border-orange-900/30 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
                                             {pedido.metodo_pago}
                                         </td>
 
-                                        <td className={`py-3 px-4 border-r border-violet-100/60 dark:border-violet-900/30`}>
+                                        <td className={`py-3 px-4 border-r border-orange-100/60 dark:border-orange-900/30`}>
                                             <PagoBadge estado={pedido.estado_pago} darkMode={darkMode} />
                                         </td>
 
-                                        <td className={`py-3 px-4 border-r border-violet-100/60 dark:border-violet-900/30 align-middle`}>
+                                        <td className={`py-3 px-4 border-r border-orange-100/60 dark:border-orange-900/30 align-middle`}>
                                             <select
                                                 value={normalizeEstatusKey(pedido.estatus_pedido)}
                                                 disabled={updatingEstatusId === pedido.id}
@@ -425,10 +425,10 @@ export default function VentasPedidosPage() {
                                             {updatingEstatusId === pedido.id && <span className={`ml-2 text-xs ${rowMutedClass}`}>Guardando…</span>}
                                         </td>
 
-                                        <td className={`py-3 px-3 border-r border-violet-100/60 dark:border-violet-900/30 align-middle text-center`}>
+                                        <td className={`py-3 px-3 border-r border-orange-100/60 dark:border-orange-900/30 align-middle text-center`}>
                                             <div className="flex flex-col items-center gap-1">
                                                 {pedido.envio != null && Number(pedido.envio.costo_envio) > 0 ? (
-                                                    <span className="text-xs font-semibold tabular-nums text-violet-400">
+                                                    <span className="text-xs font-semibold tabular-nums text-orange-400">
                                                         $ {Number(pedido.envio.costo_envio).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                                                     </span>
                                                 ) : pedido.envio != null ? (
@@ -445,7 +445,7 @@ export default function VentasPedidosPage() {
                                                     type="button"
                                                     onClick={() => handleDescargarPdf(pedido.id, pedido.folio)}
                                                     disabled={!!downloadingPdfId}
-                                                    className="p-2 rounded-lg bg-violet-600/20 hover:bg-violet-600/30 text-violet-300 transition-colors disabled:opacity-50"
+                                                    className="p-2 rounded-lg bg-orange-600/20 hover:bg-orange-600/30 text-orange-300 transition-colors disabled:opacity-50"
                                                     title="Descargar PDF"
                                                 >
                                                     <Image src="/Imagenes/icon_descarga.webp" alt="PDF" width={18} height={18} className="brightness-0 invert opacity-90" />
@@ -453,7 +453,7 @@ export default function VentasPedidosPage() {
                                                 <button
                                                     type="button"
                                                     onClick={() => setDetallePedidoId(pedido.id)}
-                                                    className="p-2 rounded-lg bg-violet-600/20 hover:bg-violet-600/30 text-violet-300 transition-colors"
+                                                    className="p-2 rounded-lg bg-orange-600/20 hover:bg-orange-600/30 text-orange-300 transition-colors"
                                                     title="Ver detalle"
                                                 >
                                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -473,7 +473,7 @@ export default function VentasPedidosPage() {
                 {last_page >= 1 && (
                     <div
                         className={`px-5 py-4 flex flex-wrap items-center justify-between gap-4 border-t ${
-                            darkMode ? 'border-violet-900/30' : 'border-violet-100/70'
+                            darkMode ? 'border-orange-900/30' : 'border-orange-100/70'
                         }`}
                     >
                         <p className={`text-sm ${rowMutedClass}`}>
@@ -506,7 +506,7 @@ export default function VentasPedidosPage() {
                                                 onClick={() => setPaginaActual(num)}
                                                 className={`min-w-[2.5rem] h-10 px-3 rounded-lg text-sm font-semibold ${
                                                     num === current_page
-                                                        ? 'bg-violet-600 text-white'
+                                                        ? 'bg-orange-600 text-white'
                                                         : darkMode
                                                           ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                                                           : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -522,7 +522,7 @@ export default function VentasPedidosPage() {
                                                 onClick={() => setPaginaActual(totalP)}
                                                 className={`min-w-[2.5rem] h-10 px-3 rounded-lg text-sm font-semibold ${
                                                     current_page === totalP
-                                                        ? 'bg-violet-600 text-white'
+                                                        ? 'bg-orange-600 text-white'
                                                         : darkMode
                                                           ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                                                           : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -558,7 +558,7 @@ export default function VentasPedidosPage() {
                     <div className={`fixed inset-4 sm:inset-auto sm:top-1/2 sm:left-1/2 z-[63] w-[94%] sm:max-w-xl rounded-2xl shadow-2xl overflow-hidden sm:-translate-x-1/2 sm:-translate-y-1/2 flex flex-col ${
                         darkMode ? 'bg-tienda-elevated border border-gray-700' : 'bg-white border border-gray-200'
                     }`}>
-                        <div className={`shrink-0 flex items-center justify-between px-4 py-3 border-b ${darkMode ? 'bg-violet-600/20 border-violet-500/30' : 'bg-violet-50 border-violet-200'}`}>
+                        <div className={`shrink-0 flex items-center justify-between px-4 py-3 border-b ${darkMode ? 'bg-orange-600/20 border-orange-500/30' : 'bg-orange-50 border-orange-200'}`}>
                             <h3 className={`text-lg font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>Pedido {detallePedido?.folio ?? '…'}</h3>
                             <button
                                 type="button"
@@ -590,7 +590,7 @@ export default function VentasPedidosPage() {
                                         </div>
                                         <div>
                                             <p className={`text-xs font-medium uppercase tracking-wider mb-0.5 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Monto</p>
-                                            <p className="font-semibold text-violet-500">$ {montoFmt(detallePedido.monto)}</p>
+                                            <p className="font-semibold text-orange-500">$ {montoFmt(detallePedido.monto)}</p>
                                         </div>
                                         <div>
                                             <p className={`text-xs font-medium uppercase tracking-wider mb-0.5 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Método de pago</p>
@@ -622,7 +622,7 @@ export default function VentasPedidosPage() {
                                                                 {it.nombre_producto}
                                                             </td>
                                                             <td className={`px-3 py-2 text-center ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{it.cantidad}</td>
-                                                            <td className={`px-3 py-2 text-right font-medium text-violet-500`}>$ {montoFmt(it.subtotal)}</td>
+                                                            <td className={`px-3 py-2 text-right font-medium text-orange-500`}>$ {montoFmt(it.subtotal)}</td>
                                                         </tr>
                                                     ))}
                                                 </tbody>
@@ -634,7 +634,7 @@ export default function VentasPedidosPage() {
                                         type="button"
                                         onClick={() => handleDescargarPdf(detallePedido.id ?? detallePedidoId, detallePedido.folio)}
                                         disabled={!!downloadingPdfId}
-                                        className={`w-full py-3 px-4 rounded-xl font-semibold text-white transition-colors disabled:opacity-50 ${darkMode ? 'bg-violet-600 hover:bg-violet-700' : 'bg-violet-600 hover:bg-violet-700'}`}
+                                        className={`w-full py-3 px-4 rounded-xl font-semibold text-white transition-colors disabled:opacity-50 ${darkMode ? 'bg-orange-600 hover:bg-orange-700' : 'bg-orange-600 hover:bg-orange-700'}`}
                                     >
                                         Descargar PDF
                                     </button>

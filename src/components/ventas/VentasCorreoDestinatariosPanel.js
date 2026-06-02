@@ -15,8 +15,8 @@ import {
 export default function VentasCorreoDestinatariosPanel({
     darkMode,
     card,
-    purpleBtn,
-    purpleStyle,
+    brandBtn,
+    brandStyle,
     ghostBtn,
     dangerBtn,
     inputCls,
@@ -218,7 +218,7 @@ export default function VentasCorreoDestinatariosPanel({
     const renderTablaGrupo = (lista) => {
         if (lista.length === 0) {
             return (
-                <p className="text-xs text-violet-600/70 dark:text-violet-400/60 py-3 px-2">
+                <p className="text-xs text-orange-600/70 dark:text-orange-400/60 py-3 px-2">
                     Sin contactos en este grupo.
                 </p>
             )
@@ -228,16 +228,16 @@ export default function VentasCorreoDestinatariosPanel({
         const todosGrupo = ids.every((id) => selectedIds.has(id))
 
         return (
-            <div className="overflow-x-auto rounded-lg border border-violet-100 dark:border-violet-900/50">
+            <div className="overflow-x-auto rounded-lg border border-orange-100 dark:border-orange-900/50">
                 <table className="w-full text-sm">
                     <thead>
-                        <tr className="text-left text-xs uppercase tracking-wide text-violet-700/80 bg-violet-50/80 dark:bg-[#12101a]/80 dark:text-violet-300/70">
+                        <tr className="text-left text-xs uppercase tracking-wide text-orange-700/80 bg-orange-50/80 dark:bg-[#202020]/80 dark:text-orange-300/70">
                             <th className="p-2 w-9">
                                 <input
                                     type="checkbox"
                                     checked={todosGrupo}
                                     onChange={() => toggleGrupoTodos(ids)}
-                                    className="rounded border-violet-300 text-violet-700 focus:ring-violet-500"
+                                    className="rounded border-orange-300 text-orange-700 focus:ring-orange-500"
                                     aria-label="Seleccionar grupo"
                                 />
                             </th>
@@ -250,18 +250,18 @@ export default function VentasCorreoDestinatariosPanel({
                         {lista.map((d) => (
                             <tr
                                 key={d.id}
-                                className="border-t border-violet-100 dark:border-violet-900/40 hover:bg-violet-50/40 dark:hover:bg-white/[0.02]"
+                                className="border-t border-orange-100 dark:border-orange-900/40 hover:bg-orange-50/40 dark:hover:bg-white/[0.02]"
                             >
                                 <td className="p-2">
                                     <input
                                         type="checkbox"
                                         checked={selectedIds.has(d.id)}
                                         onChange={() => toggleUno(d.id)}
-                                        className="rounded border-violet-300 text-violet-700 focus:ring-violet-500"
+                                        className="rounded border-orange-300 text-orange-700 focus:ring-orange-500"
                                     />
                                 </td>
-                                <td className="p-2 text-gray-800 dark:text-violet-100">{d.nombre || '—'}</td>
-                                <td className="p-2 font-medium text-violet-900 dark:text-violet-200 break-all">{d.email}</td>
+                                <td className="p-2 text-gray-800 dark:text-orange-100">{d.nombre || '—'}</td>
+                                <td className="p-2 font-medium text-orange-900 dark:text-orange-200 break-all">{d.email}</td>
                                 <td className="p-2 text-right">
                                     {confirmDeleteDestId === d.id ? null : (
                                         <button
@@ -293,7 +293,7 @@ export default function VentasCorreoDestinatariosPanel({
     }
 
     return (
-        <section className={`${card} order-1 xl:order-1 xl:sticky xl:top-4 xl:self-start xl:max-h-[calc(100vh-7rem)] xl:flex xl:flex-col`}>
+        <section className={`${card} order-1 md:order-1 md:sticky md:top-4 md:self-start md:max-h-[calc(100vh-7rem)] md:flex md:flex-col`}>
             <button
                 type="button"
                 className="flex w-full items-center justify-between gap-3 text-left shrink-0"
@@ -302,12 +302,12 @@ export default function VentasCorreoDestinatariosPanel({
             >
                 <div>
                     <h2 className="font-semibold text-gray-900 dark:text-white">Destinatarios</h2>
-                    <p className="text-xs text-violet-700/70 dark:text-violet-300/60 mt-0.5">
+                    <p className="text-xs text-orange-700/70 dark:text-orange-300/60 mt-0.5">
                         {grupos.length} grupo(s) · {destinatarios.length} contacto(s) · {selectedIds.size} seleccionado(s)
                     </p>
                 </div>
                 <span
-                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-200 transition-transform ${
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-200 transition-transform ${
                         tablaAbierta ? 'rotate-180' : ''
                     }`}
                     aria-hidden
@@ -317,17 +317,17 @@ export default function VentasCorreoDestinatariosPanel({
             </button>
 
             {tablaAbierta && (
-                <div className="mt-4 space-y-4 border-t border-violet-100 pt-4 dark:border-violet-900/40 xl:overflow-y-auto xl:min-h-0 xl:flex-1">
-                    <div className="rounded-xl border border-violet-100 dark:border-violet-900/50 overflow-hidden">
+                <div className="mt-4 space-y-4 border-t border-orange-100 pt-4 dark:border-orange-900/40 md:overflow-y-auto md:min-h-0 md:flex-1">
+                    <div className="rounded-xl border border-orange-100 dark:border-orange-900/50 overflow-hidden">
                         <button
                             type="button"
-                            className="flex w-full items-center justify-between gap-2 px-3 py-2.5 bg-violet-50/90 dark:bg-[#12101a]/90 text-left"
+                            className="flex w-full items-center justify-between gap-2 px-3 py-2.5 bg-orange-50/90 dark:bg-[#202020]/90 text-left"
                             onClick={() => setCrearGrupoAbierto((o) => !o)}
                             aria-expanded={crearGrupoAbierto}
                         >
-                            <span className="text-sm font-semibold text-violet-950 dark:text-white">Crear grupo</span>
+                            <span className="text-sm font-semibold text-orange-950 dark:text-white">Crear grupo</span>
                             <span
-                                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-200 transition-transform text-xs ${
+                                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-200 transition-transform text-xs ${
                                     crearGrupoAbierto ? 'rotate-180' : ''
                                 }`}
                                 aria-hidden
@@ -337,7 +337,7 @@ export default function VentasCorreoDestinatariosPanel({
                         </button>
 
                         {crearGrupoAbierto && (
-                            <div className="border-t border-violet-100 bg-violet-50/40 p-3 dark:border-violet-900/50 dark:bg-[#12101a]/50">
+                            <div className="border-t border-orange-100 bg-orange-50/40 p-3 dark:border-orange-900/50 dark:bg-[#202020]/50">
                                 <form onSubmit={handleCrearGrupo} className="flex gap-2">
                                     <Input
                                         type="text"
@@ -347,7 +347,7 @@ export default function VentasCorreoDestinatariosPanel({
                                         maxLength={200}
                                         className={`${inputCls} flex-1`}
                                     />
-                                    <button type="submit" className={purpleBtn} style={purpleStyle} disabled={guardandoGrupo}>
+                                    <button type="submit" className={brandBtn} style={brandStyle} disabled={guardandoGrupo}>
                                         {guardandoGrupo ? '…' : 'Crear'}
                                     </button>
                                 </form>
@@ -360,7 +360,7 @@ export default function VentasCorreoDestinatariosPanel({
                                         className={`rounded-lg border px-2.5 py-2 ${
                                             confirmDeleteGrupoId === g.id
                                                 ? 'border-red-300 bg-red-50/80 dark:border-red-900/50 dark:bg-red-950/20'
-                                                : 'border-violet-100 bg-white dark:border-violet-900/40 dark:bg-[#1a1628]/80'
+                                                : 'border-orange-100 bg-white dark:border-orange-900/40 dark:bg-[#262626]/80'
                                         }`}
                                     >
                                         {editandoGrupoId === g.id ? (
@@ -375,8 +375,8 @@ export default function VentasCorreoDestinatariosPanel({
                                                 <div className="flex gap-2">
                                                     <button
                                                         type="button"
-                                                        className={`${purpleBtn} text-xs px-3 py-1.5`}
-                                                        style={purpleStyle}
+                                                        className={`${brandBtn} text-xs px-3 py-1.5`}
+                                                        style={brandStyle}
                                                         disabled={guardandoEdicionGrupo}
                                                         onClick={() => guardarEdicionGrupo(g.id)}
                                                     >
@@ -421,22 +421,22 @@ export default function VentasCorreoDestinatariosPanel({
                                             <div className="flex items-center justify-between gap-2">
                                                 <button
                                                     type="button"
-                                                    className="text-left text-sm font-medium text-violet-950 dark:text-white truncate"
+                                                    className="text-left text-sm font-medium text-orange-950 dark:text-white truncate"
                                                     onClick={() => {
                                                         setGrupoIdRegistro(String(g.id))
                                                         setGruposExpandidos((prev) => new Set(prev).add(g.id))
                                                     }}
                                                 >
                                                     {g.nombre}
-                                                    <span className="ml-1 text-xs font-normal text-violet-600/80 dark:text-violet-400/70">
+                                                    <span className="ml-1 text-xs font-normal text-orange-600/80 dark:text-orange-400/70">
                                                         ({g.destinatarios_count})
                                                     </span>
                                                 </button>
                                                 <div className="flex shrink-0 flex-wrap gap-1.5 justify-end">
                                                     <button
                                                         type="button"
-                                                        className={`${purpleBtn} text-xs px-2.5 py-1.5 rounded-lg`}
-                                                        style={purpleStyle}
+                                                        className={`${brandBtn} text-xs px-2.5 py-1.5 rounded-lg`}
+                                                        style={brandStyle}
                                                         onClick={() => {
                                                             setEditandoGrupoId(g.id)
                                                             setEditandoGrupoNombre(g.nombre)
@@ -467,7 +467,7 @@ export default function VentasCorreoDestinatariosPanel({
                     </div>
 
                     {grupos.length === 0 ? (
-                        <p className="text-sm text-center text-violet-700/80 dark:text-violet-300/70 py-4 rounded-xl bg-violet-50/50 dark:bg-[#12101a]/60">
+                        <p className="text-sm text-center text-orange-700/80 dark:text-orange-300/70 py-4 rounded-xl bg-orange-50/50 dark:bg-[#202020]/60">
                             Crea un grupo antes de registrar correos.
                         </p>
                     ) : (
@@ -504,14 +504,14 @@ export default function VentasCorreoDestinatariosPanel({
                                     className={inputCls}
                                 />
                             </div>
-                            <button type="submit" className={`${purpleBtn} w-full`} style={purpleStyle} disabled={guardandoDest}>
+                            <button type="submit" className={`${brandBtn} w-full`} style={brandStyle} disabled={guardandoDest}>
                                 {guardandoDest ? 'Guardando…' : 'Registrar en el grupo'}
                             </button>
                         </form>
                     )}
 
                     {loading ? (
-                        <p className="text-sm text-center py-6 text-violet-600/80">Cargando…</p>
+                        <p className="text-sm text-center py-6 text-orange-600/80">Cargando…</p>
                     ) : (
                         <div className="space-y-3">
                             {secciones.map(({ key, titulo, grupo, lista }) => {
@@ -522,23 +522,23 @@ export default function VentasCorreoDestinatariosPanel({
                                 return (
                                     <div
                                         key={key}
-                                        className="rounded-xl border border-violet-100 dark:border-violet-900/50 overflow-hidden"
+                                        className="rounded-xl border border-orange-100 dark:border-orange-900/50 overflow-hidden"
                                     >
                                         <button
                                             type="button"
-                                            className="flex w-full items-center justify-between gap-2 px-3 py-2.5 bg-violet-50/90 dark:bg-[#12101a]/90 text-left"
+                                            className="flex w-full items-center justify-between gap-2 px-3 py-2.5 bg-orange-50/90 dark:bg-[#202020]/90 text-left"
                                             onClick={() => toggleExpandirGrupo(key)}
                                             aria-expanded={expandido}
                                         >
-                                            <span className="font-semibold text-sm text-violet-950 dark:text-white truncate">
+                                            <span className="font-semibold text-sm text-orange-950 dark:text-white truncate">
                                                 {titulo}
-                                                <span className="font-normal text-violet-600 dark:text-violet-400 ml-1">
+                                                <span className="font-normal text-orange-600 dark:text-orange-400 ml-1">
                                                     ({lista.length}
                                                     {selCount > 0 ? ` · ${selCount} sel.` : ''})
                                                 </span>
                                             </span>
                                             <span
-                                                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-violet-100/80 text-violet-700 dark:bg-violet-900/30 dark:text-violet-200 text-xs transition-transform ${
+                                                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-orange-100/80 text-orange-700 dark:bg-orange-900/30 dark:text-orange-200 text-xs transition-transform ${
                                                     expandido ? 'rotate-180' : ''
                                                 }`}
                                                 aria-hidden
@@ -583,7 +583,7 @@ export default function VentasCorreoDestinatariosPanel({
                             })}
 
                             {destinatarios.length === 0 && grupos.length > 0 && (
-                                <p className="text-sm text-center text-violet-600/80 py-4">
+                                <p className="text-sm text-center text-orange-600/80 py-4">
                                     Aún no hay contactos. Registra el primero arriba.
                                 </p>
                             )}

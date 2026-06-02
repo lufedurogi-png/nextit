@@ -48,11 +48,11 @@ export default function VentasCorreosHistorialPaginacion({
         : btnBaseDefault
 
     const idle = darkMode
-        ? 'border-violet-800/60 bg-[#12101a] text-violet-200 hover:bg-violet-900/40'
-        : 'border-violet-200 bg-white text-violet-900 hover:bg-violet-50'
+        ? 'border-orange-800/60 bg-[#202020] text-orange-200 hover:bg-orange-900/40'
+        : 'border-orange-200 bg-white text-orange-900 hover:bg-orange-50'
     const active = darkMode
-        ? 'border-violet-500 bg-violet-600 text-white'
-        : 'border-violet-500 bg-violet-600 text-white'
+        ? 'border-orange-500 bg-orange-600 text-white'
+        : 'border-orange-500 bg-orange-600 text-white'
 
     const go = (page) => {
         if (page >= 1 && page <= lastPage && page !== currentPage) onPageChange(page)
@@ -84,7 +84,7 @@ export default function VentasCorreosHistorialPaginacion({
                     <span
                         key={`ellipsis-${idx}`}
                         className={`inline-flex h-9 min-w-[2.25rem] items-center justify-center text-sm ${
-                            darkMode ? 'text-violet-400' : 'text-violet-500'
+                            darkMode ? 'text-orange-400' : 'text-orange-500'
                         }`}
                         aria-hidden
                     >

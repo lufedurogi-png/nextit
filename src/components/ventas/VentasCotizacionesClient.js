@@ -56,7 +56,7 @@ function hrefProductoTienda(clave) {
 function NombreProductoLink({ clave, nombre, darkMode }) {
     const href = hrefProductoTienda(clave)
     const className = `line-clamp-2 font-medium underline-offset-2 hover:underline ${
-        darkMode ? 'text-violet-200 hover:text-violet-100' : 'text-violet-900 hover:text-violet-800'
+        darkMode ? 'text-orange-200 hover:text-orange-100' : 'text-orange-900 hover:text-orange-800'
     }`
     if (!href) {
         return (
@@ -84,7 +84,7 @@ function ProductoImagenesCelda({ urls, darkMode, rowKey }) {
         return (
             <span
                 className={`inline-flex min-h-[4.5rem] min-w-[4.5rem] items-center justify-center rounded-2xl border text-[10px] font-medium uppercase leading-tight px-1 text-center ${
-                    darkMode ? 'border-violet-800/60 bg-[#1e1830] text-violet-400/80' : 'border-violet-100 bg-violet-50 text-violet-400'
+                    darkMode ? 'border-orange-800/60 bg-[#262626] text-orange-400/80' : 'border-orange-100 bg-orange-50 text-orange-400'
                 }`}
             >
                 Sin imagen
@@ -96,7 +96,7 @@ function ProductoImagenesCelda({ urls, darkMode, rowKey }) {
         <div className="flex w-[5.75rem] shrink-0 flex-col items-stretch gap-1">
             <div
                 className={`aspect-square overflow-hidden rounded-2xl border shadow-sm ${
-                    darkMode ? 'border-violet-800/50 bg-[#12101a]' : 'border-violet-100 bg-white'
+                    darkMode ? 'border-orange-800/50 bg-[#202020]' : 'border-orange-100 bg-white'
                 }`}
             >
                 <img src={cur} alt="" className="h-full w-full object-cover" loading="lazy" />
@@ -113,11 +113,11 @@ function ProductoImagenesCelda({ urls, darkMode, rowKey }) {
                             className={`min-w-[1.25rem] rounded-lg px-1 py-0.5 text-[10px] font-bold leading-none transition-colors ${
                                 i === safe
                                     ? darkMode
-                                        ? 'bg-violet-600 text-white ring-1 ring-violet-300/40'
-                                        : 'bg-violet-700 text-white shadow-sm'
+                                        ? 'bg-orange-600 text-white ring-1 ring-orange-300/40'
+                                        : 'bg-orange-700 text-white shadow-sm'
                                     : darkMode
-                                      ? 'bg-[#1e1830] text-violet-300/80 hover:bg-violet-950/80'
-                                      : 'bg-violet-100 text-violet-800 hover:bg-violet-200'
+                                      ? 'bg-[#262626] text-orange-300/80 hover:bg-orange-950/80'
+                                      : 'bg-orange-100 text-orange-800 hover:bg-orange-200'
                             }`}
                         >
                             {i + 1}
@@ -157,16 +157,16 @@ function VentasPaginationPink({ current, lastPage, onPageChange, darkMode }) {
     const btnBase =
         'inline-flex h-10 min-w-[2.5rem] items-center justify-center rounded-xl text-sm font-semibold transition-all duration-200 disabled:opacity-35 disabled:pointer-events-none'
     const inactive = darkMode
-        ? 'bg-[#1e1830]/90 text-violet-100/80 hover:bg-violet-950/50 border border-violet-800/50'
-        : 'bg-violet-50/80 text-violet-950 hover:bg-violet-100 border border-violet-100'
+        ? 'bg-[#262626]/90 text-orange-100/80 hover:bg-orange-950/50 border border-orange-800/50'
+        : 'bg-orange-50/80 text-orange-950 hover:bg-orange-100 border border-orange-100'
     const active = darkMode
-        ? 'bg-gradient-to-br from-[#5b4d7a] to-[#8b7cb8] text-white border border-violet-400/25 shadow-md shadow-black/30'
-        : 'bg-gradient-to-br from-[#5b4d7a] to-[#8b7cb8] text-white border border-violet-300/40 shadow-md shadow-violet-900/15'
+        ? 'bg-gradient-to-br from-[#FF8000] to-[#e67300] text-white border border-orange-400/25 shadow-md shadow-black/30'
+        : 'bg-gradient-to-br from-[#FF8000] to-[#e67300] text-white border border-orange-300/40 shadow-md shadow-orange-900/15'
 
     return (
         <div
             className={`flex flex-wrap items-center justify-center gap-1.5 rounded-2xl px-3 py-3.5 ${
-                darkMode ? 'border border-violet-900/40 bg-[#16131f]/80' : 'border border-violet-100 bg-violet-50/50'
+                darkMode ? 'border border-orange-900/40 bg-[#1c1c1c]/80' : 'border border-orange-100 bg-orange-50/50'
             }`}
         >
             <button
@@ -192,7 +192,7 @@ function VentasPaginationPink({ current, lastPage, onPageChange, darkMode }) {
                     <span
                         key={`e-${idx}`}
                         className={`inline-flex h-10 min-w-[2.5rem] items-center justify-center rounded-xl text-sm ${
-                            darkMode ? 'text-violet-400/70' : 'text-violet-400'
+                            darkMode ? 'text-orange-400/70' : 'text-orange-400'
                         }`}
                     >
                         …
@@ -331,15 +331,15 @@ export default function VentasCotizacionesClient() {
     const card = useMemo(
         () =>
             darkMode
-                ? 'rounded-[1.75rem] border border-violet-900/40 bg-[#1a1628]/95 shadow-[0_24px_64px_-24px_rgba(0,0,0,0.45)] overflow-hidden'
-                : 'rounded-[1.75rem] border border-violet-100 bg-white shadow-[0_20px_50px_-20px_rgba(91,77,122,0.12)] overflow-hidden',
+                ? 'rounded-[1.75rem] border border-orange-900/40 bg-[#262626]/95 shadow-[0_24px_64px_-24px_rgba(0,0,0,0.45)] overflow-hidden'
+                : 'rounded-[1.75rem] border border-orange-100 bg-white shadow-[0_20px_50px_-20px_rgba(91,77,122,0.12)] overflow-hidden',
         [darkMode]
     )
 
-    const labelClass = darkMode ? 'text-violet-200/85 font-medium' : 'text-violet-950 font-medium'
+    const labelClass = darkMode ? 'text-orange-200/85 font-medium' : 'text-orange-950 font-medium'
     const inputClass = darkMode
-        ? 'mt-1.5 block w-full rounded-xl border border-violet-800/50 bg-[#12101a]/80 px-3.5 py-2.5 text-sm text-gray-100 placeholder:text-violet-400/50 focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 outline-none transition-shadow'
-        : 'mt-1.5 block w-full rounded-xl border border-violet-100 bg-white px-3.5 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-violet-300 focus:ring-2 focus:ring-violet-200/80 outline-none transition-shadow'
+        ? 'mt-1.5 block w-full rounded-xl border border-orange-800/50 bg-[#202020]/80 px-3.5 py-2.5 text-sm text-gray-100 placeholder:text-orange-400/50 focus:border-orange-500/50 focus:ring-2 focus:ring-orange-500/20 outline-none transition-shadow'
+        : 'mt-1.5 block w-full rounded-xl border border-orange-100 bg-white px-3.5 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-orange-300 focus:ring-2 focus:ring-orange-200/80 outline-none transition-shadow'
 
     const [categorias, setCategorias] = useState([])
     const [catPrincipal, setCatPrincipal] = useState('')
@@ -739,12 +739,12 @@ export default function VentasCotizacionesClient() {
     return (
         <div className="space-y-8 pb-8">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <h1 className={`text-2xl font-semibold tracking-tight sm:text-3xl ${darkMode ? 'text-gray-100' : 'text-violet-950'}`}>
+                <h1 className={`text-2xl font-semibold tracking-tight sm:text-3xl ${darkMode ? 'text-gray-100' : 'text-orange-950'}`}>
                     Nueva cotización
                 </h1>
                 <div
                     className={`inline-flex shrink-0 rounded-xl border p-1 ${
-                        darkMode ? 'border-violet-800/50 bg-[#16131f]/80' : 'border-violet-100 bg-white/90 shadow-sm'
+                        darkMode ? 'border-orange-800/50 bg-[#1c1c1c]/80' : 'border-orange-100 bg-white/90 shadow-sm'
                     }`}
                     role="tablist"
                     aria-label="Sección cotizaciones"
@@ -757,11 +757,11 @@ export default function VentasCotizacionesClient() {
                         className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
                             mainTab === 'cotizar'
                                 ? darkMode
-                                    ? 'bg-violet-600/30 text-violet-100 shadow-inner'
-                                    : 'bg-violet-100 text-violet-950'
+                                    ? 'bg-orange-600/30 text-orange-100 shadow-inner'
+                                    : 'bg-orange-100 text-orange-950'
                                 : darkMode
-                                  ? 'text-violet-300/70 hover:bg-white/5'
-                                  : 'text-violet-800/70 hover:bg-violet-50/80'
+                                  ? 'text-orange-300/70 hover:bg-white/5'
+                                  : 'text-orange-800/70 hover:bg-orange-50/80'
                         }`}
                     >
                         Cotizar
@@ -774,11 +774,11 @@ export default function VentasCotizacionesClient() {
                         className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
                             mainTab === 'guardadas'
                                 ? darkMode
-                                    ? 'bg-violet-600/30 text-violet-100 shadow-inner'
-                                    : 'bg-violet-100 text-violet-950'
+                                    ? 'bg-orange-600/30 text-orange-100 shadow-inner'
+                                    : 'bg-orange-100 text-orange-950'
                                 : darkMode
-                                  ? 'text-violet-300/70 hover:bg-white/5'
-                                  : 'text-violet-800/70 hover:bg-violet-50/80'
+                                  ? 'text-orange-300/70 hover:bg-white/5'
+                                  : 'text-orange-800/70 hover:bg-orange-50/80'
                         }`}
                     >
                         Guardadas
@@ -813,17 +813,17 @@ export default function VentasCotizacionesClient() {
                     <div
                         className={`border-b px-6 py-5 sm:px-8 ${
                             darkMode
-                                ? 'border-violet-900/40 bg-gradient-to-r from-[#1a1628] to-[#16131f]/80'
-                                : 'border-violet-100 bg-gradient-to-r from-white to-violet-50/60'
+                                ? 'border-orange-900/40 bg-gradient-to-r from-[#262626] to-[#1c1c1c]/80'
+                                : 'border-orange-100 bg-gradient-to-r from-white to-orange-50/60'
                         }`}
                     >
                         <div className="flex flex-wrap items-start justify-between gap-3">
-                            <h2 className={`text-lg font-semibold tracking-tight sm:text-xl ${darkMode ? 'text-gray-100' : 'text-violet-950'}`}>
+                            <h2 className={`text-lg font-semibold tracking-tight sm:text-xl ${darkMode ? 'text-gray-100' : 'text-orange-950'}`}>
                                 Editar · {editingFolio || `#${editingId}`}
                             </h2>
                             <span
                                 className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${
-                                    darkMode ? 'bg-violet-600/25 text-violet-100 ring-1 ring-violet-400/30' : 'bg-violet-100 text-violet-900 ring-1 ring-violet-200/80'
+                                    darkMode ? 'bg-orange-600/25 text-orange-100 ring-1 ring-orange-400/30' : 'bg-orange-100 text-orange-900 ring-1 ring-orange-200/80'
                                 }`}
                             >
                                 Modo edición
@@ -833,11 +833,11 @@ export default function VentasCotizacionesClient() {
                 ) : null}
 
                 <div className="p-5 sm:p-8">
-                    <div className="lg:grid lg:grid-cols-[1fr_min(19rem,100%)] lg:gap-8">
+                    <div className="md:grid md:grid-cols-[1fr_min(19rem,100%)] md:gap-8">
                         <div className="space-y-5 min-w-0">
                             <div
                                 className={`rounded-2xl border p-4 sm:p-5 ${
-                                    darkMode ? 'border-violet-900/35 bg-[#12101a]/50' : 'border-violet-100 bg-violet-50/40'
+                                    darkMode ? 'border-orange-900/35 bg-[#202020]/50' : 'border-orange-100 bg-orange-50/40'
                                 }`}
                             >
                                 <Label className={labelClass}>Búsqueda en catálogo</Label>
@@ -850,14 +850,14 @@ export default function VentasCotizacionesClient() {
                             </div>
 
                             {loadingBusqueda ? (
-                                <div className={`flex items-center gap-3 py-8 text-sm ${darkMode ? 'text-violet-200/75' : 'text-violet-800/80'}`}>
-                                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-violet-400/30 border-t-violet-500" />
+                                <div className={`flex items-center gap-3 py-8 text-sm ${darkMode ? 'text-orange-200/75' : 'text-orange-800/80'}`}>
+                                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-orange-400/30 border-t-orange-500" />
                                     Cargando resultados…
                                 </div>
                             ) : productosBusqueda.length > 0 ? (
                                 <div
                                     className={`overflow-hidden rounded-2xl border shadow-sm ${
-                                        darkMode ? 'border-violet-900/40 bg-[#12101a]/40' : 'border-violet-100 bg-white'
+                                        darkMode ? 'border-orange-900/40 bg-[#202020]/40' : 'border-orange-100 bg-white'
                                     }`}
                                 >
                                     <table className="w-full min-w-[720px] border-collapse text-sm">
@@ -865,8 +865,8 @@ export default function VentasCotizacionesClient() {
                                             <tr
                                                 className={
                                                     darkMode
-                                                        ? 'border-b border-violet-900/50 bg-[#1e1830]/90 text-left text-[11px] font-semibold uppercase tracking-wide text-violet-300/80'
-                                                        : 'border-b border-violet-100 bg-violet-50/90 text-left text-[11px] font-semibold uppercase tracking-wide text-violet-900/80'
+                                                        ? 'border-b border-orange-900/50 bg-[#262626]/90 text-left text-[11px] font-semibold uppercase tracking-wide text-orange-300/80'
+                                                        : 'border-b border-orange-100 bg-orange-50/90 text-left text-[11px] font-semibold uppercase tracking-wide text-orange-900/80'
                                                 }
                                             >
                                                 <th className="whitespace-nowrap p-3.5 pl-5">Imagen</th>
@@ -886,14 +886,14 @@ export default function VentasCotizacionesClient() {
                                                         key={pr.clave}
                                                         className={
                                                             darkMode
-                                                                ? 'border-t border-violet-900/40 transition-colors hover:bg-violet-950/35'
-                                                                : 'border-t border-violet-50 transition-colors hover:bg-violet-50/70'
+                                                                ? 'border-t border-orange-900/40 transition-colors hover:bg-orange-950/35'
+                                                                : 'border-t border-orange-50 transition-colors hover:bg-orange-50/70'
                                                         }
                                                     >
                                                         <td className="align-middle p-3.5 pl-5">
                                                             <ProductoImagenesCelda urls={imgUrls} darkMode={darkMode} rowKey={pr.clave} />
                                                         </td>
-                                                        <td className="align-middle p-3.5 font-mono text-xs text-violet-800 dark:text-violet-200/90">
+                                                        <td className="align-middle p-3.5 font-mono text-xs text-orange-800 dark:text-orange-200/90">
                                                             {pr.clave}
                                                         </td>
                                                         <td className="align-middle p-3.5">
@@ -903,7 +903,7 @@ export default function VentasCotizacionesClient() {
                                                                 darkMode={darkMode}
                                                             />
                                                         </td>
-                                                        <td className={`align-middle p-3.5 tabular-nums ${darkMode ? 'text-violet-200/70' : 'text-gray-600'}`}>{stock}</td>
+                                                        <td className={`align-middle p-3.5 tabular-nums ${darkMode ? 'text-orange-200/70' : 'text-gray-600'}`}>{stock}</td>
                                                         <td className={`align-middle p-3.5 tabular-nums font-medium ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
                                                             ${Number(pr.precio || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                                                         </td>
@@ -911,7 +911,7 @@ export default function VentasCotizacionesClient() {
                                                             <button
                                                                 type="button"
                                                                 onClick={() => agregarProducto(pr)}
-                                                                className="inline-flex items-center rounded-full bg-gradient-to-r from-[#5b4d7a] to-[#8b7cb8] px-4 py-2 text-xs font-semibold text-white shadow-md shadow-violet-900/20 transition hover:brightness-105 active:scale-[0.98]"
+                                                                className="inline-flex items-center rounded-full bg-gradient-to-r from-[#FF8000] to-[#e67300] px-4 py-2 text-xs font-semibold text-white shadow-md shadow-orange-900/20 transition hover:brightness-105 active:scale-[0.98]"
                                                             >
                                                                 Agregar
                                                             </button>
@@ -923,14 +923,14 @@ export default function VentasCotizacionesClient() {
                                     </table>
                                 </div>
                             ) : (
-                                <p className={`rounded-2xl border px-4 py-6 text-sm ${darkMode ? 'border-violet-900/40 text-violet-300/70' : 'border-violet-100 bg-violet-50/40 text-violet-900/70'}`}>
+                                <p className={`rounded-2xl border px-4 py-6 text-sm ${darkMode ? 'border-orange-900/40 text-orange-300/70' : 'border-orange-100 bg-orange-50/40 text-orange-900/70'}`}>
                                     Sin resultados. Usa el buscador o los filtros.
                                 </p>
                             )}
 
                             {totalBusqueda > 0 ? (
                                 <div className="flex flex-col gap-3 pt-1">
-                                    <p className={`text-xs ${darkMode ? 'text-violet-300/65' : 'text-violet-800/70'}`}>
+                                    <p className={`text-xs ${darkMode ? 'text-orange-300/65' : 'text-orange-800/70'}`}>
                                         Página {pageBusqueda} · {totalBusqueda} resultados
                                     </p>
                                     {lastPageBusqueda > 1 ? (
@@ -946,14 +946,14 @@ export default function VentasCotizacionesClient() {
                         </div>
 
                         <aside
-                            className={`mt-8 max-h-[72vh] space-y-5 overflow-y-auto rounded-2xl border p-5 sm:p-6 lg:mt-0 ${
+                            className={`mt-8 max-h-[72vh] space-y-5 overflow-y-auto rounded-2xl border p-5 sm:p-6 md:mt-0 ${
                                 darkMode
-                                    ? 'border-violet-900/40 bg-[#16131f]/60 ring-1 ring-white/[0.04]'
-                                    : 'border-violet-100 bg-violet-50/50 ring-1 ring-violet-100/80'
+                                    ? 'border-orange-900/40 bg-[#1c1c1c]/60 ring-1 ring-white/[0.04]'
+                                    : 'border-orange-100 bg-orange-50/50 ring-1 ring-orange-100/80'
                             }`}
                         >
                             <div>
-                                <h3 className={`text-xs font-semibold uppercase tracking-[0.18em] ${darkMode ? 'text-violet-200/90' : 'text-violet-900/85'}`}>
+                                <h3 className={`text-xs font-semibold uppercase tracking-[0.18em] ${darkMode ? 'text-orange-200/90' : 'text-orange-900/85'}`}>
                                     Filtros
                                 </h3>
                             </div>
@@ -1003,7 +1003,7 @@ export default function VentasCotizacionesClient() {
                                     ))}
                                 </select>
                             </div>
-                            <div className={`flex items-center gap-3 rounded-xl px-1 py-1 ${darkMode ? 'text-violet-100/85' : 'text-violet-950'}`}>
+                            <div className={`flex items-center gap-3 rounded-xl px-1 py-1 ${darkMode ? 'text-orange-100/85' : 'text-orange-950'}`}>
                                 <SwitchToggle
                                     id="solo-stock-ventas-cot"
                                     checked={soloStock}
@@ -1016,8 +1016,8 @@ export default function VentasCotizacionesClient() {
                                 </label>
                             </div>
                             {Object.keys(filtrosDinamicos).length > 0 ? (
-                                <div className={`space-y-4 border-t pt-5 ${darkMode ? 'border-violet-900/40' : 'border-violet-100'}`}>
-                                    <p className={`text-xs font-semibold uppercase tracking-wide ${darkMode ? 'text-violet-300/70' : 'text-violet-900/70'}`}>
+                                <div className={`space-y-4 border-t pt-5 ${darkMode ? 'border-orange-900/40' : 'border-orange-100'}`}>
+                                    <p className={`text-xs font-semibold uppercase tracking-wide ${darkMode ? 'text-orange-300/70' : 'text-orange-900/70'}`}>
                                         Filtros dinámicos
                                     </p>
                                     {Object.entries(filtrosDinamicos).map(([etiqueta, valores]) => (
@@ -1050,18 +1050,18 @@ export default function VentasCotizacionesClient() {
                     <div
                         className={`mt-10 space-y-6 rounded-[1.5rem] border p-5 sm:p-7 ${
                             darkMode
-                                ? 'border-violet-900/35 bg-gradient-to-b from-[#1e1830]/50 to-[#16131f]/30'
-                                : 'border-violet-100 bg-gradient-to-b from-white to-violet-50/40'
+                                ? 'border-orange-900/35 bg-gradient-to-b from-[#262626]/50 to-[#1c1c1c]/30'
+                                : 'border-orange-100 bg-gradient-to-b from-white to-orange-50/40'
                         }`}
                     >
                         <div className="flex flex-wrap items-end justify-between gap-3">
-                            <h3 className={`text-base font-semibold tracking-tight sm:text-lg ${darkMode ? 'text-gray-100' : 'text-violet-950'}`}>
+                            <h3 className={`text-base font-semibold tracking-tight sm:text-lg ${darkMode ? 'text-gray-100' : 'text-orange-950'}`}>
                                 Detalle de la cotización
                             </h3>
                             {lineas.length > 0 ? (
                                 <span
                                     className={`rounded-full px-3 py-1 text-xs font-medium ${
-                                        darkMode ? 'bg-violet-600/20 text-violet-100 ring-1 ring-violet-500/30' : 'bg-violet-100 text-violet-900 ring-1 ring-violet-200/80'
+                                        darkMode ? 'bg-orange-600/20 text-orange-100 ring-1 ring-orange-500/30' : 'bg-orange-100 text-orange-900 ring-1 ring-orange-200/80'
                                     }`}
                                 >
                                     {lineas.length} producto{lineas.length !== 1 ? 's' : ''}
@@ -1069,21 +1069,21 @@ export default function VentasCotizacionesClient() {
                             ) : null}
                         </div>
                         {lineas.length === 0 ? (
-                            <p className={`rounded-2xl border px-4 py-8 text-center text-sm ${darkMode ? 'border-violet-900/40 text-violet-300/65' : 'border-violet-100 bg-white text-violet-900/70'}`}>
+                            <p className={`rounded-2xl border px-4 py-8 text-center text-sm ${darkMode ? 'border-orange-900/40 text-orange-300/65' : 'border-orange-100 bg-white text-orange-900/70'}`}>
                                 Vacío. Agrega productos desde la tabla superior.
                             </p>
                         ) : (
                             <div className="overflow-x-auto rounded-2xl">
                                 <div
-                                    className={`inline-block min-w-full overflow-hidden rounded-2xl border ${darkMode ? 'border-violet-900/40' : 'border-violet-100'}`}
+                                    className={`inline-block min-w-full overflow-hidden rounded-2xl border ${darkMode ? 'border-orange-900/40' : 'border-orange-100'}`}
                                 >
                                     <table className="w-full min-w-[880px] border-collapse text-sm">
                                     <thead>
                                         <tr
                                             className={
                                                 darkMode
-                                                    ? 'border-b border-violet-900/50 bg-[#1e1830]/85 text-left text-[11px] font-semibold uppercase tracking-wide text-violet-300/75'
-                                                    : 'border-b border-violet-100 bg-violet-50/90 text-left text-[11px] font-semibold uppercase tracking-wide text-violet-900/75'
+                                                    ? 'border-b border-orange-900/50 bg-[#262626]/85 text-left text-[11px] font-semibold uppercase tracking-wide text-orange-300/75'
+                                                    : 'border-b border-orange-100 bg-orange-50/90 text-left text-[11px] font-semibold uppercase tracking-wide text-orange-900/75'
                                             }
                                         >
                                             <th className="p-3 pl-4">Imagen</th>
@@ -1096,26 +1096,26 @@ export default function VentasCotizacionesClient() {
                                             <th className="p-3 pr-4" />
                                         </tr>
                                     </thead>
-                                    <tbody className={`divide-y ${darkMode ? 'divide-violet-900/35' : 'divide-violet-100'}`}>
+                                    <tbody className={`divide-y ${darkMode ? 'divide-orange-900/35' : 'divide-orange-100'}`}>
                                         {lineas.map((l) => {
                                             const urls = l.imagenes_urls?.length ? l.imagenes_urls : l.imagen ? [l.imagen] : []
                                             const sub = lineSubtotal(l)
                                             const cellIn = darkMode
-                                                ? 'rounded-xl border border-violet-800/50 bg-[#12101a]/80 px-2 py-1.5 text-sm text-gray-100 outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/30'
-                                                : 'rounded-xl border border-violet-100 bg-white px-2 py-1.5 text-sm text-gray-900 outline-none focus:border-violet-300 focus:ring-1 focus:ring-violet-200/80'
+                                                ? 'rounded-xl border border-orange-800/50 bg-[#202020]/80 px-2 py-1.5 text-sm text-gray-100 outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/30'
+                                                : 'rounded-xl border border-orange-100 bg-white px-2 py-1.5 text-sm text-gray-900 outline-none focus:border-orange-300 focus:ring-1 focus:ring-orange-200/80'
                                             return (
                                                 <tr
                                                     key={l.clave}
-                                                    className={darkMode ? 'transition-colors hover:bg-violet-950/30' : 'transition-colors hover:bg-violet-50/60'}
+                                                    className={darkMode ? 'transition-colors hover:bg-orange-950/30' : 'transition-colors hover:bg-orange-50/60'}
                                                 >
                                                     <td className="p-3.5 pl-4 align-middle">
                                                         <ProductoImagenesCelda urls={urls} darkMode={darkMode} rowKey={l.clave} />
                                                     </td>
                                                     <td className="p-3.5 align-middle max-w-[14rem]">
                                                         <NombreProductoLink clave={l.clave} nombre={l.nombre_producto} darkMode={darkMode} />
-                                                        <div className="mt-0.5 font-mono text-xs text-violet-800 dark:text-violet-200/90">{l.clave}</div>
+                                                        <div className="mt-0.5 font-mono text-xs text-orange-800 dark:text-orange-200/90">{l.clave}</div>
                                                     </td>
-                                                    <td className={`p-3.5 align-middle tabular-nums ${darkMode ? 'text-violet-200/70' : 'text-gray-600'}`}>
+                                                    <td className={`p-3.5 align-middle tabular-nums ${darkMode ? 'text-orange-200/70' : 'text-gray-600'}`}>
                                                         {l.stock_tienda != null ? l.stock_tienda : '—'}
                                                     </td>
                                                     <td className="p-3.5 align-middle">
@@ -1194,10 +1194,10 @@ export default function VentasCotizacionesClient() {
                             </div>
                         )}
 
-                        <div className="grid gap-6 lg:grid-cols-[1fr_min(16rem,100%)] lg:items-stretch">
+                        <div className="grid gap-6 md:grid-cols-[1fr_min(16rem,100%)] md:items-stretch">
                             <div
                                 className={`rounded-2xl border p-4 sm:p-5 ${
-                                    darkMode ? 'border-violet-900/40 bg-[#12101a]/40' : 'border-violet-100 bg-white/90'
+                                    darkMode ? 'border-orange-900/40 bg-[#202020]/40' : 'border-orange-100 bg-white/90'
                                 }`}
                             >
                                 <Label className={labelClass}>Descuento general (%)</Label>
@@ -1211,15 +1211,15 @@ export default function VentasCotizacionesClient() {
                                     className={inputClass}
                                     placeholder="0"
                                 />
-                                <p className={`mt-2 text-xs ${darkMode ? 'text-violet-300/65' : 'text-violet-800/70'}`}>
+                                <p className={`mt-2 text-xs ${darkMode ? 'text-orange-300/65' : 'text-orange-800/70'}`}>
                                     Máximo {maxDescuentoPct}% de descuento sobre el precio de catálogo (margen de venta).
                                 </p>
                             </div>
                             <div
                                 className={`flex flex-col justify-center rounded-2xl p-5 sm:p-6 text-white shadow-lg ${
                                     darkMode
-                                        ? 'bg-gradient-to-br from-[#5b4d7a] via-[#4a3d66] to-[#1a1628] shadow-black/40'
-                                        : 'bg-gradient-to-br from-[#5b4d7a] to-[#8b7cb8] shadow-violet-900/20'
+                                        ? 'bg-gradient-to-br from-[#FF8000] via-[#cc6600] to-[#262626] shadow-black/40'
+                                        : 'bg-gradient-to-br from-[#FF8000] to-[#e67300] shadow-orange-900/20'
                                 }`}
                             >
                                 <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/80">Total estimado</p>
@@ -1229,13 +1229,13 @@ export default function VentasCotizacionesClient() {
                             </div>
                         </div>
 
-                        <div className="grid gap-6 lg:grid-cols-2">
+                        <div className="grid gap-6 md:grid-cols-2">
                             <div
                                 className={`space-y-4 rounded-2xl border p-4 sm:p-5 ${
-                                    darkMode ? 'border-violet-900/40 bg-[#12101a]/35' : 'border-violet-100 bg-white/90'
+                                    darkMode ? 'border-orange-900/40 bg-[#202020]/35' : 'border-orange-100 bg-white/90'
                                 }`}
                             >
-                                <p className={`text-sm font-semibold ${darkMode ? 'text-gray-100' : 'text-violet-950'}`}>Cliente en la tienda</p>
+                                <p className={`text-sm font-semibold ${darkMode ? 'text-gray-100' : 'text-orange-950'}`}>Cliente en la tienda</p>
                                 <Label className={labelClass}>Buscar por nombre o correo (opcional)</Label>
                                 <Input
                                     value={clienteBusqueda}
@@ -1249,14 +1249,14 @@ export default function VentasCotizacionesClient() {
                                 {clienteOpciones.length > 0 && !clienteSeleccionado ? (
                                     <ul
                                         className={`max-h-44 overflow-y-auto rounded-xl border text-sm shadow-sm ${
-                                            darkMode ? 'border-violet-800/50 bg-[#16131f]/95' : 'border-violet-100 bg-white'
+                                            darkMode ? 'border-orange-800/50 bg-[#1c1c1c]/95' : 'border-orange-100 bg-white'
                                         }`}
                                     >
                                         {clienteOpciones.map((u) => (
                                             <li key={u.id}>
                                                 <button
                                                     type="button"
-                                                    className={`w-full px-3 py-2.5 text-left transition-colors hover:bg-violet-500/10 ${
+                                                    className={`w-full px-3 py-2.5 text-left transition-colors hover:bg-orange-500/10 ${
                                                         darkMode ? 'text-gray-100' : 'text-gray-900'
                                                     }`}
                                                     onClick={() => {
@@ -1266,18 +1266,18 @@ export default function VentasCotizacionesClient() {
                                                     }}
                                                 >
                                                     <span className="font-medium">{u.name}</span>
-                                                    <span className={`mt-0.5 block text-xs ${darkMode ? 'text-violet-300/65' : 'text-gray-500'}`}>{u.email}</span>
+                                                    <span className={`mt-0.5 block text-xs ${darkMode ? 'text-orange-300/65' : 'text-gray-500'}`}>{u.email}</span>
                                                 </button>
                                             </li>
                                         ))}
                                     </ul>
                                 ) : null}
                                 {clienteSeleccionado ? (
-                                    <p className={`rounded-xl px-3 py-2 text-xs ${darkMode ? 'bg-violet-950/60 text-violet-100' : 'bg-violet-50 text-violet-950'}`}>
+                                    <p className={`rounded-xl px-3 py-2 text-xs ${darkMode ? 'bg-orange-950/60 text-orange-100' : 'bg-orange-50 text-orange-950'}`}>
                                         <span className="font-medium">{clienteSeleccionado.name}</span> ({clienteSeleccionado.email})
                                         <button
                                             type="button"
-                                            className="ml-2 font-semibold underline decoration-violet-400/70 underline-offset-2"
+                                            className="ml-2 font-semibold underline decoration-orange-400/70 underline-offset-2"
                                             onClick={() => {
                                                 setClienteSeleccionado(null)
                                                 setClienteBusqueda('')
@@ -1290,10 +1290,10 @@ export default function VentasCotizacionesClient() {
                             </div>
                             <div
                                 className={`space-y-4 rounded-2xl border p-4 sm:p-5 ${
-                                    darkMode ? 'border-violet-900/40 bg-[#12101a]/35' : 'border-violet-100 bg-white/90'
+                                    darkMode ? 'border-orange-900/40 bg-[#202020]/35' : 'border-orange-100 bg-white/90'
                                 }`}
                             >
-                                <p className={`text-sm font-semibold ${darkMode ? 'text-gray-100' : 'text-violet-950'}`}>Prospecto sin cuenta</p>
+                                <p className={`text-sm font-semibold ${darkMode ? 'text-gray-100' : 'text-orange-950'}`}>Prospecto sin cuenta</p>
                                 <div>
                                     <Label className={labelClass}>Nombre</Label>
                                     <Input value={invitadoNombre} onChange={(e) => setInvitadoNombre(e.target.value)} className={inputClass} />
@@ -1310,7 +1310,7 @@ export default function VentasCotizacionesClient() {
                         </div>
 
                         <div
-                            className={`rounded-2xl border p-4 sm:p-5 ${darkMode ? 'border-violet-900/40 bg-[#12101a]/30' : 'border-violet-100 bg-violet-50/40'}`}
+                            className={`rounded-2xl border p-4 sm:p-5 ${darkMode ? 'border-orange-900/40 bg-[#202020]/30' : 'border-orange-100 bg-orange-50/40'}`}
                         >
                             <Label className={labelClass}>Comentario interno (opcional)</Label>
                             <textarea
@@ -1327,7 +1327,7 @@ export default function VentasCotizacionesClient() {
                                 type="button"
                                 onClick={handleGuardar}
                                 disabled={saving}
-                                className="inline-flex min-w-[10rem] items-center justify-center rounded-full bg-gradient-to-r from-[#5b4d7a] to-[#8b7cb8] px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-900/25 transition hover:brightness-105 disabled:opacity-45"
+                                className="inline-flex min-w-[10rem] items-center justify-center rounded-full bg-gradient-to-r from-[#FF8000] to-[#e67300] px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-orange-900/25 transition hover:brightness-105 disabled:opacity-45"
                             >
                                 {saving ? 'Guardando…' : editingId ? 'Actualizar cotización' : 'Guardar cotización'}
                             </button>
@@ -1337,8 +1337,8 @@ export default function VentasCotizacionesClient() {
                                     onClick={resetFormulario}
                                     className={`inline-flex items-center justify-center rounded-full border px-5 py-2.5 text-sm font-semibold transition-colors ${
                                         darkMode
-                                            ? 'border-violet-700/50 text-violet-100 hover:bg-violet-950/50'
-                                            : 'border-violet-200 text-violet-950 hover:bg-violet-50'
+                                            ? 'border-orange-700/50 text-orange-100 hover:bg-orange-950/50'
+                                            : 'border-orange-200 text-orange-950 hover:bg-orange-50'
                                     }`}
                                 >
                                     Cancelar edición
@@ -1354,35 +1354,35 @@ export default function VentasCotizacionesClient() {
             <div className={card}>
                 <div
                     className={`border-b px-6 py-5 sm:px-8 ${
-                        darkMode ? 'border-violet-900/40 bg-[#1e1830]/80' : 'border-violet-100 bg-violet-50/70'
+                        darkMode ? 'border-orange-900/40 bg-[#262626]/80' : 'border-orange-100 bg-orange-50/70'
                     }`}
                 >
-                    <h2 className={`text-lg font-semibold tracking-tight sm:text-xl ${darkMode ? 'text-gray-100' : 'text-violet-950'}`}>
+                    <h2 className={`text-lg font-semibold tracking-tight sm:text-xl ${darkMode ? 'text-gray-100' : 'text-orange-950'}`}>
                         Cotizaciones guardadas
                     </h2>
                 </div>
                 <div className="space-y-5 p-5 sm:p-8">
                     {loadingSaved ? (
-                        <div className={`flex items-center gap-3 py-10 text-sm ${darkMode ? 'text-violet-200/70' : 'text-violet-800/75'}`}>
-                            <span className="h-5 w-5 animate-spin rounded-full border-2 border-violet-400/30 border-t-violet-500" />
+                        <div className={`flex items-center gap-3 py-10 text-sm ${darkMode ? 'text-orange-200/70' : 'text-orange-800/75'}`}>
+                            <span className="h-5 w-5 animate-spin rounded-full border-2 border-orange-400/30 border-t-orange-500" />
                             Cargando…
                         </div>
                     ) : savedRows.length === 0 ? (
                         <p
-                            className={`rounded-2xl border px-4 py-10 text-center text-sm ${darkMode ? 'border-violet-900/40 text-violet-300/70' : 'border-violet-100 bg-violet-50/50 text-violet-900/75'}`}
+                            className={`rounded-2xl border px-4 py-10 text-center text-sm ${darkMode ? 'border-orange-900/40 text-orange-300/70' : 'border-orange-100 bg-orange-50/50 text-orange-900/75'}`}
                         >
                             Sin cotizaciones guardadas.
                         </p>
                     ) : (
                         <>
-                            <div className={`overflow-x-auto rounded-2xl border ${darkMode ? 'border-violet-900/40' : 'border-violet-100'}`}>
+                            <div className={`overflow-x-auto rounded-2xl border ${darkMode ? 'border-orange-900/40' : 'border-orange-100'}`}>
                                 <table className="w-full min-w-[800px] text-sm">
                                     <thead>
                                         <tr
                                             className={
                                                 darkMode
-                                                    ? 'border-b border-violet-900/50 bg-[#1e1830]/85 text-left text-[11px] font-semibold uppercase tracking-wide text-violet-300/75'
-                                                    : 'border-b border-violet-100 bg-violet-50/90 text-left text-[11px] font-semibold uppercase tracking-wide text-violet-900/75'
+                                                    ? 'border-b border-orange-900/50 bg-[#262626]/85 text-left text-[11px] font-semibold uppercase tracking-wide text-orange-300/75'
+                                                    : 'border-b border-orange-100 bg-orange-50/90 text-left text-[11px] font-semibold uppercase tracking-wide text-orange-900/75'
                                             }
                                         >
                                             <th className="p-3.5 pl-5">Folio</th>
@@ -1393,14 +1393,14 @@ export default function VentasCotizacionesClient() {
                                             <th className="p-3.5 pr-5 text-right">Acciones</th>
                                         </tr>
                                     </thead>
-                                    <tbody className={`divide-y ${darkMode ? 'divide-violet-900/35' : 'divide-violet-100'}`}>
+                                    <tbody className={`divide-y ${darkMode ? 'divide-orange-900/35' : 'divide-orange-100'}`}>
                                         {savedRows.map((row) => (
                                             <tr
                                                 key={row.id}
-                                                className={darkMode ? 'transition-colors hover:bg-violet-950/30' : 'transition-colors hover:bg-violet-50/70'}
+                                                className={darkMode ? 'transition-colors hover:bg-orange-950/30' : 'transition-colors hover:bg-orange-50/70'}
                                             >
                                                 <td className="p-3.5 pl-5 whitespace-nowrap">
-                                                    <span className="inline-flex rounded-full bg-violet-500/15 px-2.5 py-1 font-mono text-xs font-semibold text-violet-900 ring-1 ring-violet-200/70 dark:bg-violet-400/10 dark:text-violet-100 dark:ring-violet-400/30">
+                                                    <span className="inline-flex rounded-full bg-orange-500/15 px-2.5 py-1 font-mono text-xs font-semibold text-orange-900 ring-1 ring-orange-200/70 dark:bg-orange-400/10 dark:text-orange-100 dark:ring-orange-400/30">
                                                         {row.folio || `—`}
                                                     </span>
                                                 </td>
@@ -1410,7 +1410,7 @@ export default function VentasCotizacionesClient() {
                                                     </div>
                                                     {row.comentario ? (
                                                         <div
-                                                            className={`mt-1 line-clamp-1 text-xs ${darkMode ? 'text-violet-300/55' : 'text-gray-500'}`}
+                                                            className={`mt-1 line-clamp-1 text-xs ${darkMode ? 'text-orange-300/55' : 'text-gray-500'}`}
                                                             title={row.comentario}
                                                         >
                                                             {row.comentario}
@@ -1420,8 +1420,8 @@ export default function VentasCotizacionesClient() {
                                                 <td className="p-3.5 text-right text-base font-semibold tabular-nums text-gray-900 dark:text-gray-50">
                                                     ${Number(row.total).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                                                 </td>
-                                                <td className={`p-3.5 whitespace-nowrap text-xs ${darkMode ? 'text-violet-200/65' : 'text-gray-600'}`}>{fmtFecha(row.created_at)}</td>
-                                                <td className={`p-3.5 whitespace-nowrap text-xs ${darkMode ? 'text-violet-200/65' : 'text-gray-600'}`}>{fmtFecha(row.updated_at)}</td>
+                                                <td className={`p-3.5 whitespace-nowrap text-xs ${darkMode ? 'text-orange-200/65' : 'text-gray-600'}`}>{fmtFecha(row.created_at)}</td>
+                                                <td className={`p-3.5 whitespace-nowrap text-xs ${darkMode ? 'text-orange-200/65' : 'text-gray-600'}`}>{fmtFecha(row.updated_at)}</td>
                                                 <td className="p-3.5 pr-5 text-right">
                                                     <div className="inline-flex flex-wrap justify-end gap-2">
                                                         <button
@@ -1429,8 +1429,8 @@ export default function VentasCotizacionesClient() {
                                                             onClick={() => handlePdf(row)}
                                                             className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
                                                                 darkMode
-                                                                    ? 'border-violet-600/50 bg-violet-950/50 text-violet-100 hover:bg-violet-900/50'
-                                                                    : 'border-violet-200 bg-violet-50 text-violet-900 hover:bg-violet-100'
+                                                                    ? 'border-orange-600/50 bg-orange-950/50 text-orange-100 hover:bg-orange-900/50'
+                                                                    : 'border-orange-200 bg-orange-50 text-orange-900 hover:bg-orange-100'
                                                             }`}
                                                         >
                                                             PDF
@@ -1440,8 +1440,8 @@ export default function VentasCotizacionesClient() {
                                                             onClick={() => cargarParaEditar(row)}
                                                             className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
                                                                 darkMode
-                                                                    ? 'border-violet-500/40 bg-violet-600/20 text-violet-100 hover:bg-violet-600/35'
-                                                                    : 'border-violet-200 bg-white text-violet-900 hover:bg-violet-50'
+                                                                    ? 'border-orange-500/40 bg-orange-600/20 text-orange-100 hover:bg-orange-600/35'
+                                                                    : 'border-orange-200 bg-white text-orange-900 hover:bg-orange-50'
                                                             }`}
                                                         >
                                                             Editar

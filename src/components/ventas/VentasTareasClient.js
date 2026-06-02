@@ -20,18 +20,18 @@ import VentasCorreosHistorialPaginacion from '@/components/ventas/VentasCorreosH
 import { useAdminTheme } from '@/contexts/AdminThemeContext'
 
 const card =
-    'rounded-2xl border border-violet-100 bg-white shadow-sm dark:border-violet-900/40 dark:bg-[#1a1628]/80 overflow-hidden'
+    'rounded-2xl border border-orange-100 bg-white shadow-sm dark:border-orange-900/40 dark:bg-[#262626]/80 overflow-hidden'
 const inputCls =
-    'w-full rounded-xl border border-violet-100 bg-violet-50/50 px-3 py-2 text-sm dark:border-violet-800 dark:bg-[#12101a] dark:text-violet-100'
+    'w-full rounded-xl border border-orange-100 bg-orange-50/50 px-3 py-2 text-sm dark:border-orange-800 dark:bg-[#202020] dark:text-orange-100'
 const ghostBtn =
-    'rounded-xl border border-violet-200 px-3 py-1.5 text-xs font-medium text-violet-900 transition hover:bg-violet-50 dark:border-violet-700 dark:text-violet-100 dark:hover:bg-white/5 disabled:opacity-50'
-const purpleBtn =
+    'rounded-xl border border-orange-200 px-3 py-1.5 text-xs font-medium text-orange-900 transition hover:bg-orange-50 dark:border-orange-700 dark:text-orange-100 dark:hover:bg-white/5 disabled:opacity-50'
+const brandBtn =
     'rounded-xl px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:opacity-95 disabled:opacity-50'
-const purpleStyle = { background: 'linear-gradient(90deg, #5b4d7a, #8b7cb8)' }
+const brandStyle = { background: 'linear-gradient(90deg, #FF8000, #e67300)' }
 
 const FILTROS = [
     { id: 'hoy', label: 'Hoy', border: 'border-sky-200' },
-    { id: 'semana', label: 'Esta semana', border: 'border-violet-200' },
+    { id: 'semana', label: 'Esta semana', border: 'border-orange-200' },
     { id: '48h', label: 'Próximas 48 h', border: 'border-amber-200' },
     { id: 'vencidas', label: 'Vencidas', border: 'border-rose-200' },
     { id: 'todas', label: 'Todas', border: 'border-slate-200' },
@@ -159,8 +159,8 @@ export default function VentasTareasClient() {
         <div className="space-y-6">
             <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                    <h1 className="text-2xl font-bold text-violet-950 dark:text-white">Pendientes</h1>
-                    <p className="text-sm text-violet-800/70 dark:text-violet-200/60 mt-1">
+                    <h1 className="text-2xl font-bold text-orange-950 dark:text-white">Pendientes</h1>
+                    <p className="text-sm text-orange-800/70 dark:text-orange-200/60 mt-1">
                         Lista operativa de tus recordatorios (mismos datos que el calendario).
                     </p>
                 </div>
@@ -181,17 +181,17 @@ export default function VentasTareasClient() {
                 </div>
             )}
 
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
                 {FILTROS.map(({ id, label, border }) => (
                     <button
                         key={id}
                         type="button"
                         onClick={() => setFiltro(id)}
                         className={`${card} border-t-4 ${border} p-4 text-left transition ${
-                            filtro === id ? 'ring-2 ring-violet-400/50' : 'hover:bg-violet-50/40 dark:hover:bg-white/[0.02]'
+                            filtro === id ? 'ring-2 ring-orange-400/50' : 'hover:bg-orange-50/40 dark:hover:bg-white/[0.02]'
                         }`}
                     >
-                        <p className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-violet-300/60">
+                        <p className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-orange-300/60">
                             {label}
                         </p>
                         <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-white">
@@ -202,27 +202,27 @@ export default function VentasTareasClient() {
             </div>
 
             <div className={card}>
-                <div className="border-b border-violet-100 px-5 py-4 dark:border-violet-900/40 flex flex-wrap gap-2 justify-between items-center">
+                <div className="border-b border-orange-100 px-5 py-4 dark:border-orange-900/40 flex flex-wrap gap-2 justify-between items-center">
                     <h2 className="font-semibold text-gray-900 dark:text-white">
                         {FILTROS.find((f) => f.id === filtro)?.label ?? 'Tareas'}
                     </h2>
                     <button
                         type="button"
                         onClick={() => setFormOpen((o) => !o)}
-                        className={purpleBtn}
-                        style={purpleStyle}
+                        className={brandBtn}
+                        style={brandStyle}
                     >
                         {formOpen ? 'Cancelar' : '+ Nueva tarea'}
                     </button>
                 </div>
 
                 {formOpen && (
-                    <div className="border-b border-violet-100 px-5 py-4 dark:border-violet-900/40 bg-violet-50/30 dark:bg-violet-950/20 space-y-3">
-                        <p className="text-xs font-semibold uppercase text-violet-700/80 dark:text-violet-300/70">
+                    <div className="border-b border-orange-100 px-5 py-4 dark:border-orange-900/40 bg-orange-50/30 dark:bg-orange-950/20 space-y-3">
+                        <p className="text-xs font-semibold uppercase text-orange-700/80 dark:text-orange-300/70">
                             Nueva tarea
                         </p>
                         <div className="grid gap-3 sm:grid-cols-3">
-                            <label className="block text-xs text-violet-800/80 dark:text-violet-200/70">
+                            <label className="block text-xs text-orange-800/80 dark:text-orange-200/70">
                                 Fecha
                                 <input
                                     type="date"
@@ -231,7 +231,7 @@ export default function VentasTareasClient() {
                                     className={`${inputCls} mt-1`}
                                 />
                             </label>
-                            <label className="block text-xs text-violet-800/80 dark:text-violet-200/70">
+                            <label className="block text-xs text-orange-800/80 dark:text-orange-200/70">
                                 Hora (opcional)
                                 <input
                                     type="time"
@@ -240,7 +240,7 @@ export default function VentasTareasClient() {
                                     className={`${inputCls} mt-1`}
                                 />
                             </label>
-                            <label className="block text-xs text-violet-800/80 dark:text-violet-200/70 sm:col-span-1">
+                            <label className="block text-xs text-orange-800/80 dark:text-orange-200/70 sm:col-span-1">
                                 Descripción
                                 <input
                                     type="text"
@@ -257,8 +257,8 @@ export default function VentasTareasClient() {
                             type="button"
                             onClick={() => void agregar()}
                             disabled={saving || !draftText.trim()}
-                            className={purpleBtn}
-                            style={purpleStyle}
+                            className={brandBtn}
+                            style={brandStyle}
                         >
                             {saving ? 'Guardando…' : 'Guardar tarea'}
                         </button>
@@ -268,22 +268,22 @@ export default function VentasTareasClient() {
                 <div className="overflow-x-auto">
                     <table className="w-full min-w-[640px] text-sm">
                         <thead>
-                            <tr className="bg-violet-50/80 text-left text-xs font-semibold text-violet-900 dark:bg-violet-950/40 dark:text-violet-200">
+                            <tr className="bg-orange-50/80 text-left text-xs font-semibold text-orange-900 dark:bg-orange-950/40 dark:text-orange-200">
                                 <th className="px-4 py-3">Tarea</th>
                                 <th className="px-4 py-3">Vence</th>
                                 <th className="px-4 py-3 text-right">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-violet-50 dark:divide-violet-900/30">
+                        <tbody className="divide-y divide-orange-50 dark:divide-orange-900/30">
                             {loading ? (
                                 <tr>
-                                    <td colSpan={3} className="px-4 py-8 text-center text-violet-600/70 dark:text-violet-300/60">
+                                    <td colSpan={3} className="px-4 py-8 text-center text-orange-600/70 dark:text-orange-300/60">
                                         Cargando pendientes…
                                     </td>
                                 </tr>
                             ) : filas.length === 0 ? (
                                 <tr>
-                                    <td colSpan={3} className="px-4 py-8 text-center text-gray-500 dark:text-violet-300/50">
+                                    <td colSpan={3} className="px-4 py-8 text-center text-gray-500 dark:text-orange-300/50">
                                         No hay tareas en este filtro.
                                     </td>
                                 </tr>
@@ -291,7 +291,7 @@ export default function VentasTareasClient() {
                                 filas.map((t) => {
                                     const vencida = t.dateISO < toISODate(now)
                                     return (
-                                        <tr key={t.id} className="hover:bg-violet-50/40 dark:hover:bg-white/[0.02]">
+                                        <tr key={t.id} className="hover:bg-orange-50/40 dark:hover:bg-white/[0.02]">
                                             <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100 max-w-md">
                                                 {t.text}
                                             </td>
@@ -300,7 +300,7 @@ export default function VentasTareasClient() {
                                                     className={
                                                         vencida
                                                             ? 'text-rose-600 dark:text-rose-400 font-medium'
-                                                            : 'text-gray-600 dark:text-violet-300/70'
+                                                            : 'text-gray-600 dark:text-orange-300/70'
                                                     }
                                                 >
                                                     {formatTareaVence(t, now)}
@@ -325,7 +325,7 @@ export default function VentasTareasClient() {
                 </div>
 
                 {!loading && filtradas.length > PER_PAGE && (
-                    <div className="border-t border-violet-100 px-4 py-4 dark:border-violet-900/40">
+                    <div className="border-t border-orange-100 px-4 py-4 dark:border-orange-900/40">
                         <VentasCorreosHistorialPaginacion
                             darkMode={darkMode}
                             currentPage={paginaActual}

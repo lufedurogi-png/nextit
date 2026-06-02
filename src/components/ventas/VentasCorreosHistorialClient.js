@@ -13,9 +13,9 @@ import {
 
 const PER_PAGE = 6
 
-const card = 'rounded-2xl border border-violet-100 bg-white p-4 sm:p-5 shadow-sm dark:border-violet-900/40 dark:bg-[#1a1628]/80'
+const card = 'rounded-2xl border border-orange-100 bg-white p-4 sm:p-5 shadow-sm dark:border-orange-900/40 dark:bg-[#262626]/80'
 const ghostBtn =
-    'rounded-xl border border-violet-200 px-3 py-2 text-sm font-medium text-violet-900 transition hover:bg-violet-50 dark:border-violet-800/60 dark:text-violet-100 dark:hover:bg-white/5 disabled:opacity-50'
+    'rounded-xl border border-orange-200 px-3 py-2 text-sm font-medium text-orange-900 transition hover:bg-orange-50 dark:border-orange-800/60 dark:text-orange-100 dark:hover:bg-white/5 disabled:opacity-50'
 const dangerBtn =
     'rounded-xl border border-red-200 px-3 py-2 text-sm font-medium text-red-700 transition hover:bg-red-50 dark:border-red-900/50 dark:text-red-300 dark:hover:bg-red-950/30 disabled:opacity-50'
 
@@ -47,24 +47,24 @@ function VistaCorreoEnviado({ detalle, darkMode }) {
     return (
         <div
             className={`overflow-hidden rounded-xl border shadow-inner ${
-                darkMode ? 'border-violet-800/60 bg-[#0f0d14]' : 'border-violet-200 bg-white'
+                darkMode ? 'border-orange-800/60 bg-[#0f0d14]' : 'border-orange-200 bg-white'
             }`}
         >
             <div
                 className={`border-b px-4 py-3 ${
-                    darkMode ? 'border-violet-900/50 bg-[#1a1628]' : 'border-violet-100 bg-violet-50/80'
+                    darkMode ? 'border-orange-900/50 bg-[#262626]' : 'border-orange-100 bg-orange-50/80'
                 }`}
             >
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-violet-500 dark:text-violet-400">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-orange-500 dark:text-orange-400">
                     Vista del correo enviado
                 </p>
-                <p className="mt-1 text-sm font-semibold text-violet-950 dark:text-white">{detalle.asunto}</p>
+                <p className="mt-1 text-sm font-semibold text-orange-950 dark:text-white">{detalle.asunto}</p>
             </div>
 
-            <div className={`px-4 py-5 sm:px-6 ${darkMode ? 'text-violet-100' : 'text-gray-800'}`}>
+            <div className={`px-4 py-5 sm:px-6 ${darkMode ? 'text-orange-100' : 'text-gray-800'}`}>
                 <div
                     className={`correo-cuerpo-vista text-sm leading-relaxed break-words [&_b]:font-bold [&_strong]:font-bold [&_i]:italic [&_em]:italic [&_u]:underline [&_img]:mx-auto [&_p]:mb-2 ${
-                        darkMode ? '[&_a]:text-violet-300' : '[&_a]:text-violet-700'
+                        darkMode ? '[&_a]:text-orange-300' : '[&_a]:text-orange-700'
                     }`}
                     dangerouslySetInnerHTML={{ __html: html }}
                 />
@@ -73,10 +73,10 @@ function VistaCorreoEnviado({ detalle, darkMode }) {
             {(detalle.adjuntos?.length || 0) > 0 && (
                 <div
                     className={`border-t px-4 py-3 ${
-                        darkMode ? 'border-violet-900/50 bg-[#12101a]/80' : 'border-violet-100 bg-gray-50'
+                        darkMode ? 'border-orange-900/50 bg-[#202020]/80' : 'border-orange-100 bg-gray-50'
                     }`}
                 >
-                    <p className="text-[10px] font-semibold uppercase tracking-wide text-violet-600 dark:text-violet-400 mb-2">
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-orange-600 dark:text-orange-400 mb-2">
                         Archivos adjuntos al correo
                     </p>
                     <ul className="flex flex-wrap gap-2">
@@ -84,14 +84,14 @@ function VistaCorreoEnviado({ detalle, darkMode }) {
                             <li
                                 key={a.id}
                                 className={`inline-flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-xs ${
-                                    darkMode ? 'border-violet-800/60 bg-[#1a1628]' : 'border-violet-200 bg-white'
+                                    darkMode ? 'border-orange-800/60 bg-[#262626]' : 'border-orange-200 bg-white'
                                 }`}
                             >
-                                <span className="text-violet-500" aria-hidden>
+                                <span className="text-orange-500" aria-hidden>
                                     📎
                                 </span>
                                 <span className="font-medium truncate max-w-[12rem] sm:max-w-md xl:max-w-none">{a.nombre}</span>
-                                <span className="text-violet-500/70">{formatBytes(a.tamano_bytes)}</span>
+                                <span className="text-orange-500/70">{formatBytes(a.tamano_bytes)}</span>
                             </li>
                         ))}
                     </ul>
@@ -124,8 +124,8 @@ export default function VentasCorreosHistorialClient() {
 
     const inputCls = `w-full rounded-xl border px-3 py-2 text-sm transition-colors ${
         darkMode
-            ? 'border-violet-800/60 bg-[#12101a] text-violet-50 placeholder:text-violet-400/40'
-            : 'border-violet-100 bg-white text-gray-900 placeholder:text-gray-400'
+            ? 'border-orange-800/60 bg-[#202020] text-orange-50 placeholder:text-orange-400/40'
+            : 'border-orange-100 bg-white text-gray-900 placeholder:text-gray-400'
     }`
     useEffect(() => {
         const t = setTimeout(() => setBusquedaAplicada(busqueda.trim()), 400)
@@ -228,8 +228,8 @@ export default function VentasCorreosHistorialClient() {
         <div className="w-full space-y-6">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-violet-950 dark:text-white">Historial de correos</h1>
-                    <p className="text-sm text-violet-800/70 dark:text-violet-200/60 mt-1">
+                    <h1 className="text-2xl font-bold text-orange-950 dark:text-white">Historial de correos</h1>
+                    <p className="text-sm text-orange-800/70 dark:text-orange-200/60 mt-1">
                         Revisa cómo se envió cada mensaje, con imágenes y adjuntos.
                     </p>
                 </div>
@@ -252,9 +252,9 @@ export default function VentasCorreosHistorialClient() {
             )}
 
             <section className={`${card} space-y-4`}>
-                <div className="grid gap-3 lg:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,9rem))_auto] lg:items-end">
-                    <div className="min-w-0 sm:col-span-2 lg:col-span-1">
-                        <label htmlFor="historial-buscar" className="block text-xs font-medium text-violet-800/80 dark:text-violet-300/70 mb-1">
+                <div className="grid gap-3 md:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,9rem))_auto] md:items-end">
+                    <div className="min-w-0 sm:col-span-2 md:col-span-1">
+                        <label htmlFor="historial-buscar" className="block text-xs font-medium text-orange-800/80 dark:text-orange-300/70 mb-1">
                             Buscar
                         </label>
                         <input
@@ -286,7 +286,7 @@ export default function VentasCorreosHistorialClient() {
                         onDiaChange={setFiltroDia}
                     />
 
-                    <div className="flex items-end sm:col-span-2 lg:col-span-1">
+                    <div className="flex items-end sm:col-span-2 md:col-span-1">
                         <button
                             type="button"
                             className={`${ghostBtn} w-full`}
@@ -310,26 +310,26 @@ export default function VentasCorreosHistorialClient() {
 
             <section className={card}>
                 {!loading && meta.total > 0 && (
-                    <p className="text-xs text-violet-700/80 dark:text-violet-300/60 mb-4">{rangoTexto}</p>
+                    <p className="text-xs text-orange-700/80 dark:text-orange-300/60 mb-4">{rangoTexto}</p>
                 )}
 
                 {loading ? (
-                    <p className="text-sm text-center py-10 text-violet-600/80 dark:text-violet-300/70">Cargando historial…</p>
+                    <p className="text-sm text-center py-10 text-orange-600/80 dark:text-orange-300/70">Cargando historial…</p>
                 ) : envios.length === 0 ? (
                     <div className="py-12 text-center">
-                        <p className="text-sm text-violet-700/80 dark:text-violet-300/70">
+                        <p className="text-sm text-orange-700/80 dark:text-orange-300/70">
                             {hayFiltros || busquedaAplicada
                                 ? 'No hay envíos que coincidan con los filtros.'
                                 : 'Aún no has enviado correos desde ventas.'}
                         </p>
                         {hayFiltros ? (
-                            <button type="button" className="inline-block mt-4 text-sm font-semibold text-violet-700 hover:underline dark:text-violet-300" onClick={limpiarFiltros}>
+                            <button type="button" className="inline-block mt-4 text-sm font-semibold text-orange-700 hover:underline dark:text-orange-300" onClick={limpiarFiltros}>
                                 Quitar filtros
                             </button>
                         ) : (
                             <Link
                                 href="/ventas-correos"
-                                className="inline-block mt-4 text-sm font-semibold text-violet-700 hover:underline dark:text-violet-300"
+                                className="inline-block mt-4 text-sm font-semibold text-orange-700 hover:underline dark:text-orange-300"
                             >
                                 Ir a redactar correo
                             </Link>
@@ -348,30 +348,30 @@ export default function VentasCorreosHistorialClient() {
                                         confirmando
                                             ? 'border-red-300 bg-red-50/30 dark:border-red-900/50 dark:bg-red-950/15'
                                             : abierto
-                                              ? 'border-violet-300 bg-violet-50/50 dark:border-violet-700 dark:bg-violet-950/20'
-                                              : 'border-violet-100 dark:border-violet-900/50 hover:border-violet-200 dark:hover:border-violet-800'
+                                              ? 'border-orange-300 bg-orange-50/50 dark:border-orange-700 dark:bg-orange-950/20'
+                                              : 'border-orange-100 dark:border-orange-900/50 hover:border-orange-200 dark:hover:border-orange-800'
                                     }`}
                                 >
-                                    <div className="flex w-full flex-col gap-2 lg:flex-row lg:items-stretch">
+                                    <div className="flex w-full flex-col gap-2 md:flex-row md:items-stretch">
                                         <button
                                             type="button"
-                                            className="flex flex-1 flex-col gap-3 p-4 text-left lg:flex-row lg:items-center lg:gap-6 min-w-0"
+                                            className="flex flex-1 flex-col gap-3 p-4 text-left md:flex-row md:items-center md:gap-6 min-w-0"
                                             onClick={() => abrirDetalle(envio.id)}
                                             aria-expanded={abierto}
                                             disabled={confirmando}
                                         >
                                             <div className="flex-1 min-w-0">
-                                                <p className="font-semibold text-violet-950 dark:text-white truncate">{envio.asunto}</p>
-                                                <p className="text-xs text-violet-700/70 dark:text-violet-300/60 mt-0.5">
+                                                <p className="font-semibold text-orange-950 dark:text-white truncate">{envio.asunto}</p>
+                                                <p className="text-xs text-orange-700/70 dark:text-orange-300/60 mt-0.5">
                                                     {formatFechaHora(envio.fecha)}
                                                 </p>
                                                 {envio.cuerpo_preview && (
-                                                    <p className="text-sm text-gray-600 dark:text-violet-200/60 mt-2 line-clamp-2 lg:line-clamp-1 xl:line-clamp-none xl:max-w-4xl">
+                                                    <p className="text-sm text-gray-600 dark:text-orange-200/60 mt-2 line-clamp-2 md:line-clamp-1 xl:line-clamp-none xl:max-w-4xl">
                                                         {envio.cuerpo_preview}
                                                     </p>
                                                 )}
                                             </div>
-                                            <div className="flex flex-wrap items-center gap-2 shrink-0 lg:justify-end">
+                                            <div className="flex flex-wrap items-center gap-2 shrink-0 md:justify-end">
                                                 <span
                                                     className={`rounded-lg px-2 py-1 text-xs font-medium ${
                                                         ok
@@ -387,17 +387,17 @@ export default function VentasCorreosHistorialClient() {
                                                     </span>
                                                 )}
                                                 {(envio.imagenes_inline?.length || 0) > 0 && (
-                                                    <span className="rounded-lg px-2 py-1 text-xs font-medium bg-indigo-100 text-indigo-900 dark:bg-indigo-950/50 dark:text-indigo-200">
+                                                    <span className="rounded-lg px-2 py-1 text-xs font-medium bg-orange-100 text-orange-900 dark:bg-orange-950/50 dark:text-orange-200">
                                                         {envio.imagenes_inline.length} img
                                                     </span>
                                                 )}
                                                 {(envio.adjuntos?.length || 0) > 0 && (
-                                                    <span className="rounded-lg px-2 py-1 text-xs font-medium bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-200">
+                                                    <span className="rounded-lg px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-200">
                                                         {envio.adjuntos.length} adjunto(s)
                                                     </span>
                                                 )}
                                                 <span
-                                                    className={`text-violet-500 transition-transform ${abierto ? 'rotate-180' : ''}`}
+                                                    className={`text-orange-500 transition-transform ${abierto ? 'rotate-180' : ''}`}
                                                     aria-hidden
                                                 >
                                                     ▼
@@ -405,7 +405,7 @@ export default function VentasCorreosHistorialClient() {
                                             </div>
                                         </button>
                                         {!confirmando && (
-                                            <div className="flex items-center justify-end px-4 pb-4 lg:px-0 lg:pb-0 lg:pr-4 lg:items-center">
+                                            <div className="flex items-center justify-end px-4 pb-4 md:px-0 md:pb-0 md:pr-4 md:items-center">
                                                 <button
                                                     type="button"
                                                     className={`${dangerBtn} text-xs`}
@@ -455,15 +455,15 @@ export default function VentasCorreosHistorialClient() {
                                     )}
 
                                     {abierto && !confirmando && (
-                                        <div className="border-t border-violet-100 dark:border-violet-900/50 px-4 pb-5 pt-4">
+                                        <div className="border-t border-orange-100 dark:border-orange-900/50 px-4 pb-5 pt-4">
                                             {detalleLoading ? (
-                                                <p className="text-sm text-violet-600/80 dark:text-violet-300/70">Cargando detalle…</p>
+                                                <p className="text-sm text-orange-600/80 dark:text-orange-300/70">Cargando detalle…</p>
                                             ) : detalle ? (
-                                                <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(280px,22rem)] 2xl:grid-cols-[minmax(0,1fr)_24rem]">
+                                                <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_minmax(280px,22rem)] 2xl:grid-cols-[minmax(0,1fr)_24rem]">
                                                     <VistaCorreoEnviado detalle={detalle} darkMode={darkMode} />
 
-                                                    <div className="xl:sticky xl:top-4 xl:self-start xl:max-h-[calc(100vh-7rem)] xl:overflow-y-auto">
-                                                        <h3 className="text-xs font-semibold uppercase tracking-wide text-violet-700/80 dark:text-violet-300/70 mb-2">
+                                                    <div className="md:sticky md:top-4 md:self-start md:max-h-[calc(100vh-7rem)] md:overflow-y-auto">
+                                                        <h3 className="text-xs font-semibold uppercase tracking-wide text-orange-700/80 dark:text-orange-300/70 mb-2">
                                                             Destinatarios ({detalle.destinatarios?.length || 0})
                                                         </h3>
                                                         <ul className="space-y-1.5">
@@ -477,7 +477,7 @@ export default function VentasCorreosHistorialClient() {
                                                                     }`}
                                                                 >
                                                                     <div className="flex flex-wrap items-start justify-between gap-2">
-                                                                        <span className="font-medium text-violet-900 dark:text-violet-100 break-all">
+                                                                        <span className="font-medium text-orange-900 dark:text-orange-100 break-all">
                                                                             {d.nombre ? `${d.nombre} · ` : ''}
                                                                             {d.email}
                                                                         </span>

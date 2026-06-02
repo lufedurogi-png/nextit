@@ -31,7 +31,7 @@ export function VentasFichaProductoImagen({ urls, darkMode, rowKey }) {
         return (
             <span
                 className={`inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border text-[9px] font-medium uppercase leading-tight text-center ${
-                    darkMode ? 'border-violet-800/60 bg-[#1e1830] text-violet-400/80' : 'border-violet-100 bg-violet-50 text-violet-400'
+                    darkMode ? 'border-orange-800/60 bg-[#262626] text-orange-400/80' : 'border-orange-100 bg-orange-50 text-orange-400'
                 }`}
             >
                 Sin img
@@ -41,7 +41,7 @@ export function VentasFichaProductoImagen({ urls, darkMode, rowKey }) {
     return (
         <div
             className={`h-14 w-14 shrink-0 overflow-hidden rounded-xl border ${
-                darkMode ? 'border-violet-800/50 bg-[#12101a]' : 'border-violet-100 bg-white'
+                darkMode ? 'border-orange-800/50 bg-[#202020]' : 'border-orange-100 bg-white'
             }`}
         >
             <img src={list[0]} alt="" className="h-full w-full object-cover" loading="lazy" />
@@ -52,7 +52,7 @@ export function VentasFichaProductoImagen({ urls, darkMode, rowKey }) {
 export function VentasFichaProductoNombre({ clave, nombre, darkMode }) {
     const href = hrefProductoTienda(clave)
     const className = `line-clamp-2 text-xs font-medium underline-offset-2 hover:underline ${
-        darkMode ? 'text-violet-200 hover:text-violet-100' : 'text-violet-900 hover:text-violet-800'
+        darkMode ? 'text-orange-200 hover:text-orange-100' : 'text-orange-900 hover:text-orange-800'
     }`
     if (!href) {
         return (
@@ -70,15 +70,15 @@ export function VentasFichaProductoNombre({ clave, nombre, darkMode }) {
 
 export function VentasFichaProductosTabla({ items, darkMode }) {
     if (!items?.length) {
-        return <p className={`text-xs ${darkMode ? 'text-violet-300/60' : 'text-gray-500'}`}>Sin productos.</p>
+        return <p className={`text-xs ${darkMode ? 'text-orange-300/60' : 'text-gray-500'}`}>Sin productos.</p>
     }
     return (
-        <div className="overflow-x-auto rounded-xl border border-violet-100 dark:border-violet-800/50">
+        <div className="overflow-x-auto rounded-xl border border-orange-100 dark:border-orange-800/50">
             <table className="w-full min-w-[520px] text-xs">
                 <thead>
                     <tr
                         className={`text-left text-[10px] font-semibold uppercase tracking-wide ${
-                            darkMode ? 'bg-violet-950/50 text-violet-200' : 'bg-violet-50 text-violet-900'
+                            darkMode ? 'bg-orange-950/50 text-orange-200' : 'bg-orange-50 text-orange-900'
                         }`}
                     >
                         <th className="px-2 py-2 w-16">Imagen</th>
@@ -89,7 +89,7 @@ export function VentasFichaProductosTabla({ items, darkMode }) {
                         <th className="px-2 py-2 w-24 text-right">Precio</th>
                     </tr>
                 </thead>
-                <tbody className={`divide-y ${darkMode ? 'divide-violet-900/40' : 'divide-violet-50'}`}>
+                <tbody className={`divide-y ${darkMode ? 'divide-orange-900/40' : 'divide-orange-50'}`}>
                     {items.map((it, idx) => {
                         const urls = getProductoImagenesUrls(it)
                         const clave = it.clave ?? '—'
@@ -99,11 +99,11 @@ export function VentasFichaProductosTabla({ items, darkMode }) {
                                 ? it.precio_unitario.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })
                                 : '—'
                         return (
-                            <tr key={`${clave}-${idx}`} className={darkMode ? 'text-violet-100/90' : 'text-gray-800'}>
+                            <tr key={`${clave}-${idx}`} className={darkMode ? 'text-orange-100/90' : 'text-gray-800'}>
                                 <td className="px-2 py-2 align-top">
                                     <VentasFichaProductoImagen urls={urls} darkMode={darkMode} rowKey={clave} />
                                 </td>
-                                <td className="px-2 py-2 align-top font-mono text-violet-700 dark:text-violet-300">{clave}</td>
+                                <td className="px-2 py-2 align-top font-mono text-orange-700 dark:text-orange-300">{clave}</td>
                                 <td className="px-2 py-2 align-top">
                                     <VentasFichaProductoNombre clave={it.clave} nombre={nombre} darkMode={darkMode} />
                                 </td>
