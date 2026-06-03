@@ -78,6 +78,7 @@ class ClienteVendedorChatController extends Controller
     {
         $arr = [
             'id' => $m->id,
+            'channel' => 'ventas',
             'sender_type' => $m->sender_type,
             'body' => $m->body,
             'created_at' => $m->created_at->toIso8601String(),

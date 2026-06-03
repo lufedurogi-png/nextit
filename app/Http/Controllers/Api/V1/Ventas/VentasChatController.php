@@ -271,6 +271,7 @@ class VentasChatController extends Controller
     {
         $arr = [
             'id' => $m->id,
+            'channel' => 'ventas',
             'user_id' => $m->user_id,
             'sender_type' => $m->sender_type,
             'body' => $m->body,

@@ -181,6 +181,7 @@ class AdminChatController extends Controller
         $senderType = $m->sender_type === 'seller' ? 'admin' : $m->sender_type;
         $arr = [
             'id' => $m->id,
+            'channel' => 'admin',
             'user_id' => $m->user_id,
             'sender_type' => $senderType,
             'body' => $m->body,

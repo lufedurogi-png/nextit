@@ -106,6 +106,7 @@ class ClienteChatController extends Controller
 
         $arr = [
             'id' => $m->id,
+            'channel' => 'admin',
             'sender_type' => $senderType,
             'body' => $m->body,
             'created_at' => $m->created_at->toIso8601String(),
