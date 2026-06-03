@@ -2847,7 +2847,7 @@ function DashboardInner() {
                                 <p className={`text-sm mb-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                                     Escribe aquí y un administrador te responderá. Tus mensajes aparecen en naranja; las respuestas de administración en verde.
                                 </p>
-                                <ChatVentasCliente darkMode={darkMode} channel="admin" />
+                                <ChatVentasCliente key="chat-admin" darkMode={darkMode} channel="admin" />
                             </div>
                         )}
 
@@ -2868,7 +2868,7 @@ function DashboardInner() {
                                 <p className={`text-sm mb-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                                     Escribe aquí y un vendedor te responderá. Tus mensajes aparecen en naranja; las respuestas del equipo de ventas en morado.
                                 </p>
-                                <ChatVentasCliente darkMode={darkMode} channel="ventas" />
+                                <ChatVentasCliente key="chat-ventas" darkMode={darkMode} channel="ventas" />
                             </div>
                         )}
 

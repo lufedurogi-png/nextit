@@ -31,15 +31,27 @@ export function formatHistorialFecha(isoString) {
     return d.toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short' })
 }
 
+const CHAT_CHANNELS = new Set(['admin', 'ventas'])
+
+export function normalizeChatChannel(channel) {
+    const value = String(channel || 'admin').trim().toLowerCase()
+    return CHAT_CHANNELS.has(value) ? value : 'admin'
+}
+
 export async function getChatMensajesCliente(channel = 'admin', afterId = 0) {
-    const params = { channel }
+    const normalized = normalizeChatChannel(channel)
+    const params = { channel: normalized }
     if (afterId > 0) params.after_id = afterId
     const { data } = await axios.get('/chat-mensajes', { params })
-    return data?.success && data?.data ? data.data : []
+    const list = data?.success && data?.data ? data.data : []
+    return Array.isArray(list)
+        ? list.filter((m) => !m?.channel || normalizeChatChannel(m.channel) === normalized)
+        : []
 }
 
 export async function enviarMensajeCliente(body, channel = 'admin') {
-    const { data } = await axios.post('/chat-mensajes', { body, channel })
+    const normalized = normalizeChatChannel(channel)
+    const { data } = await axios.post('/chat-mensajes', { body, channel: normalized })
     if (!data?.success) return null
     const msg = data.data ?? data
     return msg && typeof msg === 'object' && 'id' in msg ? msg : null

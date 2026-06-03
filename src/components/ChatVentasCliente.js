@@ -23,6 +23,7 @@ const COLOR_VENDEDOR = '#FF8000'
 const POLL_MS = 8000
 
 export default function ChatVentasCliente({ darkMode, channel = 'admin' }) {
+    const chatChannel = channel === 'ventas' ? 'ventas' : 'admin'
     const [mensajes, setMensajes] = useState([])
     const [loading, setLoading] = useState(true)
     const [nuevoTexto, setNuevoTexto] = useState('')
@@ -35,10 +36,12 @@ export default function ChatVentasCliente({ darkMode, channel = 'admin' }) {
     const scrollRef = useRef(null)
     const mensajesRef = useRef([])
     const pollingRef = useRef(false)
+    const channelRef = useRef(chatChannel)
 
     mensajesRef.current = mensajes
+    channelRef.current = chatChannel
 
-    const { scrollToBottom } = useChatAutoScroll(scrollRef, mensajes, { forceKey: channel })
+    const { scrollToBottom } = useChatAutoScroll(scrollRef, mensajes, { forceKey: chatChannel })
 
     const cargarMensajes = useCallback(
         async (silent = false) => {
@@ -52,7 +55,7 @@ export default function ChatVentasCliente({ darkMode, channel = 'admin' }) {
 
             try {
                 const afterId = silent ? maxChatMessageId(mensajesRef.current) : 0
-                const lista = await getChatMensajesCliente(channel, afterId)
+                const lista = await getChatMensajesCliente(channelRef.current, afterId)
                 const list = Array.isArray(lista) ? lista : []
 
                 setMensajes((prev) => {
@@ -68,13 +71,13 @@ export default function ChatVentasCliente({ darkMode, channel = 'admin' }) {
                 if (silent) pollingRef.current = false
             }
         },
-        [channel]
+        [chatChannel]
     )
 
     useEffect(() => {
         setMensajes([])
         cargarMensajes(false)
-    }, [channel, cargarMensajes])
+    }, [chatChannel, cargarMensajes])
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -83,7 +86,7 @@ export default function ChatVentasCliente({ darkMode, channel = 'admin' }) {
             cargarMensajes(true)
         }, POLL_MS)
         return () => clearInterval(interval)
-    }, [channel, cargarMensajes, editandoId])
+    }, [chatChannel, cargarMensajes, editandoId])
 
     const handleEnviar = async () => {
         const texto = (nuevoTexto || '').trim()
@@ -92,6 +95,7 @@ export default function ChatVentasCliente({ darkMode, channel = 'admin' }) {
         const tempId = 'temp-' + Date.now()
         const tempMsg = {
             id: tempId,
+            channel: channelRef.current,
             sender_type: 'customer',
             body: texto,
             created_at: new Date().toISOString(),
@@ -103,9 +107,16 @@ export default function ChatVentasCliente({ darkMode, channel = 'admin' }) {
         scrollToBottom('smooth')
         setEnviando(true)
         try {
-            const m = await enviarMensajeCliente(texto, channel)
+            const m = await enviarMensajeCliente(texto, channelRef.current)
             if (m) {
-                setMensajes((prev) => prev.map((x) => (x.id === tempId ? { ...m, pending: false } : x)))
+                if (m.channel && m.channel !== channelRef.current) {
+                    setMensajes((prev) => prev.filter((x) => x.id !== tempId))
+                    setErrorEnvio(
+                        `El mensaje se guardó en el canal «${m.channel}» en lugar de «${channelRef.current}». Actualiza el servidor (migrate + deploy API).`
+                    )
+                } else {
+                    setMensajes((prev) => prev.map((x) => (x.id === tempId ? { ...m, pending: false } : x)))
+                }
             } else {
                 setMensajes((prev) => prev.filter((x) => x.id !== tempId))
                 setErrorEnvio('No se pudo enviar el mensaje. Revisa tu conexión o intenta de nuevo.')
@@ -164,14 +175,14 @@ export default function ChatVentasCliente({ darkMode, channel = 'admin' }) {
 
     const isCliente = (m) => m.sender_type === 'customer'
     const isStaff = (m) => m.sender_type === 'admin' || m.sender_type === 'seller'
-    const staffColor = channel === 'ventas' ? COLOR_VENDEDOR : COLOR_ADMIN
+    const staffColor = chatChannel === 'ventas' ? COLOR_VENDEDOR : COLOR_ADMIN
     const staffLabel = (m) => {
-        if (channel === 'ventas') return m.seller_name || 'Vendedor'
+        if (chatChannel === 'ventas') return m.seller_name || 'Vendedor'
         return m.admin_name || m.seller_name || 'Administración'
     }
 
     const emptyHint =
-        channel === 'ventas'
+        chatChannel === 'ventas'
             ? 'Aún no hay mensajes. Escribe algo y un vendedor te responderá.'
             : 'Aún no hay mensajes. Escribe algo y un administrador te responderá.'
 
