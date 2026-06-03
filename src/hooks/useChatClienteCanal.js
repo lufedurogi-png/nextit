@@ -93,9 +93,7 @@ export default function useChatClienteCanal({ channel, threadId, api, staffLabel
                 setMensajes((prev) => prev.map((x) => (x.id === tempId ? { ...m, pending: false } : x)))
             } else {
                 setMensajes((prev) => prev.filter((x) => x.id !== tempId))
-                setErrorEnvio(
-                    'No se pudo enviar. Si el servidor no distingue canales, actualiza la API (migrate + deploy).'
-                )
+                setErrorEnvio('No se pudo enviar el mensaje. Intenta de nuevo.')
             }
         } catch (err) {
             setMensajes((prev) => prev.filter((x) => x.id !== tempId))
