@@ -34,12 +34,20 @@ class ClienteChatController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        $validated = $request->validate([
+        $rules = [
             'body' => 'required|string|max:5000',
-            'channel' => ['nullable', 'string', Rule::in(ChatChannel::all())],
-        ]);
+        ];
+        if (ChatChannel::columnExists()) {
+            $rules['channel'] = ['required', 'string', Rule::in(ChatChannel::all())];
+        } else {
+            $rules['channel'] = ['nullable', 'string', Rule::in(ChatChannel::all())];
+        }
 
-        $channel = ChatChannel::normalize($validated['channel'] ?? ChatChannel::ADMIN);
+        $validated = $request->validate($rules);
+
+        $channel = ChatChannel::columnExists()
+            ? ChatChannel::normalize($validated['channel'])
+            : ChatChannel::normalize($validated['channel'] ?? ChatChannel::ADMIN);
 
         $payload = [
             'user_id' => Auth::id(),
@@ -51,6 +59,7 @@ class ClienteChatController extends Controller
             $payload['channel'] = $channel;
         }
         $mensaje = ClienteVentasMensaje::create($payload);
+        $mensaje->refresh();
 
         return response()->json([
             'success' => true,
@@ -93,9 +102,13 @@ class ClienteChatController extends Controller
             $senderType = 'admin';
         }
 
+        $storedChannel = ChatChannel::columnExists() && filled($m->channel)
+            ? ChatChannel::normalize((string) $m->channel)
+            : $channel;
+
         $arr = [
             'id' => $m->id,
-            'channel' => $m->channel ?? $channel,
+            'channel' => $storedChannel,
             'sender_type' => $senderType,
             'body' => $m->body,
             'created_at' => $m->created_at->toIso8601String(),
