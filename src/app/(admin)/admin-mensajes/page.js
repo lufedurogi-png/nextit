@@ -21,6 +21,7 @@ const POLL_MS = 8000
 
 export default function AdminMensajesPage() {
     const [darkMode, setDarkMode] = useState(true)
+    const [filtro, setFiltro] = useState('')
     const [clientes, setClientes] = useState([])
     const [loadingClientes, setLoadingClientes] = useState(true)
     const [clienteSeleccionado, setClienteSeleccionado] = useState(null)
@@ -38,6 +39,10 @@ export default function AdminMensajesPage() {
 
     mensajesRef.current = mensajes
 
+    const panel = darkMode
+        ? 'rounded-2xl border border-gray-700 bg-tienda-elevated/80 flex flex-col overflow-hidden min-h-0 h-full'
+        : 'rounded-2xl border border-gray-200 bg-white flex flex-col overflow-hidden min-h-0 h-full'
+
     useEffect(() => {
         setDarkMode(JSON.parse(localStorage.getItem('darkMode') ?? 'true'))
     }, [])
@@ -47,15 +52,15 @@ export default function AdminMensajesPage() {
         return () => window.removeEventListener('darkModeChange', onDarkModeChange)
     }, [])
 
-    const cargarClientes = useCallback(async () => {
-        setLoadingClientes(true)
+    const cargarClientes = useCallback(async (silent = false) => {
+        if (!silent) setLoadingClientes(true)
         try {
             const lista = await getChatClientesAdmin()
             setClientes(Array.isArray(lista) ? lista : [])
         } catch {
-            setClientes([])
+            if (!silent) setClientes([])
         } finally {
-            setLoadingClientes(false)
+            if (!silent) setLoadingClientes(false)
         }
     }, [])
 
@@ -100,10 +105,11 @@ export default function AdminMensajesPage() {
         const interval = setInterval(() => {
             if (typeof document !== 'undefined' && document.visibilityState === 'visible' && editandoId == null) {
                 cargarMensajes(clienteSeleccionado.id, true)
+                cargarClientes(true)
             }
         }, POLL_MS)
         return () => clearInterval(interval)
-    }, [clienteSeleccionado?.id, cargarMensajes, editandoId])
+    }, [clienteSeleccionado?.id, cargarMensajes, cargarClientes, editandoId])
 
     const handleEnviar = async () => {
         const userId = clienteSeleccionado?.id
@@ -186,107 +192,187 @@ export default function AdminMensajesPage() {
         }
     }
 
+    const q = filtro.trim().toLowerCase()
+    const clientesFiltrados = q
+        ? clientes.filter(
+              (c) =>
+                  (c.name || '').toLowerCase().includes(q) ||
+                  (c.email || '').toLowerCase().includes(q)
+          )
+        : clientes
+
+    const seleccionarCliente = (c) => {
+        setClienteSeleccionado({ id: c.id, name: c.name, email: c.email })
+    }
+
+    const volverALista = () => {
+        setClienteSeleccionado(null)
+    }
+
+    const enConversacionMobile = Boolean(clienteSeleccionado)
+
     return (
-        <div className="space-y-6">
-            <div className="flex items-center gap-4">
-                <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${darkMode ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-100 text-emerald-600'}`}>
-                    <Image src="/Imagenes/icon_mensaje.png" alt="" width={28} height={28} className="object-contain" />
+        <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            <div className="shrink-0 flex flex-wrap items-center gap-3 mb-3 md:mb-4">
+                <span
+                    className={`flex h-10 w-10 md:h-12 md:w-12 shrink-0 items-center justify-center rounded-xl ${
+                        darkMode ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-100 text-emerald-600'
+                    }`}
+                >
+                    <Image src="/Imagenes/icon_mensaje.png" alt="" width={24} height={24} className="object-contain md:w-7 md:h-7" />
                 </span>
                 <div>
-                    <h1 className={`text-2xl font-bold ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
+                    <h1 className={`text-xl md:text-2xl font-bold ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
                         Mensajería con clientes
                     </h1>
-                    <p className={`text-sm mt-0.5 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <p className={`text-xs md:text-sm mt-0.5 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                         Clientes que han iniciado chat. Selecciona uno para ver y responder.
                     </p>
                 </div>
             </div>
 
-            <div className={`rounded-xl border-2 overflow-hidden flex flex-col h-[calc(100dvh-11rem)] max-h-[42rem] min-h-[24rem] md:min-h-[28rem] ${darkMode ? 'bg-tienda-elevated/50 border-gray-700' : 'bg-white border-gray-200'}`}>
-                <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-hidden relative">
+            <div className="flex flex-1 min-h-0 gap-0 md:gap-4 md:grid md:grid-cols-12 md:grid-rows-1 overflow-hidden min-h-[calc(100dvh-11rem)] md:min-h-0 max-md:relative">
+                <div
+                    className={`${panel} md:col-span-4 max-md:absolute max-md:inset-0 max-md:z-10 ${
+                        enConversacionMobile ? 'max-md:hidden' : 'max-md:flex'
+                    }`}
+                >
                     <div
-                        className={`w-full md:w-72 shrink-0 border-b md:border-b-0 md:border-r flex flex-col min-h-0 md:relative max-md:absolute max-md:inset-0 max-md:z-10 ${
-                            clienteSeleccionado ? 'max-md:hidden' : 'max-md:flex'
-                        } ${darkMode ? 'border-gray-700 bg-tienda-elevated/80' : 'border-gray-200 bg-gray-50'}`}
+                        className={`shrink-0 border-b px-3 py-2 ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}
                     >
-                        <div className="p-3 border-b border-gray-600/50 flex items-center gap-2 shrink-0">
-                            <Image src="/Imagenes/icon_mensaje.png" alt="" width={20} height={20} className="object-contain opacity-80" />
-                            <span className={`font-semibold text-sm ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Clientes con chat</span>
-                        </div>
-                        <div className="overflow-y-auto flex-1 min-h-0 p-2">
-                            {loadingClientes ? (
-                                <p className={`p-4 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Cargando…</p>
-                            ) : clientes.length === 0 ? (
-                                <p className={`p-4 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                                    Ningún cliente ha iniciado un chat aún.
-                                </p>
-                            ) : (
-                                clientes.map((c) => {
-                                    const initial = (c.name || c.email || '?').charAt(0).toUpperCase()
-                                    const isSelected = clienteSeleccionado?.id === c.id
-                                    return (
+                        <input
+                            type="search"
+                            value={filtro}
+                            onChange={(e) => setFiltro(e.target.value)}
+                            placeholder="Filtrar clientes…"
+                            className={`w-full rounded-lg border px-3 py-2 text-sm ${
+                                darkMode
+                                    ? 'border-gray-600 bg-[#202020] text-gray-100 placeholder-gray-500'
+                                    : 'border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400'
+                            }`}
+                        />
+                    </div>
+                    <ul className="overflow-y-auto flex-1 min-h-0 p-2">
+                        {loadingClientes ? (
+                            <li className={`px-3 py-4 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                Cargando…
+                            </li>
+                        ) : clientesFiltrados.length === 0 ? (
+                            <li className={`px-3 py-4 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                {clientes.length === 0
+                                    ? 'Ningún cliente ha iniciado un chat aún.'
+                                    : 'Sin coincidencias.'}
+                            </li>
+                        ) : (
+                            clientesFiltrados.map((c) => {
+                                const initial = (c.name || c.email || '?').charAt(0).toUpperCase()
+                                const active = clienteSeleccionado?.id === c.id
+                                return (
+                                    <li key={c.id}>
                                         <button
-                                            key={c.id}
                                             type="button"
-                                            onClick={() => setClienteSeleccionado({ id: c.id, name: c.name, email: c.email })}
+                                            onClick={() => seleccionarCliente(c)}
                                             className={`w-full text-left rounded-xl p-3 mb-2 transition-all flex items-center gap-3 ${
-                                                isSelected
+                                                active
                                                     ? 'bg-emerald-600 text-white shadow-md'
                                                     : darkMode
-                                                        ? 'hover:bg-gray-700/80 text-gray-200'
-                                                        : 'hover:bg-gray-100 text-gray-800'
+                                                      ? 'hover:bg-gray-700/80 text-gray-200'
+                                                      : 'hover:bg-gray-100 text-gray-800'
                                             }`}
                                         >
-                                            <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${
-                                                isSelected ? 'bg-white/20 text-white' : darkMode ? 'bg-gray-600 text-gray-200' : 'bg-gray-200 text-gray-600'
-                                            }`}>
+                                            <span
+                                                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${
+                                                    active
+                                                        ? 'bg-white/20 text-white'
+                                                        : darkMode
+                                                          ? 'bg-gray-600 text-gray-200'
+                                                          : 'bg-gray-200 text-gray-600'
+                                                }`}
+                                            >
                                                 {initial}
                                             </span>
                                             <div className="min-w-0 flex-1">
-                                                <div className="font-medium truncate">{c.name || 'Sin nombre'}</div>
-                                                <div className={`text-xs truncate ${isSelected ? 'text-emerald-100' : darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                                <div className="font-medium text-sm truncate">
+                                                    {c.name || 'Sin nombre'}
+                                                </div>
+                                                <div
+                                                    className={`text-xs truncate ${
+                                                        active
+                                                            ? 'text-emerald-100'
+                                                            : darkMode
+                                                              ? 'text-gray-400'
+                                                              : 'text-gray-500'
+                                                    }`}
+                                                >
                                                     {c.email}
                                                 </div>
                                                 {c.unanswered_count > 0 && (
-                                                    <span className="inline-flex items-center justify-center rounded-full bg-amber-500/90 text-white text-xs font-bold min-w-[1.25rem] h-5 px-1.5 mt-1">
-                                                        {c.unanswered_count}
+                                                    <span className="mt-1 inline-flex rounded-full bg-amber-500/90 px-2 py-0.5 text-[10px] font-bold text-white">
+                                                        {c.unanswered_count} sin leer
                                                     </span>
                                                 )}
                                             </div>
                                         </button>
-                                    )
-                                })
-                            )}
-                        </div>
-                    </div>
+                                    </li>
+                                )
+                            })
+                        )}
+                    </ul>
+                </div>
 
+                <div
+                    className={`${panel} md:col-span-8 max-md:absolute max-md:inset-0 max-md:z-20 flex ${
+                        !enConversacionMobile ? 'max-md:hidden' : ''
+                    }`}
+                >
                     <div
-                        className={`flex-1 flex flex-col min-h-0 overflow-hidden p-3 md:p-4 max-md:absolute max-md:inset-0 max-md:z-20 ${
-                            !clienteSeleccionado ? 'max-md:hidden' : ''
+                        className={`shrink-0 border-b px-3 py-2.5 md:px-4 md:py-3 flex items-center gap-2 ${
+                            darkMode ? 'border-gray-700' : 'border-gray-200'
                         }`}
                     >
-                        {clienteSeleccionado && (
-                            <div className={`mb-3 pb-2 border-b shrink-0 flex items-center gap-2 ${darkMode ? 'border-gray-600' : 'border-gray-200'}`}>
-                                <button
-                                    type="button"
-                                    onClick={() => setClienteSeleccionado(null)}
-                                    className={`md:hidden shrink-0 inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm font-medium ${
-                                        darkMode ? 'text-gray-200 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-100'
+                        {enConversacionMobile && (
+                            <button
+                                type="button"
+                                onClick={volverALista}
+                                className={`md:hidden shrink-0 inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm font-medium ${
+                                    darkMode
+                                        ? 'text-emerald-200 hover:bg-gray-700'
+                                        : 'text-emerald-800 hover:bg-emerald-50'
+                                }`}
+                                aria-label="Volver a la lista de clientes"
+                            >
+                                <span aria-hidden>←</span>
+                                <span>Clientes</span>
+                            </button>
+                        )}
+                        <div className="min-w-0 flex-1">
+                            <p className={`text-[10px] md:text-xs ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+                                Conversación con
+                            </p>
+                            <p
+                                className={`font-semibold text-sm md:text-base truncate ${
+                                    darkMode ? 'text-white' : 'text-gray-900'
+                                }`}
+                            >
+                                {clienteSeleccionado?.name || 'Selecciona un cliente'}
+                            </p>
+                            {clienteSeleccionado?.email && (
+                                <p
+                                    className={`text-[10px] md:text-xs truncate ${
+                                        darkMode ? 'text-gray-400' : 'text-gray-500'
                                     }`}
                                 >
-                                    <span aria-hidden>←</span>
-                                    <span>Clientes</span>
-                                </button>
-                                <div className="min-w-0 flex-1">
-                                    <span className={`font-semibold block truncate ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                                        {clienteSeleccionado.name}
-                                    </span>
-                                    <span className={`text-xs block truncate ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                                        {clienteSeleccionado.email}
-                                    </span>
-                                </div>
-                            </div>
+                                    {clienteSeleccionado.email}
+                                </p>
+                            )}
+                        </div>
+                        {clienteSeleccionado && (
+                            <span className="hidden sm:inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold uppercase text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-200">
+                                Abierta
+                            </span>
                         )}
+                    </div>
+                    <div className="flex flex-1 flex-col min-h-0 overflow-hidden p-2 md:p-3">
                         <AdminChatView
                             threadId="staff-chat-admin"
                             chatChannel={CHAT_CHANNEL_ADMIN}
