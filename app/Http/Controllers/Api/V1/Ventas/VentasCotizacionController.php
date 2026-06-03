@@ -171,6 +171,7 @@ class VentasCotizacionController extends Controller
             'items.*.imagen' => ['nullable', 'string', 'max:2000'],
             'items.*.stock_tienda' => ['nullable', 'integer', 'min:0'],
             'items.*.descuento_linea_pct' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'items.*.comentario' => ['nullable', 'string', 'max:500'],
         ]);
 
         if (! empty($validated['cliente_user_id'])) {
@@ -199,6 +200,7 @@ class VentasCotizacionController extends Controller
                 'imagen' => $row['imagen'] ?? null,
                 'stock_tienda' => isset($row['stock_tienda']) ? (int) $row['stock_tienda'] : null,
                 'descuento_linea_pct' => round(min(100, max(0, (float) ($row['descuento_linea_pct'] ?? 0))), 2),
+                'comentario' => isset($row['comentario']) ? trim((string) $row['comentario']) ?: null : null,
             ];
         }
 
