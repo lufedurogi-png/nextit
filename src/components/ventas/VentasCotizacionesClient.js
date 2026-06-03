@@ -376,6 +376,7 @@ export default function VentasCotizacionesClient() {
     const [successMsg, setSuccessMsg] = useState('')
     const [mainTab, setMainTab] = useState('cotizar')
     const [maxDescuentoPct, setMaxDescuentoPct] = useState(10)
+    const [detalleCotizacionModal, setDetalleCotizacionModal] = useState(null)
 
     useEffect(() => {
         fetchVentasCotizacionReglasPrecio()
@@ -1080,7 +1081,7 @@ export default function VentasCotizacionesClient() {
                                 <div
                                     className={`inline-block min-w-full overflow-hidden rounded-2xl border ${darkMode ? 'border-orange-900/40' : 'border-orange-100'}`}
                                 >
-                                    <table className="w-full min-w-[1040px] border-collapse text-sm">
+                                    <table className="w-full min-w-[1180px] border-collapse text-sm">
                                     <thead>
                                         <tr
                                             className={
@@ -1096,7 +1097,7 @@ export default function VentasCotizacionesClient() {
                                             <th className="p-3">Precio unit.</th>
                                             <th className="p-3">Dto. línea %</th>
                                             <th className="p-3 pr-4 text-right">Subtotal</th>
-                                            <th className="p-3 min-w-[10rem]">Comentario</th>
+                                            <th className="p-3 w-[18rem] min-w-[14rem]">Comentario</th>
                                             <th className="p-3 pr-4" />
                                         </tr>
                                     </thead>
@@ -1180,9 +1181,9 @@ export default function VentasCotizacionesClient() {
                                                     <td className="p-3.5 pr-4 align-middle text-right text-base font-semibold tabular-nums text-gray-900 dark:text-gray-50">
                                                         ${sub.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                                                     </td>
-                                                    <td className="p-3.5 align-middle min-w-[10rem] max-w-[14rem]">
-                                                        <input
-                                                            type="text"
+                                                    <td className="p-3.5 align-top w-[18rem] min-w-[14rem]">
+                                                        <textarea
+                                                            rows={2}
                                                             maxLength={500}
                                                             value={l.comentario ?? ''}
                                                             onChange={(e) => {
@@ -1191,8 +1192,8 @@ export default function VentasCotizacionesClient() {
                                                                     prev.map((x) => (x.clave === l.clave ? { ...x, comentario: v } : x))
                                                                 )
                                                             }}
-                                                            placeholder="Notas del producto…"
-                                                            className={`w-full min-w-[8rem] ${cellIn}`}
+                                                            placeholder="Notas del producto (opcional)…"
+                                                            className={`w-full min-h-[3.25rem] resize-y ${cellIn}`}
                                                         />
                                                     </td>
                                                     <td className="p-3.5 pr-4 align-middle">
@@ -1395,7 +1396,7 @@ export default function VentasCotizacionesClient() {
                     ) : (
                         <>
                             <div className={`overflow-x-auto rounded-2xl border ${darkMode ? 'border-orange-900/40' : 'border-orange-100'}`}>
-                                <table className="w-full min-w-[800px] text-sm">
+                                <table className="w-full min-w-[920px] text-sm">
                                     <thead>
                                         <tr
                                             className={
@@ -1445,6 +1446,17 @@ export default function VentasCotizacionesClient() {
                                                     <div className="inline-flex flex-wrap justify-end gap-2">
                                                         <button
                                                             type="button"
+                                                            onClick={() => setDetalleCotizacionModal(row)}
+                                                            className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
+                                                                darkMode
+                                                                    ? 'border-orange-500/50 bg-orange-600/25 text-orange-100 hover:bg-orange-600/40'
+                                                                    : 'border-orange-300 bg-orange-100/80 text-orange-950 hover:bg-orange-200/80'
+                                                            }`}
+                                                        >
+                                                            Ver detalle
+                                                        </button>
+                                                        <button
+                                                            type="button"
                                                             onClick={() => handlePdf(row)}
                                                             className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
                                                                 darkMode
@@ -1490,6 +1502,192 @@ export default function VentasCotizacionesClient() {
                 </div>
             </div>
             )}
+
+            {detalleCotizacionModal ? (
+                <>
+                    <div
+                        className="fixed inset-0 z-50 bg-black/55 backdrop-blur-sm"
+                        onClick={() => setDetalleCotizacionModal(null)}
+                        aria-hidden
+                    />
+                    <div
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="ventas-cotizacion-detalle-titulo"
+                        className={`fixed inset-3 z-50 flex max-h-[92vh] flex-col overflow-hidden rounded-[1.5rem] shadow-2xl sm:inset-auto sm:left-1/2 sm:top-1/2 sm:w-full sm:max-w-3xl sm:-translate-x-1/2 sm:-translate-y-1/2 ${
+                            darkMode ? 'border border-orange-900/50 bg-[#262626]' : 'border border-orange-100 bg-white'
+                        }`}
+                    >
+                        <div
+                            className={`flex shrink-0 items-center justify-between gap-3 border-b px-5 py-4 sm:px-6 ${
+                                darkMode ? 'border-orange-900/50 bg-[#1c1c1c]/90' : 'border-orange-100 bg-orange-50/80'
+                            }`}
+                        >
+                            <div>
+                                <h3
+                                    id="ventas-cotizacion-detalle-titulo"
+                                    className={`text-lg font-semibold ${darkMode ? 'text-gray-100' : 'text-orange-950'}`}
+                                >
+                                    Detalle de la cotización
+                                </h3>
+                                <p className={`mt-0.5 font-mono text-sm ${darkMode ? 'text-orange-300/80' : 'text-orange-800/80'}`}>
+                                    {detalleCotizacionModal.folio || `CV-${detalleCotizacionModal.id}`}
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setDetalleCotizacionModal(null)}
+                                className={`rounded-xl px-3 py-1.5 text-sm font-semibold transition ${
+                                    darkMode
+                                        ? 'text-orange-200 hover:bg-orange-950/60'
+                                        : 'text-orange-900 hover:bg-orange-100'
+                                }`}
+                                aria-label="Cerrar"
+                            >
+                                Cerrar
+                            </button>
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-5">
+                            <div
+                                className={`grid gap-3 rounded-2xl border p-4 text-sm sm:grid-cols-2 ${
+                                    darkMode ? 'border-orange-900/40 bg-[#202020]/50' : 'border-orange-100 bg-orange-50/40'
+                                }`}
+                            >
+                                <div className="sm:col-span-2">
+                                    <p className={`text-[11px] font-semibold uppercase tracking-wide ${darkMode ? 'text-orange-400/80' : 'text-orange-800/70'}`}>
+                                        Cliente / destino
+                                    </p>
+                                    <p className={`mt-1 ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
+                                        {detalleCotizacionModal.cliente_destino || nombreClienteMostrar(detalleCotizacionModal)}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className={`text-[11px] font-semibold uppercase tracking-wide ${darkMode ? 'text-orange-400/80' : 'text-orange-800/70'}`}>
+                                        Descuento general
+                                    </p>
+                                    <p className={`mt-1 tabular-nums ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                                        {Number(detalleCotizacionModal.descuento_general_pct ?? 0).toLocaleString('es-MX')}%
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className={`text-[11px] font-semibold uppercase tracking-wide ${darkMode ? 'text-orange-400/80' : 'text-orange-800/70'}`}>
+                                        Total
+                                    </p>
+                                    <p className={`mt-1 text-lg font-semibold tabular-nums ${darkMode ? 'text-gray-50' : 'text-orange-950'}`}>
+                                        ${Number(detalleCotizacionModal.total).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className={`text-[11px] font-semibold uppercase tracking-wide ${darkMode ? 'text-orange-400/80' : 'text-orange-800/70'}`}>
+                                        Creada
+                                    </p>
+                                    <p className={`mt-1 text-xs ${darkMode ? 'text-orange-200/70' : 'text-gray-600'}`}>
+                                        {fmtFecha(detalleCotizacionModal.created_at)}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className={`text-[11px] font-semibold uppercase tracking-wide ${darkMode ? 'text-orange-400/80' : 'text-orange-800/70'}`}>
+                                        Actualizada
+                                    </p>
+                                    <p className={`mt-1 text-xs ${darkMode ? 'text-orange-200/70' : 'text-gray-600'}`}>
+                                        {fmtFecha(detalleCotizacionModal.updated_at)}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {detalleCotizacionModal.comentario ? (
+                                <div
+                                    className={`rounded-2xl border p-4 ${
+                                        darkMode ? 'border-orange-900/40 bg-[#202020]/40' : 'border-orange-100 bg-white'
+                                    }`}
+                                >
+                                    <p className={`text-[11px] font-semibold uppercase tracking-wide ${darkMode ? 'text-orange-400/80' : 'text-orange-800/70'}`}>
+                                        Comentario interno (cotización)
+                                    </p>
+                                    <p className={`mt-2 whitespace-pre-wrap text-sm ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                                        {detalleCotizacionModal.comentario}
+                                    </p>
+                                </div>
+                            ) : null}
+
+                            <div>
+                                <p className={`mb-3 text-sm font-semibold ${darkMode ? 'text-gray-100' : 'text-orange-950'}`}>
+                                    Productos ({(detalleCotizacionModal.items || []).length})
+                                </p>
+                                <div className={`overflow-x-auto rounded-2xl border ${darkMode ? 'border-orange-900/40' : 'border-orange-100'}`}>
+                                    <table className="w-full min-w-[640px] border-collapse text-sm">
+                                        <thead>
+                                            <tr
+                                                className={
+                                                    darkMode
+                                                        ? 'border-b border-orange-900/50 bg-[#1c1c1c]/80 text-left text-[11px] font-semibold uppercase tracking-wide text-orange-300/75'
+                                                        : 'border-b border-orange-100 bg-orange-50/90 text-left text-[11px] font-semibold uppercase tracking-wide text-orange-900/75'
+                                                }
+                                            >
+                                                <th className="p-3 pl-4">Producto</th>
+                                                <th className="p-3 text-center">Cant.</th>
+                                                <th className="p-3 text-right">P. unit.</th>
+                                                <th className="p-3 text-center">Dto. %</th>
+                                                <th className="p-3 text-right">Subtotal</th>
+                                                <th className="p-3 pr-4 min-w-[10rem]">Comentario</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className={`divide-y ${darkMode ? 'divide-orange-900/35' : 'divide-orange-100'}`}>
+                                            {(detalleCotizacionModal.items || []).map((it, idx) => {
+                                                const sub = lineSubtotal({
+                                                    cantidad: it.cantidad,
+                                                    precio_unitario: it.precio_unitario,
+                                                    descuento_linea_pct: it.descuento_linea_pct ?? 0,
+                                                })
+                                                const comentarioLinea = (it.comentario || '').trim()
+                                                return (
+                                                    <tr key={`${it.clave}-${idx}`} className={darkMode ? 'text-gray-100' : 'text-gray-800'}>
+                                                        <td className="p-3 pl-4 align-top max-w-[14rem]">
+                                                            <div className="font-medium line-clamp-3">{it.nombre_producto}</div>
+                                                            {it.clave ? (
+                                                                <div className="mt-0.5 font-mono text-xs text-orange-700 dark:text-orange-300/90">
+                                                                    {it.clave}
+                                                                </div>
+                                                            ) : null}
+                                                        </td>
+                                                        <td className="p-3 text-center align-top tabular-nums">{it.cantidad}</td>
+                                                        <td className="p-3 text-right align-top tabular-nums">
+                                                            ${Number(it.precio_unitario).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                                                        </td>
+                                                        <td className="p-3 text-center align-top tabular-nums">
+                                                            {Number(it.descuento_linea_pct ?? 0).toLocaleString('es-MX')}
+                                                        </td>
+                                                        <td className="p-3 text-right align-top font-semibold tabular-nums">
+                                                            ${sub.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                                                        </td>
+                                                        <td className="p-3 pr-4 align-top min-w-[10rem] max-w-[16rem]">
+                                                            {comentarioLinea ? (
+                                                                <span className={`block whitespace-pre-wrap text-xs ${darkMode ? 'text-orange-200/90' : 'text-gray-700'}`}>
+                                                                    {comentarioLinea}
+                                                                </span>
+                                                            ) : (
+                                                                <span className={`text-xs italic ${darkMode ? 'text-orange-400/45' : 'text-gray-400'}`}>
+                                                                    Sin comentario
+                                                                </span>
+                                                            )}
+                                                        </td>
+                                                    </tr>
+                                                )
+                                            })}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <p className={`mt-4 text-right text-base font-semibold tabular-nums ${darkMode ? 'text-gray-50' : 'text-orange-950'}`}>
+                                    Total cotización:{' '}
+                                    <span className={darkMode ? 'text-orange-300' : 'text-[#e67300]'}>
+                                        ${Number(detalleCotizacionModal.total).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </>
+            ) : null}
         </div>
     )
 }
