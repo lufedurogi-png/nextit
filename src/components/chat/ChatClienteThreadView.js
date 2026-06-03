@@ -39,12 +39,11 @@ export default function ChatClienteThreadView({
             id={threadId}
             data-chat-thread={threadId}
             data-chat-channel={channel}
-            className="flex flex-col min-h-[420px]"
-            style={{ height: 'min(520px, 55vh)' }}
+            className="flex flex-col flex-1 min-h-[min(520px,58dvh)] md:min-h-[420px] w-full"
         >
             <div
                 ref={scrollRef}
-                className={`flex-1 overflow-y-auto rounded-2xl border-2 p-4 space-y-4 mb-4 scroll-smooth ${
+                className={`flex-1 min-h-0 overflow-y-auto rounded-2xl border-2 p-3 md:p-4 space-y-3 md:space-y-4 mb-3 md:mb-4 scroll-smooth ${
                     darkMode ? 'border-gray-600 bg-tienda-elevated/40' : 'border-gray-200 bg-gray-50'
                 }`}
             >

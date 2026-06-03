@@ -202,9 +202,13 @@ export default function AdminMensajesPage() {
                 </div>
             </div>
 
-            <div className={`rounded-xl border-2 overflow-hidden flex flex-col h-[calc(100vh-11rem)] max-h-[42rem] min-h-[28rem] ${darkMode ? 'bg-tienda-elevated/50 border-gray-700' : 'bg-white border-gray-200'}`}>
-                <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-hidden">
-                    <div className={`w-full md:w-72 shrink-0 border-b md:border-b-0 md:border-r flex flex-col ${darkMode ? 'border-gray-700 bg-tienda-elevated/80' : 'border-gray-200 bg-gray-50'}`}>
+            <div className={`rounded-xl border-2 overflow-hidden flex flex-col h-[calc(100dvh-11rem)] max-h-[42rem] min-h-[24rem] md:min-h-[28rem] ${darkMode ? 'bg-tienda-elevated/50 border-gray-700' : 'bg-white border-gray-200'}`}>
+                <div className="flex flex-col md:flex-row flex-1 min-h-0 overflow-hidden relative">
+                    <div
+                        className={`w-full md:w-72 shrink-0 border-b md:border-b-0 md:border-r flex flex-col min-h-0 md:relative max-md:absolute max-md:inset-0 max-md:z-10 ${
+                            clienteSeleccionado ? 'max-md:hidden' : 'max-md:flex'
+                        } ${darkMode ? 'border-gray-700 bg-tienda-elevated/80' : 'border-gray-200 bg-gray-50'}`}
+                    >
                         <div className="p-3 border-b border-gray-600/50 flex items-center gap-2 shrink-0">
                             <Image src="/Imagenes/icon_mensaje.png" alt="" width={20} height={20} className="object-contain opacity-80" />
                             <span className={`font-semibold text-sm ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Clientes con chat</span>
@@ -256,15 +260,31 @@ export default function AdminMensajesPage() {
                         </div>
                     </div>
 
-                    <div className="flex-1 flex flex-col min-h-0 overflow-hidden p-4">
+                    <div
+                        className={`flex-1 flex flex-col min-h-0 overflow-hidden p-3 md:p-4 max-md:absolute max-md:inset-0 max-md:z-20 ${
+                            !clienteSeleccionado ? 'max-md:hidden' : ''
+                        }`}
+                    >
                         {clienteSeleccionado && (
-                            <div className={`mb-3 pb-2 border-b shrink-0 ${darkMode ? 'border-gray-600' : 'border-gray-200'}`}>
-                                <span className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                                    {clienteSeleccionado.name}
-                                </span>
-                                <span className={`text-sm ml-2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                                    {clienteSeleccionado.email}
-                                </span>
+                            <div className={`mb-3 pb-2 border-b shrink-0 flex items-center gap-2 ${darkMode ? 'border-gray-600' : 'border-gray-200'}`}>
+                                <button
+                                    type="button"
+                                    onClick={() => setClienteSeleccionado(null)}
+                                    className={`md:hidden shrink-0 inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm font-medium ${
+                                        darkMode ? 'text-gray-200 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-100'
+                                    }`}
+                                >
+                                    <span aria-hidden>←</span>
+                                    <span>Clientes</span>
+                                </button>
+                                <div className="min-w-0 flex-1">
+                                    <span className={`font-semibold block truncate ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                                        {clienteSeleccionado.name}
+                                    </span>
+                                    <span className={`text-xs block truncate ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                        {clienteSeleccionado.email}
+                                    </span>
+                                </div>
                             </div>
                         )}
                         <AdminChatView

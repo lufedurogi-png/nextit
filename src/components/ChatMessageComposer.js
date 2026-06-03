@@ -82,7 +82,7 @@ export default function ChatMessageComposer({
                     )}
                 </button>
             </div>
-            <div className={`mt-1.5 px-1 flex justify-between text-[10px] ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+            <div className={`mt-1.5 px-1 hidden sm:flex justify-between text-[10px] ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
                 <span>Enter para enviar · Shift+Enter nueva línea</span>
                 {value.length > maxLength * 0.85 && (
                     <span className={value.length >= maxLength ? 'text-rose-500' : ''}>

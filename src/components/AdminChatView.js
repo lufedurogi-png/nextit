@@ -63,7 +63,7 @@ export default function AdminChatView({
         >
             <div
                 ref={scrollRef}
-                className={`flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain rounded-xl border-2 p-4 space-y-4 mb-3 scroll-smooth ${
+                className={`flex-1 min-h-[12rem] overflow-y-auto overflow-x-hidden overscroll-contain rounded-xl border-2 p-3 md:p-4 space-y-3 md:space-y-4 mb-2 md:mb-3 scroll-smooth ${
                     darkMode ? 'border-gray-600 bg-tienda-elevated/40' : 'border-gray-200 bg-gray-50'
                 }`}
             >

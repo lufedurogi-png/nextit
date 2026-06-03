@@ -41,6 +41,7 @@ export default function VentasInboxClient() {
     const [guardandoId, setGuardandoId] = useState(null)
     const [eliminandoId, setEliminandoId] = useState(null)
     const [scrollBump, setScrollBump] = useState(0)
+    const [mobileFichaOpen, setMobileFichaOpen] = useState(false)
     const mensajesRef = useRef([])
     const pollingRef = useRef(false)
 
@@ -233,19 +234,35 @@ export default function VentasInboxClient() {
           )
         : clientes
 
+    const seleccionarCliente = (c) => {
+        setClienteSeleccionado({ id: c.id, name: c.name, email: c.email })
+        setMobileFichaOpen(false)
+    }
+
+    const volverALista = () => {
+        setClienteSeleccionado(null)
+        setMobileFichaOpen(false)
+    }
+
+    const enConversacionMobile = Boolean(clienteSeleccionado)
+
     return (
         <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
-            <div className="shrink-0 flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div className="shrink-0 flex flex-wrap items-center justify-between gap-3 mb-3 md:mb-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-orange-950 dark:text-white">Chats</h1>
-                    <p className="text-sm text-orange-800/70 dark:text-orange-200/60 mt-1">
+                    <h1 className="text-xl md:text-2xl font-bold text-orange-950 dark:text-white">Chats</h1>
+                    <p className="text-xs md:text-sm text-orange-800/70 dark:text-orange-200/60 mt-0.5 md:mt-1">
                         Mensajes y seguimiento con clientes.
                     </p>
                 </div>
             </div>
 
-            <div className="grid flex-1 min-h-0 gap-4 md:grid-cols-12 md:grid-rows-1 overflow-hidden">
-                <div className={`${panel} md:col-span-3`}>
+            <div className="flex flex-1 min-h-0 gap-0 md:gap-4 md:grid md:grid-cols-12 md:grid-rows-1 overflow-hidden min-h-[calc(100dvh-11rem)] md:min-h-0 max-md:relative">
+                <div
+                    className={`${panel} md:col-span-3 max-md:absolute max-md:inset-0 max-md:z-10 ${
+                        enConversacionMobile ? 'max-md:hidden' : 'max-md:flex'
+                    }`}
+                >
                     <div className="shrink-0 border-b border-orange-100 px-3 py-2 dark:border-orange-900/40">
                         <input
                             type="search"
@@ -271,9 +288,7 @@ export default function VentasInboxClient() {
                                     <li key={c.id}>
                                         <button
                                             type="button"
-                                            onClick={() =>
-                                                setClienteSeleccionado({ id: c.id, name: c.name, email: c.email })
-                                            }
+                                            onClick={() => seleccionarCliente(c)}
                                             className={`w-full border-b border-orange-50 px-3 py-3 text-left transition dark:border-orange-900/30 ${
                                                 active
                                                     ? 'bg-orange-50/80 dark:bg-orange-600/15'
@@ -299,26 +314,50 @@ export default function VentasInboxClient() {
                     </ul>
                 </div>
 
-                <div className={`${panel} md:col-span-6`}>
-                    <div className="shrink-0 border-b border-orange-100 px-4 py-3 flex items-center justify-between dark:border-orange-900/40">
-                        <div>
-                            <p className="text-xs text-gray-500 dark:text-orange-300/50">Conversación con</p>
-                            <p className="font-semibold text-gray-900 dark:text-white">
+                <div
+                    className={`${panel} md:col-span-6 max-md:absolute max-md:inset-0 max-md:z-20 flex ${
+                        !enConversacionMobile ? 'max-md:hidden' : ''
+                    }`}
+                >
+                    <div className="shrink-0 border-b border-orange-100 px-3 py-2.5 md:px-4 md:py-3 flex items-center gap-2 dark:border-orange-900/40">
+                        {enConversacionMobile && (
+                            <button
+                                type="button"
+                                onClick={volverALista}
+                                className="md:hidden shrink-0 inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm font-medium text-orange-700 hover:bg-orange-50 dark:text-orange-200 dark:hover:bg-orange-900/30"
+                                aria-label="Volver a la lista de clientes"
+                            >
+                                <span aria-hidden>←</span>
+                                <span>Clientes</span>
+                            </button>
+                        )}
+                        <div className="min-w-0 flex-1">
+                            <p className="text-[10px] md:text-xs text-gray-500 dark:text-orange-300/50">Conversación con</p>
+                            <p className="font-semibold text-sm md:text-base text-gray-900 dark:text-white truncate">
                                 {clienteSeleccionado?.name || 'Selecciona un cliente'}
                             </p>
                             {clienteSeleccionado?.email && (
-                                <p className="text-xs text-orange-700/70 dark:text-orange-300/60">
+                                <p className="text-[10px] md:text-xs text-orange-700/70 dark:text-orange-300/60 truncate">
                                     {clienteSeleccionado.email}
                                 </p>
                             )}
                         </div>
                         {clienteSeleccionado && (
-                            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold uppercase text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-200">
-                                Abierta
-                            </span>
+                            <>
+                                <button
+                                    type="button"
+                                    onClick={() => setMobileFichaOpen(true)}
+                                    className="md:hidden shrink-0 rounded-lg border border-orange-200 px-2.5 py-1.5 text-xs font-semibold text-orange-800 dark:border-orange-700 dark:text-orange-100"
+                                >
+                                    Ficha
+                                </button>
+                                <span className="hidden sm:inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold uppercase text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-200">
+                                    Abierta
+                                </span>
+                            </>
                         )}
                     </div>
-                    <div className="flex flex-1 flex-col min-h-0 overflow-hidden p-3">
+                    <div className="flex flex-1 flex-col min-h-0 overflow-hidden p-2 md:p-3">
                         <AdminChatView
                             threadId="staff-chat-ventas"
                             chatChannel={CHAT_CHANNEL_VENTAS}
@@ -349,7 +388,7 @@ export default function VentasInboxClient() {
                     </div>
                 </div>
 
-                <div className={`${panel} md:col-span-3`}>
+                <div className={`${panel} md:col-span-3 hidden md:flex`}>
                     <div className="shrink-0 border-b border-orange-100 px-4 py-3 dark:border-orange-900/40">
                         <h3 className="font-semibold text-sm text-gray-900 dark:text-white">Ficha rápida</h3>
                     </div>
@@ -361,6 +400,37 @@ export default function VentasInboxClient() {
                     </div>
                 </div>
             </div>
+
+            {mobileFichaOpen && clienteSeleccionado && (
+                <div className="md:hidden fixed inset-0 z-50 flex flex-col justify-end">
+                    <button
+                        type="button"
+                        className="absolute inset-0 bg-black/45"
+                        aria-label="Cerrar ficha"
+                        onClick={() => setMobileFichaOpen(false)}
+                    />
+                    <div
+                        className={`${panel} relative z-10 max-h-[88dvh] rounded-b-none border-b-0 shadow-2xl`}
+                    >
+                        <div className="shrink-0 border-b border-orange-100 px-4 py-3 flex items-center justify-between dark:border-orange-900/40">
+                            <h3 className="font-semibold text-sm text-gray-900 dark:text-white">Ficha rápida</h3>
+                            <button
+                                type="button"
+                                onClick={() => setMobileFichaOpen(false)}
+                                className="rounded-lg px-2.5 py-1 text-xs font-semibold text-orange-700 dark:text-orange-200"
+                            >
+                                Cerrar
+                            </button>
+                        </div>
+                        <div className="flex flex-1 flex-col min-h-0 overflow-hidden max-h-[calc(88dvh-3rem)]">
+                            <VentasFichaRapida
+                                clienteId={clienteSeleccionado.id}
+                                clienteFallback={clienteSeleccionado}
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
