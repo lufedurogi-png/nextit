@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\V1\BusquedaController;
 use App\Http\Controllers\Api\V1\CarritoController;
 use App\Http\Controllers\Api\V1\Client\ClientController;
 use App\Http\Controllers\Api\V1\ClienteChatController;
+use App\Http\Controllers\Api\V1\ClienteVendedorChatController;
 use App\Http\Controllers\Api\V1\CotizacionController;
 use App\Http\Controllers\Api\V1\CotizacionInvitadoPublicController;
 use App\Http\Controllers\Api\V1\DatoFacturacionController;
@@ -244,6 +245,11 @@ Route::prefix('v1')->group(function () {
             Route::post('/chat-mensajes', [ClienteChatController::class, 'store'])->name('chat.mensajes.store');
             Route::put('/chat-mensajes/{id}', [ClienteChatController::class, 'update'])->name('chat.mensajes.update');
             Route::delete('/chat-mensajes/{id}', [ClienteChatController::class, 'destroy'])->name('chat.mensajes.destroy');
+
+            Route::get('/chat-vendedor-mensajes', [ClienteVendedorChatController::class, 'index'])->name('chat.vendedor.mensajes.index');
+            Route::post('/chat-vendedor-mensajes', [ClienteVendedorChatController::class, 'store'])->name('chat.vendedor.mensajes.store');
+            Route::put('/chat-vendedor-mensajes/{id}', [ClienteVendedorChatController::class, 'update'])->name('chat.vendedor.mensajes.update');
+            Route::delete('/chat-vendedor-mensajes/{id}', [ClienteVendedorChatController::class, 'destroy'])->name('chat.vendedor.mensajes.destroy');
         });
 
         // Admin: lecturas y chat compartidos con vendedores; gestión sensible solo administrador

@@ -55,6 +55,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'api/v1/mercadopago/payments/*',
             'api/v1/chat-mensajes',
             'api/v1/chat-mensajes/*',
+            'api/v1/chat-vendedor-mensajes',
+            'api/v1/chat-vendedor-mensajes/*',
             'api/v1/admin/chat/*',
         ]);
 

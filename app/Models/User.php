@@ -97,8 +97,13 @@ class User extends Authenticatable
         return $this->hasMany(ClienteVentasMensaje::class, 'user_id');
     }
 
+    public function clienteVendedorMensajes()
+    {
+        return $this->hasMany(ClienteVendedorMensaje::class, 'user_id');
+    }
+
     public function mensajesEnviadosComoVendedor()
     {
-        return $this->hasMany(ClienteVentasMensaje::class, 'seller_id');
+        return $this->hasMany(ClienteVendedorMensaje::class, 'seller_id');
     }
 }

@@ -3,13 +3,12 @@
 namespace App\Http\Controllers\Api\V1\Ventas;
 
 use App\Http\Controllers\Controller;
-use App\Models\ClienteVentasMensaje;
+use App\Models\ClienteVendedorMensaje;
 use App\Models\Cotizacion;
 use App\Models\Pedido;
 use App\Models\User;
 use App\Models\VentasClienteFicha;
 use App\Models\VentasCotizacion;
-use App\Support\ChatChannel;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,16 +17,19 @@ class VentasChatController extends Controller
 {
     public function indexClientes(): JsonResponse
     {
-        $userIds = ChatChannel::distinctUserIdsForChannel(ChatChannel::VENTAS);
+        $clientesConMensajes = ClienteVendedorMensaje::query()
+            ->select('user_id')
+            ->groupBy('user_id')
+            ->pluck('user_id');
 
-        if ($userIds === []) {
+        if ($clientesConMensajes->isEmpty()) {
             return response()->json(['success' => true, 'data' => []]);
         }
 
-        $users = User::whereIn('id', $userIds)
+        $users = User::whereIn('id', $clientesConMensajes)
             ->get(['id', 'name', 'email']);
 
-        $sinContestar = $this->getMensajesSinContestarPorCliente($userIds);
+        $sinContestar = $this->getMensajesSinContestarPorCliente($clientesConMensajes->toArray());
 
         $data = $users->map(function (User $u) use ($sinContestar) {
             return [
@@ -45,17 +47,15 @@ class VentasChatController extends Controller
     {
         $afterId = max(0, (int) $request->query('after_id', 0));
 
-        $query = ChatChannel::applyChannelFilter(
-            ClienteVentasMensaje::where('user_id', $userId),
-            ChatChannel::VENTAS
-        )->with(['user:id,name,email', 'seller:id,name,email'])
+        $query = ClienteVendedorMensaje::where('user_id', $userId)
+            ->with(['user:id,name,email', 'seller:id,name,email'])
             ->orderBy('created_at');
 
         if ($afterId > 0) {
             $query->where('id', '>', $afterId);
         }
 
-        $mensajes = $query->get()->map(fn (ClienteVentasMensaje $m) => $this->mapMensaje($m));
+        $mensajes = $query->get()->map(fn (ClienteVendedorMensaje $m) => $this->mapMensaje($m));
 
         $cliente = User::find($userId, ['id', 'name', 'email']);
         if (! $cliente) {
@@ -80,16 +80,12 @@ class VentasChatController extends Controller
             return response()->json(['success' => false, 'message' => 'Cliente no encontrado'], 404);
         }
 
-        $payload = [
+        $mensaje = ClienteVendedorMensaje::create([
             'user_id' => $userId,
             'sender_type' => 'seller',
             'seller_id' => Auth::id(),
             'body' => $request->input('body'),
-        ];
-        if (ChatChannel::columnExists()) {
-            $payload['channel'] = ChatChannel::VENTAS;
-        }
-        $mensaje = ClienteVentasMensaje::create($payload);
+        ]);
 
         return response()->json([
             'success' => true,
@@ -99,7 +95,7 @@ class VentasChatController extends Controller
 
     public function update(Request $request, int $id): JsonResponse
     {
-        $mensaje = ChatChannel::applyChannelFilter(ClienteVentasMensaje::where('id', $id), ChatChannel::VENTAS)
+        $mensaje = ClienteVendedorMensaje::where('id', $id)
             ->where('sender_type', 'seller')
             ->where('seller_id', Auth::id())
             ->firstOrFail();
@@ -115,7 +111,7 @@ class VentasChatController extends Controller
 
     public function destroy(int $id): JsonResponse
     {
-        $mensaje = ChatChannel::applyChannelFilter(ClienteVentasMensaje::where('id', $id), ChatChannel::VENTAS)
+        $mensaje = ClienteVendedorMensaje::where('id', $id)
             ->where('sender_type', 'seller')
             ->where('seller_id', Auth::id())
             ->firstOrFail();
@@ -245,10 +241,8 @@ class VentasChatController extends Controller
 
     private function getMensajesSinContestarPorCliente(array $userIds): array
     {
-        $mensajes = ChatChannel::applyChannelFilter(
-            ClienteVentasMensaje::whereIn('user_id', $userIds),
-            ChatChannel::VENTAS
-        )->orderBy('user_id')
+        $mensajes = ClienteVendedorMensaje::whereIn('user_id', $userIds)
+            ->orderBy('user_id')
             ->orderByDesc('created_at')
             ->get(['user_id', 'sender_type']);
 
@@ -273,7 +267,7 @@ class VentasChatController extends Controller
         return $result;
     }
 
-    private function mapMensaje(ClienteVentasMensaje $m): array
+    private function mapMensaje(ClienteVendedorMensaje $m): array
     {
         $arr = [
             'id' => $m->id,

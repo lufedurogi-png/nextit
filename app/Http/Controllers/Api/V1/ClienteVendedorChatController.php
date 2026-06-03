@@ -3,19 +3,18 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use App\Models\ClienteVentasMensaje;
+use App\Models\ClienteVendedorMensaje;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Schema;
 
-class ClienteChatController extends Controller
+class ClienteVendedorChatController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
         $afterId = max(0, (int) $request->query('after_id', 0));
 
-        $query = $this->adminMessagesQuery(Auth::id())
+        $query = ClienteVendedorMensaje::where('user_id', Auth::id())
             ->with(['seller:id,name,email'])
             ->orderBy('created_at');
 
@@ -23,7 +22,7 @@ class ClienteChatController extends Controller
             $query->where('id', '>', $afterId);
         }
 
-        $mensajes = $query->get()->map(fn (ClienteVentasMensaje $m) => $this->mapMensaje($m));
+        $mensajes = $query->get()->map(fn (ClienteVendedorMensaje $m) => $this->mapMensaje($m));
 
         return response()->json(['success' => true, 'data' => $mensajes]);
     }
@@ -34,17 +33,12 @@ class ClienteChatController extends Controller
             'body' => 'required|string|max:5000',
         ]);
 
-        $payload = [
+        $mensaje = ClienteVendedorMensaje::create([
             'user_id' => Auth::id(),
             'sender_type' => 'customer',
             'seller_id' => null,
             'body' => $validated['body'],
-        ];
-        if ($this->hasChannelColumn()) {
-            $payload['channel'] = 'admin';
-        }
-
-        $mensaje = ClienteVentasMensaje::create($payload);
+        ]);
 
         return response()->json([
             'success' => true,
@@ -54,7 +48,7 @@ class ClienteChatController extends Controller
 
     public function update(Request $request, int $id): JsonResponse
     {
-        $mensaje = $this->adminMessagesQuery(Auth::id())
+        $mensaje = ClienteVendedorMensaje::where('user_id', Auth::id())
             ->where('id', $id)
             ->where('sender_type', 'customer')
             ->firstOrFail();
@@ -70,7 +64,7 @@ class ClienteChatController extends Controller
 
     public function destroy(int $id): JsonResponse
     {
-        $mensaje = $this->adminMessagesQuery(Auth::id())
+        $mensaje = ClienteVendedorMensaje::where('user_id', Auth::id())
             ->where('id', $id)
             ->where('sender_type', 'customer')
             ->firstOrFail();
@@ -80,41 +74,19 @@ class ClienteChatController extends Controller
         return response()->json(['success' => true]);
     }
 
-    /** @return \Illuminate\Database\Eloquent\Builder<ClienteVentasMensaje> */
-    private function adminMessagesQuery(int $userId)
+    private function mapMensaje(ClienteVendedorMensaje $m): array
     {
-        $query = ClienteVentasMensaje::where('user_id', $userId);
-
-        if ($this->hasChannelColumn()) {
-            $query->where(function ($q) {
-                $q->where('channel', 'admin')->orWhereNull('channel');
-            });
-        }
-
-        return $query;
-    }
-
-    private function hasChannelColumn(): bool
-    {
-        return Schema::hasTable('cliente_ventas_mensajes')
-            && Schema::hasColumn('cliente_ventas_mensajes', 'channel');
-    }
-
-    private function mapMensaje(ClienteVentasMensaje $m): array
-    {
-        $senderType = $m->sender_type === 'seller' ? 'admin' : $m->sender_type;
-
         $arr = [
             'id' => $m->id,
-            'sender_type' => $senderType,
+            'sender_type' => $m->sender_type,
             'body' => $m->body,
             'created_at' => $m->created_at->toIso8601String(),
             'updated_at' => $m->updated_at->toIso8601String(),
         ];
 
         if ($m->seller_id && $m->relationLoaded('seller') && $m->seller) {
-            $arr['admin_name'] = $m->seller->name;
-            $arr['admin_email'] = $m->seller->email;
+            $arr['seller_name'] = $m->seller->name;
+            $arr['seller_email'] = $m->seller->email;
         }
 
         return $arr;

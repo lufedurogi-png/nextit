@@ -3,7 +3,6 @@
 use App\Jobs\ActualizarTipoCambioJob;
 use App\Models\ClienteVentasMensaje;
 use App\Models\ProductoCva;
-use App\Support\ChatChannel;
 use App\Models\ProductoManual;
 use App\Services\CatalogoStockPublicoService;
 use App\Services\CVAService;
@@ -101,29 +100,28 @@ Schedule::command('precios:comparar-descuentos')->twiceDaily(6, 18);
 Schedule::job(new ActualizarTipoCambioJob)->dailyAt('06:30');
 
 Artisan::command('chat:diagnostico', function () {
-    $hasChannel = ChatChannel::columnExists();
-    $this->info('Columna channel: '.($hasChannel ? 'sí' : 'no (migración pendiente)'));
-
-    if (! $hasChannel) {
-        $this->warn('Ejecuta: php artisan migrate');
-        $this->line('Total mensajes: '.ClienteVentasMensaje::count());
-
-        return 0;
-    }
-
-    foreach (ChatChannel::all() as $ch) {
-        $this->line("Canal [{$ch}]: ".ClienteVentasMensaje::where('channel', $ch)->count().' mensajes');
-    }
+    $this->info('Chat administración (cliente_ventas_mensajes): '.ClienteVentasMensaje::count().' mensajes');
+    $this->info('Chat vendedor (cliente_vendedor_mensajes): '.(\App\Models\ClienteVendedorMensaje::count()).' mensajes');
 
     $this->newLine();
-    $this->info('Últimos 5 mensajes:');
+    $this->info('Últimos 3 mensajes admin:');
     ClienteVentasMensaje::query()
         ->orderByDesc('id')
-        ->limit(5)
-        ->get(['id', 'user_id', 'channel', 'sender_type', 'body', 'created_at'])
+        ->limit(3)
+        ->get(['id', 'user_id', 'sender_type', 'body', 'created_at'])
         ->each(function ($m) {
-            $this->line("#{$m->id} user={$m->user_id} ch={$m->channel} from={$m->sender_type} «".mb_substr($m->body, 0, 40).'»');
+            $this->line("#{$m->id} user={$m->user_id} from={$m->sender_type} «".mb_substr($m->body, 0, 40).'»');
+        });
+
+    $this->newLine();
+    $this->info('Últimos 3 mensajes vendedor:');
+    \App\Models\ClienteVendedorMensaje::query()
+        ->orderByDesc('id')
+        ->limit(3)
+        ->get(['id', 'user_id', 'sender_type', 'body', 'created_at'])
+        ->each(function ($m) {
+            $this->line("#{$m->id} user={$m->user_id} from={$m->sender_type} «".mb_substr($m->body, 0, 40).'»');
         });
 
     return 0;
-})->purpose('Diagnóstico de chats cliente/ventas (canales admin vs ventas)');
+})->purpose('Diagnóstico de chats cliente (admin vs vendedor)');

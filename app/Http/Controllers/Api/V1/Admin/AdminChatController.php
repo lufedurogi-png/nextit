@@ -5,20 +5,18 @@ namespace App\Http\Controllers\Api\V1\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ClienteVentasMensaje;
 use App\Models\User;
-use App\Support\ChatChannel;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 
 class AdminChatController extends Controller
 {
     public function indexClientes(): JsonResponse
     {
-        $clientesConMensajes = ClienteVentasMensaje::query()
-            ->where('channel', ChatChannel::ADMIN)
-            ->select('user_id')
-            ->groupBy('user_id')
-            ->pluck('user_id');
+        $query = ClienteVentasMensaje::query()->select('user_id');
+        $this->applyAdminChannelScope($query);
+        $clientesConMensajes = $query->groupBy('user_id')->pluck('user_id');
 
         if ($clientesConMensajes->isEmpty()) {
             return response()->json(['success' => true, 'data' => []]);
@@ -45,9 +43,9 @@ class AdminChatController extends Controller
     {
         $afterId = max(0, (int) $request->query('after_id', 0));
 
-        $query = ClienteVentasMensaje::where('user_id', $userId)
-            ->where('channel', ChatChannel::ADMIN)
-            ->with(['user:id,name,email', 'seller:id,name,email'])
+        $query = ClienteVentasMensaje::where('user_id', $userId);
+        $this->applyAdminChannelScope($query);
+        $query->with(['user:id,name,email', 'seller:id,name,email'])
             ->orderBy('created_at');
 
         if ($afterId > 0) {
@@ -79,13 +77,17 @@ class AdminChatController extends Controller
             return response()->json(['success' => false, 'message' => 'Cliente no encontrado'], 404);
         }
 
-        $mensaje = ClienteVentasMensaje::create([
+        $payload = [
             'user_id' => $userId,
-            'channel' => ChatChannel::ADMIN,
             'sender_type' => 'admin',
             'seller_id' => Auth::id(),
             'body' => $request->input('body'),
-        ]);
+        ];
+        if ($this->hasChannelColumn()) {
+            $payload['channel'] = 'admin';
+        }
+
+        $mensaje = ClienteVentasMensaje::create($payload);
 
         return response()->json([
             'success' => true,
@@ -95,8 +97,9 @@ class AdminChatController extends Controller
 
     public function update(Request $request, int $id): JsonResponse
     {
-        $mensaje = ClienteVentasMensaje::where('id', $id)
-            ->where('channel', ChatChannel::ADMIN)
+        $query = ClienteVentasMensaje::where('id', $id);
+        $this->applyAdminChannelScope($query);
+        $mensaje = $query
             ->whereIn('sender_type', ['admin', 'seller'])
             ->where('seller_id', Auth::id())
             ->firstOrFail();
@@ -112,8 +115,9 @@ class AdminChatController extends Controller
 
     public function destroy(int $id): JsonResponse
     {
-        $mensaje = ClienteVentasMensaje::where('id', $id)
-            ->where('channel', ChatChannel::ADMIN)
+        $query = ClienteVentasMensaje::where('id', $id);
+        $this->applyAdminChannelScope($query);
+        $mensaje = $query
             ->whereIn('sender_type', ['admin', 'seller'])
             ->where('seller_id', Auth::id())
             ->firstOrFail();
@@ -125,8 +129,9 @@ class AdminChatController extends Controller
 
     private function getMensajesSinContestarPorCliente(array $userIds): array
     {
-        $mensajes = ClienteVentasMensaje::whereIn('user_id', $userIds)
-            ->where('channel', ChatChannel::ADMIN)
+        $query = ClienteVentasMensaje::whereIn('user_id', $userIds);
+        $this->applyAdminChannelScope($query);
+        $mensajes = $query
             ->orderBy('user_id')
             ->orderByDesc('created_at')
             ->get(['user_id', 'sender_type']);
@@ -153,6 +158,24 @@ class AdminChatController extends Controller
         return $result;
     }
 
+    /** @param  \Illuminate\Database\Eloquent\Builder<ClienteVentasMensaje>  $query */
+    private function applyAdminChannelScope($query): void
+    {
+        if (! $this->hasChannelColumn()) {
+            return;
+        }
+
+        $query->where(function ($q) {
+            $q->where('channel', 'admin')->orWhereNull('channel');
+        });
+    }
+
+    private function hasChannelColumn(): bool
+    {
+        return Schema::hasTable('cliente_ventas_mensajes')
+            && Schema::hasColumn('cliente_ventas_mensajes', 'channel');
+    }
+
     private function mapMensaje(ClienteVentasMensaje $m): array
     {
         $senderType = $m->sender_type === 'seller' ? 'admin' : $m->sender_type;
@@ -171,8 +194,6 @@ class AdminChatController extends Controller
         if ($m->seller_id && $m->relationLoaded('seller') && $m->seller) {
             $arr['admin_name'] = $m->seller->name;
             $arr['admin_email'] = $m->seller->email;
-            $arr['seller_name'] = $m->seller->name;
-            $arr['seller_email'] = $m->seller->email;
         }
 
         return $arr;
