@@ -572,6 +572,7 @@ export default function VentasCotizacionesClient() {
                     imagenes_urls: urls,
                     stock_tienda: stock,
                     descuento_linea_pct: 0,
+                    comentario: '',
                 },
             ]
         })
@@ -610,6 +611,7 @@ export default function VentasCotizacionesClient() {
                     imagenes_urls: it.imagen ? [it.imagen] : [],
                     stock_tienda: it.stock_tienda ?? null,
                     descuento_linea_pct: it.descuento_linea_pct ?? 0,
+                    comentario: it.comentario || '',
                 }
             })
         )
@@ -646,6 +648,7 @@ export default function VentasCotizacionesClient() {
                     imagen: l.imagen || null,
                     stock_tienda: l.stock_tienda != null ? Number(l.stock_tienda) : null,
                     descuento_linea_pct: Number(l.descuento_linea_pct) || 0,
+                    comentario: (l.comentario || '').trim() || null,
                 }
             }),
         }
@@ -1077,7 +1080,7 @@ export default function VentasCotizacionesClient() {
                                 <div
                                     className={`inline-block min-w-full overflow-hidden rounded-2xl border ${darkMode ? 'border-orange-900/40' : 'border-orange-100'}`}
                                 >
-                                    <table className="w-full min-w-[880px] border-collapse text-sm">
+                                    <table className="w-full min-w-[1040px] border-collapse text-sm">
                                     <thead>
                                         <tr
                                             className={
@@ -1093,6 +1096,7 @@ export default function VentasCotizacionesClient() {
                                             <th className="p-3">Precio unit.</th>
                                             <th className="p-3">Dto. línea %</th>
                                             <th className="p-3 pr-4 text-right">Subtotal</th>
+                                            <th className="p-3 min-w-[10rem]">Comentario</th>
                                             <th className="p-3 pr-4" />
                                         </tr>
                                     </thead>
@@ -1175,6 +1179,21 @@ export default function VentasCotizacionesClient() {
                                                     </td>
                                                     <td className="p-3.5 pr-4 align-middle text-right text-base font-semibold tabular-nums text-gray-900 dark:text-gray-50">
                                                         ${sub.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                                                    </td>
+                                                    <td className="p-3.5 align-middle min-w-[10rem] max-w-[14rem]">
+                                                        <input
+                                                            type="text"
+                                                            maxLength={500}
+                                                            value={l.comentario ?? ''}
+                                                            onChange={(e) => {
+                                                                const v = e.target.value
+                                                                setLineas((prev) =>
+                                                                    prev.map((x) => (x.clave === l.clave ? { ...x, comentario: v } : x))
+                                                                )
+                                                            }}
+                                                            placeholder="Notas del producto…"
+                                                            className={`w-full min-w-[8rem] ${cellIn}`}
+                                                        />
                                                     </td>
                                                     <td className="p-3.5 pr-4 align-middle">
                                                         <button
