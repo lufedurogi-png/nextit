@@ -60,8 +60,16 @@ export default function VentasInboxClient() {
                 }
                 return arr
             })
-        } catch {
-            if (!silent) setClientes([])
+        } catch (err) {
+            if (!silent) {
+                setClientes([])
+                const msg =
+                    err.response?.data?.message ||
+                    (err.response?.status === 403
+                        ? 'Sin permiso de vendedor para ver la bandeja de chats.'
+                        : 'No se pudo cargar la lista de chats. Revisa que el servidor tenga las migraciones al día.')
+                setActionMessage({ type: 'error', text: msg })
+            }
         } finally {
             if (!silent) setLoadingClientes(false)
         }
