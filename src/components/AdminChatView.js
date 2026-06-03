@@ -2,7 +2,7 @@
 
 import { useRef } from 'react'
 import Image from 'next/image'
-import { formatMessageTime } from '@/lib/chatApi'
+import { formatMessageTime, chatMessageReactKey } from '@/lib/chatApi'
 import { useChatAutoScroll } from '@/hooks/useChatAutoScroll'
 import ChatMessageComposer from '@/components/ChatMessageComposer'
 
@@ -10,6 +10,8 @@ const COLOR_CLIENTE = '#FF8000'
 const COLOR_ADMIN = '#059669'
 
 export default function AdminChatView({
+    threadId = 'staff-chat-thread',
+    chatChannel = null,
     darkMode,
     cliente,
     mensajes,
@@ -53,7 +55,12 @@ export default function AdminChatView({
     }
 
     return (
-        <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+        <div
+            id={threadId}
+            data-chat-thread={threadId}
+            data-chat-channel={chatChannel ?? undefined}
+            className="flex flex-col flex-1 min-h-0 overflow-hidden"
+        >
             <div
                 ref={scrollRef}
                 className={`flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain rounded-xl border-2 p-4 space-y-4 mb-3 scroll-smooth ${
@@ -67,7 +74,7 @@ export default function AdminChatView({
                 ) : (
                     mensajes.map((m) => (
                         <div
-                            key={m.id}
+                            key={chatChannel ? chatMessageReactKey(m, chatChannel) : m.id}
                             className={`flex flex-col ${isCliente(m) ? 'items-start' : 'items-end'}`}
                         >
                             <div

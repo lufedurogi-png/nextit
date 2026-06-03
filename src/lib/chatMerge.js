@@ -1,3 +1,5 @@
+import { filterMessagesByChannel, messageBelongsToChannel } from '@/lib/chatChannels'
+
 /** Id numérico del servidor (ignora temporales pending). */
 export function maxChatMessageId(mensajes) {
     if (!Array.isArray(mensajes) || mensajes.length === 0) return 0
@@ -22,12 +24,22 @@ function pendingYaEnServidor(pending, serverList) {
     )
 }
 
+function onlyChannel(list, channel) {
+    if (!channel) return Array.isArray(list) ? list : []
+    return filterMessagesByChannel(list, channel)
+}
+
 /**
  * Carga inicial: reemplaza con la lista del servidor + pendientes locales.
+ * Si `channel` está definido, descarta mensajes de otros canales.
  */
-export function setChatMessagesFromServer(prev, serverList) {
-    const incoming = Array.isArray(serverList) ? serverList : []
-    const pending = (prev || []).filter((m) => m.pending || String(m.id).startsWith('temp-'))
+export function setChatMessagesFromServer(prev, serverList, channel = null) {
+    const incoming = onlyChannel(serverList, channel)
+    const pending = (prev || []).filter((m) => {
+        if (!m.pending && !String(m.id).startsWith('temp-')) return false
+        if (!channel) return true
+        return messageBelongsToChannel(m, channel)
+    })
     if (pending.length === 0) return incoming
 
     const merged = [...incoming]
@@ -40,17 +52,24 @@ export function setChatMessagesFromServer(prev, serverList) {
 
 /**
  * Polling incremental: solo agrega mensajes nuevos o actualiza editados.
- * Devuelve la misma referencia si no hubo cambios (evita re-render).
  */
-export function appendChatMessagesFromServer(prev, deltaList) {
-    const delta = Array.isArray(deltaList) ? deltaList : []
+export function appendChatMessagesFromServer(prev, deltaList, channel = null) {
+    const delta = onlyChannel(deltaList, channel)
     if (delta.length === 0) return prev
 
-    const pending = prev.filter((m) => m.pending || String(m.id).startsWith('temp-'))
+    const pending = prev.filter((m) => {
+        if (!m.pending && !String(m.id).startsWith('temp-')) return false
+        if (!channel) return true
+        return messageBelongsToChannel(m, channel)
+    })
     const map = new Map()
     for (const m of prev) {
         if (!m.pending && !String(m.id).startsWith('temp-')) {
-            map.set(m.id, m)
+            if (!channel) {
+                map.set(m.id, m)
+            } else if (messageBelongsToChannel(m, channel)) {
+                map.set(m.id, m)
+            }
         }
     }
 

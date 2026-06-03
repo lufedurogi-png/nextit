@@ -1,193 +1,47 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
 import Image from 'next/image'
-import {
-    formatMessageTime,
-    getChatMensajesCliente,
-    enviarMensajeCliente,
-    actualizarMensajeCliente,
-    eliminarMensajeCliente,
-} from '@/lib/chatApi'
-import {
-    maxChatMessageId,
-    setChatMessagesFromServer,
-    appendChatMessagesFromServer,
-} from '@/lib/chatMerge'
-import { useChatAutoScroll } from '@/hooks/useChatAutoScroll'
+import { formatMessageTime, chatMessageReactKey } from '@/lib/chatApi'
 import ChatMessageComposer from '@/components/ChatMessageComposer'
 
 const COLOR_CLIENTE = '#FF8000'
-const COLOR_ADMIN = '#059669'
-const COLOR_VENDEDOR = '#FF8000'
-const POLL_MS = 8000
 
-export default function ChatVentasCliente({ darkMode, channel = 'admin' }) {
-    const chatChannel = channel === 'ventas' ? 'ventas' : 'admin'
-    const [mensajes, setMensajes] = useState([])
-    const [loading, setLoading] = useState(true)
-    const [nuevoTexto, setNuevoTexto] = useState('')
-    const [enviando, setEnviando] = useState(false)
-    const [editandoId, setEditandoId] = useState(null)
-    const [editandoTexto, setEditandoTexto] = useState('')
-    const [guardandoId, setGuardandoId] = useState(null)
-    const [eliminandoId, setEliminandoId] = useState(null)
-    const [errorEnvio, setErrorEnvio] = useState(null)
-    const scrollRef = useRef(null)
-    const mensajesRef = useRef([])
-    const pollingRef = useRef(false)
-    const channelRef = useRef(chatChannel)
-
-    mensajesRef.current = mensajes
-    channelRef.current = chatChannel
-
-    const { scrollToBottom } = useChatAutoScroll(scrollRef, mensajes, { forceKey: chatChannel })
-
-    const cargarMensajes = useCallback(
-        async (silent = false) => {
-            if (pollingRef.current && silent) return
-            if (silent) pollingRef.current = true
-
-            if (!silent) {
-                setLoading(true)
-                setErrorEnvio(null)
-            }
-
-            try {
-                const afterId = silent ? maxChatMessageId(mensajesRef.current) : 0
-                const lista = await getChatMensajesCliente(channelRef.current, afterId)
-                const list = Array.isArray(lista) ? lista : []
-
-                setMensajes((prev) => {
-                    if (!silent || afterId === 0) {
-                        return setChatMessagesFromServer(prev, list)
-                    }
-                    return appendChatMessagesFromServer(prev, list)
-                })
-            } catch {
-                if (!silent) setMensajes([])
-            } finally {
-                if (!silent) setLoading(false)
-                if (silent) pollingRef.current = false
-            }
-        },
-        [chatChannel]
-    )
-
-    useEffect(() => {
-        setMensajes([])
-        cargarMensajes(false)
-    }, [chatChannel, cargarMensajes])
-
-    useEffect(() => {
-        const interval = setInterval(() => {
-            if (typeof document === 'undefined' || document.visibilityState !== 'visible') return
-            if (editandoId != null) return
-            cargarMensajes(true)
-        }, POLL_MS)
-        return () => clearInterval(interval)
-    }, [chatChannel, cargarMensajes, editandoId])
-
-    const handleEnviar = async () => {
-        const texto = (nuevoTexto || '').trim()
-        if (!texto || enviando) return
-        setErrorEnvio(null)
-        const tempId = 'temp-' + Date.now()
-        const tempMsg = {
-            id: tempId,
-            channel: channelRef.current,
-            sender_type: 'customer',
-            body: texto,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            pending: true,
-        }
-        setMensajes((prev) => [...prev, tempMsg])
-        setNuevoTexto('')
-        scrollToBottom('smooth')
-        setEnviando(true)
-        try {
-            const m = await enviarMensajeCliente(texto, channelRef.current)
-            if (m) {
-                if (m.channel && m.channel !== channelRef.current) {
-                    setMensajes((prev) => prev.filter((x) => x.id !== tempId))
-                    setErrorEnvio(
-                        `El mensaje se guardó en el canal «${m.channel}» en lugar de «${channelRef.current}». Actualiza el servidor (migrate + deploy API).`
-                    )
-                } else {
-                    setMensajes((prev) => prev.map((x) => (x.id === tempId ? { ...m, pending: false } : x)))
-                }
-            } else {
-                setMensajes((prev) => prev.filter((x) => x.id !== tempId))
-                setErrorEnvio('No se pudo enviar el mensaje. Revisa tu conexión o intenta de nuevo.')
-            }
-        } catch (err) {
-            setMensajes((prev) => prev.filter((x) => x.id !== tempId))
-            const msg = err.response?.data?.message || err.response?.data?.errors?.body?.[0] || err.message
-            setErrorEnvio(msg || 'Error al enviar. Intenta de nuevo.')
-        } finally {
-            setEnviando(false)
-        }
-    }
-
-    const iniciarEdicion = (m) => {
-        setEditandoId(m.id)
-        setEditandoTexto(m.body)
-    }
-
-    const cancelarEdicion = () => {
-        setEditandoId(null)
-        setEditandoTexto('')
-    }
-
-    const guardarEdicion = async () => {
-        if (editandoId == null) return
-        const texto = (editandoTexto || '').trim()
-        if (!texto) return
-        setGuardandoId(editandoId)
-        try {
-            const actualizado = await actualizarMensajeCliente(editandoId, texto)
-            if (actualizado) {
-                setMensajes((prev) =>
-                    prev.map((x) => (x.id === editandoId ? { ...x, ...actualizado } : x))
-                )
-            }
-            cancelarEdicion()
-        } catch {
-            //
-        } finally {
-            setGuardandoId(null)
-        }
-    }
-
-    const handleEliminar = async (id) => {
-        if (eliminandoId) return
-        setEliminandoId(id)
-        try {
-            const ok = await eliminarMensajeCliente(id)
-            if (ok) setMensajes((prev) => prev.filter((x) => x.id !== id))
-        } catch {
-            //
-        } finally {
-            setEliminandoId(null)
-        }
-    }
-
+export default function ChatClienteThreadView({
+    threadId,
+    channel,
+    darkMode,
+    mensajes,
+    loading,
+    emptyHint,
+    staffColor,
+    staffLabel,
+    nuevoTexto,
+    setNuevoTexto,
+    enviando,
+    onEnviar,
+    editandoId,
+    editandoTexto,
+    setEditandoTexto,
+    onGuardarEdicion,
+    onCancelarEdicion,
+    onIniciarEdicion,
+    onEliminar,
+    guardandoId,
+    eliminandoId,
+    errorEnvio,
+    scrollRef,
+}) {
     const isCliente = (m) => m.sender_type === 'customer'
     const isStaff = (m) => m.sender_type === 'admin' || m.sender_type === 'seller'
-    const staffColor = chatChannel === 'ventas' ? COLOR_VENDEDOR : COLOR_ADMIN
-    const staffLabel = (m) => {
-        if (chatChannel === 'ventas') return m.seller_name || 'Vendedor'
-        return m.admin_name || m.seller_name || 'Administración'
-    }
-
-    const emptyHint =
-        chatChannel === 'ventas'
-            ? 'Aún no hay mensajes. Escribe algo y un vendedor te responderá.'
-            : 'Aún no hay mensajes. Escribe algo y un administrador te responderá.'
 
     return (
-        <div className="flex flex-col min-h-[420px]" style={{ height: 'min(520px, 55vh)' }}>
+        <div
+            id={threadId}
+            data-chat-thread={threadId}
+            data-chat-channel={channel}
+            className="flex flex-col min-h-[420px]"
+            style={{ height: 'min(520px, 55vh)' }}
+        >
             <div
                 ref={scrollRef}
                 className={`flex-1 overflow-y-auto rounded-2xl border-2 p-4 space-y-4 mb-4 scroll-smooth ${
@@ -201,7 +55,7 @@ export default function ChatVentasCliente({ darkMode, channel = 'admin' }) {
                 ) : (
                     mensajes.map((m) => (
                         <div
-                            key={m.id}
+                            key={chatMessageReactKey(m, channel)}
                             className={`flex flex-col ${isCliente(m) ? 'items-end' : 'items-start'}`}
                         >
                             <div
@@ -231,7 +85,7 @@ export default function ChatVentasCliente({ darkMode, channel = 'admin' }) {
                                         <div className="flex gap-2">
                                             <button
                                                 type="button"
-                                                onClick={guardarEdicion}
+                                                onClick={onGuardarEdicion}
                                                 disabled={guardandoId === m.id}
                                                 className="p-1.5 rounded bg-white/20 hover:bg-white/30"
                                                 title="Guardar"
@@ -246,7 +100,7 @@ export default function ChatVentasCliente({ darkMode, channel = 'admin' }) {
                                             </button>
                                             <button
                                                 type="button"
-                                                onClick={cancelarEdicion}
+                                                onClick={onCancelarEdicion}
                                                 className="p-1.5 rounded bg-white/20 hover:bg-white/30 text-white text-xs"
                                             >
                                                 Cancelar
@@ -260,7 +114,7 @@ export default function ChatVentasCliente({ darkMode, channel = 'admin' }) {
                                             <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <button
                                                     type="button"
-                                                    onClick={() => iniciarEdicion(m)}
+                                                    onClick={() => onIniciarEdicion(m)}
                                                     className="p-1 rounded hover:bg-white/20"
                                                     title="Editar"
                                                 >
@@ -274,7 +128,7 @@ export default function ChatVentasCliente({ darkMode, channel = 'admin' }) {
                                                 </button>
                                                 <button
                                                     type="button"
-                                                    onClick={() => handleEliminar(m.id)}
+                                                    onClick={() => onEliminar(m.id)}
                                                     disabled={eliminandoId === m.id}
                                                     className="p-1 rounded hover:bg-white/20"
                                                     title="Eliminar"
@@ -308,7 +162,7 @@ export default function ChatVentasCliente({ darkMode, channel = 'admin' }) {
             <ChatMessageComposer
                 value={nuevoTexto}
                 onChange={setNuevoTexto}
-                onSubmit={handleEnviar}
+                onSubmit={onEnviar}
                 placeholder="Escribe tu mensaje…"
                 disabled={loading}
                 sending={enviando}

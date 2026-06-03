@@ -24,7 +24,8 @@ import {
     checkoutCart,
     PAYPAL_POST_CAPTURE_META_KEY,
 } from '@/lib/carrito'
-import ChatVentasCliente from '@/components/ChatVentasCliente'
+import ChatClienteAdminPanel from '@/components/chat/ChatClienteAdminPanel'
+import ChatClienteVentasPanel from '@/components/chat/ChatClienteVentasPanel'
 import PrivacyNoticeReader from '@/components/PrivacyNoticeReader'
 
 /** Ventana deslizante de 7 páginas + "..." + última página + ">>". currentPage y totalPages base 1. */
@@ -2847,7 +2848,7 @@ function DashboardInner() {
                                 <p className={`text-sm mb-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                                     Escribe aquí y un administrador te responderá. Tus mensajes aparecen en naranja; las respuestas de administración en verde.
                                 </p>
-                                <ChatVentasCliente key="chat-admin" darkMode={darkMode} channel="admin" />
+                                <ChatClienteAdminPanel darkMode={darkMode} />
                             </div>
                         )}
 
@@ -2868,7 +2869,7 @@ function DashboardInner() {
                                 <p className={`text-sm mb-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                                     Escribe aquí y un vendedor te responderá. Tus mensajes aparecen en naranja; las respuestas del equipo de ventas en morado.
                                 </p>
-                                <ChatVentasCliente key="chat-ventas" darkMode={darkMode} channel="ventas" />
+                                <ChatClienteVentasPanel darkMode={darkMode} />
                             </div>
                         )}
 

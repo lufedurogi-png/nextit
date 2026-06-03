@@ -8,7 +8,8 @@ import {
     enviarMensajeAdmin,
     actualizarMensajeAdmin,
     eliminarMensajeAdmin,
-} from '@/lib/chatApi'
+} from '@/lib/chatStaffAdminApi'
+import { CHAT_CHANNEL_ADMIN } from '@/lib/chatChannels'
 import {
     maxChatMessageId,
     setChatMessagesFromServer,
@@ -75,8 +76,8 @@ export default function AdminMensajesPage() {
             const { mensajes: list } = await getChatMensajesAdmin(userId, afterId)
             const arr = Array.isArray(list) ? list : []
             setMensajes((prev) => {
-                if (!silent || afterId === 0) return setChatMessagesFromServer(prev, arr)
-                return appendChatMessagesFromServer(prev, arr)
+                if (!silent || afterId === 0) return setChatMessagesFromServer(prev, arr, CHAT_CHANNEL_ADMIN)
+                return appendChatMessagesFromServer(prev, arr, CHAT_CHANNEL_ADMIN)
             })
         } catch {
             if (!silent) setMensajes([])
@@ -111,6 +112,7 @@ export default function AdminMensajesPage() {
         const tempId = 'temp-' + Date.now()
         const tempMsg = {
             id: tempId,
+            channel: CHAT_CHANNEL_ADMIN,
             user_id: userId,
             sender_type: 'admin',
             body: texto,
@@ -266,6 +268,8 @@ export default function AdminMensajesPage() {
                             </div>
                         )}
                         <AdminChatView
+                            threadId="staff-chat-admin"
+                            chatChannel={CHAT_CHANNEL_ADMIN}
                             darkMode={darkMode}
                             cliente={clienteSeleccionado}
                             mensajes={mensajes}

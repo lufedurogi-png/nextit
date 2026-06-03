@@ -1,4 +1,93 @@
-import axios from '@/lib/axios'
+/**
+ * Utilidades compartidas de chat y re-exportes de compatibilidad.
+ * Para código nuevo, importa desde chatClienteAdminApi, chatClienteVentasApi,
+ * chatStaffAdminApi o chatStaffVentasApi según el canal.
+ */
+
+import { CHAT_CHANNEL_VENTAS, normalizeChatChannel } from '@/lib/chatChannels'
+import {
+    getMensajesChatClienteAdmin,
+    enviarMensajeChatClienteAdmin,
+    actualizarMensajeChatClienteAdmin,
+    eliminarMensajeChatClienteAdmin,
+} from '@/lib/chatClienteAdminApi'
+import {
+    getMensajesChatClienteVentas,
+    enviarMensajeChatClienteVentas,
+    actualizarMensajeChatClienteVentas,
+    eliminarMensajeChatClienteVentas,
+} from '@/lib/chatClienteVentasApi'
+
+export {
+    CHAT_CHANNEL_ADMIN,
+    CHAT_CHANNEL_VENTAS,
+    normalizeChatChannel,
+    messageBelongsToChannel,
+    filterMessagesByChannel,
+    chatMessageReactKey,
+} from '@/lib/chatChannels'
+
+export {
+    getMensajesChatClienteAdmin as getChatMensajesClienteAdmin,
+    enviarMensajeChatClienteAdmin,
+    actualizarMensajeChatClienteAdmin,
+    eliminarMensajeChatClienteAdmin,
+} from '@/lib/chatClienteAdminApi'
+
+export {
+    getMensajesChatClienteVentas as getChatMensajesClienteVentas,
+    enviarMensajeChatClienteVentas,
+    actualizarMensajeChatClienteVentas,
+    eliminarMensajeChatClienteVentas,
+} from '@/lib/chatClienteVentasApi'
+
+export {
+    getChatClientesAdmin,
+    getChatMensajesAdmin,
+    enviarMensajeAdmin,
+    actualizarMensajeAdmin,
+    eliminarMensajeAdmin,
+} from '@/lib/chatStaffAdminApi'
+
+export {
+    getChatClientesVentas,
+    getChatMensajesVentas,
+    enviarMensajeVentas,
+    actualizarMensajeVentas,
+    eliminarMensajeVentas,
+} from '@/lib/chatStaffVentasApi'
+
+/** @deprecated Usa getChatMensajesClienteAdmin o getChatMensajesClienteVentas */
+export async function getChatMensajesCliente(channel = 'admin', afterId = 0) {
+    if (normalizeChatChannel(channel) === CHAT_CHANNEL_VENTAS) {
+        return getMensajesChatClienteVentas(afterId)
+    }
+    return getMensajesChatClienteAdmin(afterId)
+}
+
+/** @deprecated Usa enviarMensajeChatClienteAdmin o enviarMensajeChatClienteVentas */
+export async function enviarMensajeCliente(body, channel = 'admin') {
+    if (normalizeChatChannel(channel) === CHAT_CHANNEL_VENTAS) {
+        return enviarMensajeChatClienteVentas(body)
+    }
+    return enviarMensajeChatClienteAdmin(body)
+}
+
+/** @deprecated Usa actualizarMensajeChatClienteAdmin o actualizarMensajeChatClienteVentas */
+export async function actualizarMensajeCliente(id, body, channel = 'admin') {
+    if (normalizeChatChannel(channel) === CHAT_CHANNEL_VENTAS) {
+        return actualizarMensajeChatClienteVentas(id, body)
+    }
+    return actualizarMensajeChatClienteAdmin(id, body)
+}
+
+/** @deprecated Usa eliminarMensajeChatClienteAdmin o eliminarMensajeChatClienteVentas */
+export async function eliminarMensajeCliente(id, channel = 'admin') {
+    if (normalizeChatChannel(channel) === CHAT_CHANNEL_VENTAS) {
+        return eliminarMensajeChatClienteVentas(id)
+    }
+    return eliminarMensajeChatClienteAdmin(id)
+}
 
 /** Formato 12 horas: "Hoy 6:30 PM", "Ayer 6:30 PM", "5 Mar 2025 6:30 PM" */
 export function formatMessageTime(isoString) {
@@ -29,102 +118,4 @@ export function formatHistorialFecha(isoString) {
     const isYesterday = d.getDate() === yesterday.getDate() && d.getMonth() === yesterday.getMonth() && d.getFullYear() === yesterday.getFullYear()
     if (isYesterday) return 'Ayer'
     return d.toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short' })
-}
-
-const CHAT_CHANNELS = new Set(['admin', 'ventas'])
-
-export function normalizeChatChannel(channel) {
-    const value = String(channel || 'admin').trim().toLowerCase()
-    return CHAT_CHANNELS.has(value) ? value : 'admin'
-}
-
-export async function getChatMensajesCliente(channel = 'admin', afterId = 0) {
-    const normalized = normalizeChatChannel(channel)
-    const params = { channel: normalized }
-    if (afterId > 0) params.after_id = afterId
-    const { data } = await axios.get('/chat-mensajes', { params })
-    const list = data?.success && data?.data ? data.data : []
-    return Array.isArray(list)
-        ? list.filter((m) => !m?.channel || normalizeChatChannel(m.channel) === normalized)
-        : []
-}
-
-export async function enviarMensajeCliente(body, channel = 'admin') {
-    const normalized = normalizeChatChannel(channel)
-    const { data } = await axios.post('/chat-mensajes', { body, channel: normalized })
-    if (!data?.success) return null
-    const msg = data.data ?? data
-    return msg && typeof msg === 'object' && 'id' in msg ? msg : null
-}
-
-export async function actualizarMensajeCliente(id, body) {
-    const { data } = await axios.put(`/chat-mensajes/${id}`, { body })
-    return data?.success ? data.data : null
-}
-
-export async function eliminarMensajeCliente(id) {
-    const { data } = await axios.delete(`/chat-mensajes/${id}`)
-    return data?.success
-}
-
-// Admin
-export async function getChatClientesAdmin() {
-    const { data } = await axios.get('/admin/chat/clientes')
-    return data?.success && data?.data ? data.data : []
-}
-
-export async function getChatMensajesAdmin(userId, afterId = 0) {
-    const params = afterId > 0 ? { after_id: afterId } : {}
-    const { data } = await axios.get(`/admin/chat/clientes/${userId}`, { params })
-    if (!data?.success) return { cliente: null, mensajes: [] }
-    return {
-        cliente: data.data?.cliente ?? null,
-        mensajes: data.data?.mensajes ?? [],
-    }
-}
-
-export async function enviarMensajeAdmin(userId, body) {
-    const { data } = await axios.post(`/admin/chat/clientes/${userId}/mensajes`, { body })
-    return data?.success ? data.data : null
-}
-
-export async function actualizarMensajeAdmin(id, body) {
-    const { data } = await axios.put(`/admin/chat/mensajes/${id}`, { body })
-    return data?.success ? data.data : null
-}
-
-export async function eliminarMensajeAdmin(id) {
-    const { data } = await axios.delete(`/admin/chat/mensajes/${id}`)
-    return data?.success
-}
-
-// Ventas (bandeja)
-export async function getChatClientesVentas() {
-    const { data } = await axios.get('/ventas/chat/clientes')
-    return data?.success && data?.data ? data.data : []
-}
-
-export async function getChatMensajesVentas(userId, afterId = 0) {
-    const params = afterId > 0 ? { after_id: afterId } : {}
-    const { data } = await axios.get(`/ventas/chat/clientes/${userId}`, { params })
-    if (!data?.success) return { cliente: null, mensajes: [] }
-    return {
-        cliente: data.data?.cliente ?? null,
-        mensajes: data.data?.mensajes ?? [],
-    }
-}
-
-export async function enviarMensajeVentas(userId, body) {
-    const { data } = await axios.post(`/ventas/chat/clientes/${userId}/mensajes`, { body })
-    return data?.success ? data.data : null
-}
-
-export async function actualizarMensajeVentas(id, body) {
-    const { data } = await axios.put(`/ventas/chat/mensajes/${id}`, { body })
-    return data?.success ? data.data : null
-}
-
-export async function eliminarMensajeVentas(id) {
-    const { data } = await axios.delete(`/ventas/chat/mensajes/${id}`)
-    return data?.success
 }

@@ -8,7 +8,8 @@ import {
     enviarMensajeVentas,
     actualizarMensajeVentas,
     eliminarMensajeVentas,
-} from '@/lib/chatApi'
+} from '@/lib/chatStaffVentasApi'
+import { CHAT_CHANNEL_VENTAS } from '@/lib/chatChannels'
 import {
     maxChatMessageId,
     setChatMessagesFromServer,
@@ -63,13 +64,8 @@ export default function VentasInboxClient() {
         } catch (err) {
             if (!silent) {
                 setClientes([])
-                const msg =
-                    err.response?.data?.message ||
-                    (err.response?.status === 403
-                        ? 'Sin permiso de vendedor para ver la bandeja de chats.'
-                        : 'No se pudo cargar la lista de chats. Revisa que el servidor tenga las migraciones al día.')
-                setActionMessage({ type: 'error', text: msg })
             }
+            void err
         } finally {
             if (!silent) setLoadingClientes(false)
         }
@@ -123,8 +119,8 @@ export default function VentasInboxClient() {
             const { mensajes: list } = await getChatMensajesVentas(userId, afterId)
             const arr = Array.isArray(list) ? list : []
             setMensajes((prev) => {
-                if (!silent || afterId === 0) return setChatMessagesFromServer(prev, arr)
-                return appendChatMessagesFromServer(prev, arr)
+                if (!silent || afterId === 0) return setChatMessagesFromServer(prev, arr, CHAT_CHANNEL_VENTAS)
+                return appendChatMessagesFromServer(prev, arr, CHAT_CHANNEL_VENTAS)
             })
         } catch {
             if (!silent) setMensajes([])
@@ -160,6 +156,7 @@ export default function VentasInboxClient() {
         const tempId = 'temp-' + Date.now()
         const tempMsg = {
             id: tempId,
+            channel: CHAT_CHANNEL_VENTAS,
             user_id: userId,
             sender_type: 'seller',
             body: texto,
@@ -323,6 +320,8 @@ export default function VentasInboxClient() {
                     </div>
                     <div className="flex flex-1 flex-col min-h-0 overflow-hidden p-3">
                         <AdminChatView
+                            threadId="staff-chat-ventas"
+                            chatChannel={CHAT_CHANNEL_VENTAS}
                             darkMode={darkMode}
                             cliente={clienteSeleccionado}
                             mensajes={mensajes}
