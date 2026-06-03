@@ -17,9 +17,10 @@ class ClienteChatController extends Controller
         $channel = ChatChannel::normalize($request->query('channel'));
         $afterId = max(0, (int) $request->query('after_id', 0));
 
-        $query = ClienteVentasMensaje::where('user_id', Auth::id())
-            ->where('channel', $channel)
-            ->with(['seller:id,name,email'])
+        $query = ChatChannel::applyChannelFilter(
+            ClienteVentasMensaje::where('user_id', Auth::id()),
+            $channel
+        )->with(['seller:id,name,email'])
             ->orderBy('created_at');
 
         if ($afterId > 0) {
@@ -40,13 +41,16 @@ class ClienteChatController extends Controller
 
         $channel = ChatChannel::normalize($validated['channel'] ?? ChatChannel::ADMIN);
 
-        $mensaje = ClienteVentasMensaje::create([
+        $payload = [
             'user_id' => Auth::id(),
-            'channel' => $channel,
             'sender_type' => 'customer',
             'seller_id' => null,
             'body' => $validated['body'],
-        ]);
+        ];
+        if (ChatChannel::columnExists()) {
+            $payload['channel'] = $channel;
+        }
+        $mensaje = ClienteVentasMensaje::create($payload);
 
         return response()->json([
             'success' => true,
