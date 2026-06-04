@@ -46,6 +46,114 @@ export const TAMANOS_LETRA_CORREO = [
     { label: '36 px', value: '36px' },
 ]
 
+const STYLE_PROP_MAP = {
+    fontFamily: 'font-family',
+    fontSize: 'font-size',
+    backgroundColor: 'background-color',
+    color: 'color',
+    textDecoration: 'text-decoration',
+}
+
+function estilosAInlineCss(styles) {
+    return Object.entries(styles)
+        .filter(([, v]) => v != null && String(v).trim() !== '')
+        .map(([k, v]) => `${STYLE_PROP_MAP[k] || k}: ${v}`)
+        .join('; ')
+}
+
+/** Resuelve el stack canónico a partir de lo que el navegador escribió en font-family. */
+export function resolverFuenteCanonica(fontFamily) {
+    if (!fontFamily || typeof fontFamily !== 'string') return null
+    const raw = fontFamily.trim().replace(/['"]/g, '')
+    if (!raw) return null
+
+    for (const f of FUENTES_CORREO) {
+        if (raw.toLowerCase() === f.value.toLowerCase()) return f.value
+    }
+
+    const primary = raw.split(',')[0].trim().toLowerCase()
+    for (const f of FUENTES_CORREO) {
+        if (f.label.toLowerCase() === primary) return f.value
+        if (f.value.toLowerCase().startsWith(primary)) return f.value
+    }
+
+    for (const f of FUENTES_CORREO) {
+        if (raw.toLowerCase().includes(f.label.toLowerCase())) return f.value
+    }
+
+    return null
+}
+
+function parsearEstiloInline(styleStr) {
+    const out = {}
+    if (!styleStr || typeof styleStr !== 'string') return out
+    styleStr.split(';').forEach((piece) => {
+        const idx = piece.indexOf(':')
+        if (idx === -1) return
+        const key = piece.slice(0, idx).trim().toLowerCase()
+        const val = piece.slice(idx + 1).trim()
+        if (key) out[key] = val
+    })
+    return out
+}
+
+function rgbAHex(color) {
+    if (!color) return null
+    const c = color.trim().toLowerCase()
+    if (c === 'transparent') return 'transparent'
+    if (/^#[0-9a-f]{3,6}$/i.test(c)) {
+        if (c.length === 4) {
+            return `#${c[1]}${c[1]}${c[2]}${c[2]}${c[3]}${c[3]}`
+        }
+        return c
+    }
+    const m = c.match(/^rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})/)
+    if (!m) return null
+    const hex = (n) => Math.min(255, parseInt(n, 10)).toString(16).padStart(2, '0')
+    return `#${hex(m[1])}${hex(m[2])}${hex(m[3])}`
+}
+
+/** Normaliza fuentes y colores de resaltado antes de guardar o enviar. */
+export function normalizarHtmlCorreo(html) {
+    if (typeof document === 'undefined' || !html?.trim()) return html || ''
+
+    const div = document.createElement('div')
+    div.innerHTML = html
+
+    div.querySelectorAll('span').forEach((span) => {
+        const parsed = parsearEstiloInline(span.getAttribute('style') || '')
+        const fam =
+            span.style.fontFamily ||
+            parsed['font-family'] ||
+            null
+        const canonFam = resolverFuenteCanonica(fam)
+        if (canonFam) parsed['font-family'] = canonFam
+
+        const bg = span.style.backgroundColor || parsed['background-color']
+        const hexBg = rgbAHex(bg)
+        if (hexBg) {
+            const permitido = RESALTADO_COLORES_CORREO.some((r) => r.value === hexBg || r.value === 'transparent')
+            if (permitido || hexBg === 'transparent') parsed['background-color'] = hexBg
+        }
+
+        const size = span.style.fontSize || parsed['font-size']
+        if (size) {
+            const px = String(size).toLowerCase().replace(/(\d+)\.0+px/, '$1px')
+            if (TAMANOS_LETRA_CORREO.some((t) => t.value === px)) parsed['font-size'] = px
+        }
+
+        const keys = Object.keys(parsed)
+        if (keys.length === 0) {
+            span.removeAttribute('style')
+            return
+        }
+        const css = keys.map((k) => `${k}: ${parsed[k]}`).join('; ')
+        span.setAttribute('style', css)
+    })
+
+    return div.innerHTML
+}
+
 /** Resaltado tipo marcador (fondo detrás del texto), estilo Word. */
 export const RESALTADO_COLORES_CORREO = [
     { label: 'Quitar resaltado', value: 'transparent', color: '#ffffff', border: true },
@@ -76,11 +184,10 @@ export function aplicarEstiloEnSeleccion(editorEl, styles, onSync) {
     if (range.collapsed) return false
 
     const span = document.createElement('span')
-    Object.entries(styles).forEach(([key, val]) => {
-        if (val != null && String(val).trim() !== '') {
-            span.style[key] = val
-        }
-    })
+    const css = estilosAInlineCss(styles)
+    if (css) {
+        span.setAttribute('style', css)
+    }
 
     try {
         range.surroundContents(span)

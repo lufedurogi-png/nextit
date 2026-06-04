@@ -11,6 +11,7 @@ import {
 import {
     aplicarEstiloEnSeleccion,
     FUENTES_CORREO,
+    normalizarHtmlCorreo,
     RESALTADO_COLORES_CORREO,
     TAMANOS_LETRA_CORREO,
 } from '@/lib/ventasCorreoRichText'
@@ -35,7 +36,7 @@ export function nombreVistaPreviaDestinatario(destinatario) {
 }
 
 export function buildCuerpoHtmlConImagenes(htmlEditor, cantidadImagenes) {
-    let html = (htmlEditor || '').trim()
+    let html = normalizarHtmlCorreo((htmlEditor || '').trim())
     if (cantidadImagenes > 0) {
         const bloque = Array.from({ length: cantidadImagenes }, (_, i) => `<p>[[IMG:${i}]]</p>`).join('')
         html = `${html}<div>${bloque}</div>`
@@ -153,7 +154,12 @@ export default function VentasCorreoEditor({
     const enModoPlantilla = modoPlantilla !== null
 
     const syncEditorHtml = useCallback(() => {
-        onCuerpoChange(editorRef.current?.innerHTML ?? '')
+        const raw = editorRef.current?.innerHTML ?? ''
+        const html = normalizarHtmlCorreo(raw)
+        if (editorRef.current && html !== raw) {
+            editorRef.current.innerHTML = html
+        }
+        onCuerpoChange(html)
     }, [editorRef, onCuerpoChange])
 
     const avisoSeleccionTexto = useCallback((mensaje) => {
@@ -232,7 +238,7 @@ export default function VentasCorreoEditor({
 
     const guardarPlantilla = async () => {
         const nombre = plantillaNombre.trim()
-        const html = editorRef.current?.innerHTML ?? ''
+        const html = normalizarHtmlCorreo(editorRef.current?.innerHTML ?? '')
         const plano = html.replace(/<[^>]+>/g, '').trim()
         const tieneContenido = plano.length > 0 || html.includes(ETIQUETA_USUARIOS)
 
@@ -373,7 +379,6 @@ export default function VentasCorreoEditor({
     const cuerpoPlano = (cuerpoHtml || '').replace(/<[^>]+>/g, '')
     const tieneEtiquetaUsuarios = cuerpoPlano.includes(ETIQUETA_USUARIOS)
     const ejemploDestinatario = destinatariosSeleccionados?.[0]
-    const nombreEjemplo = nombreVistaPreviaDestinatario(ejemploDestinatario)
 
     const agregarImagen = (file) => {
         if (!file || !file.type.startsWith('image/')) return
@@ -421,7 +426,7 @@ export default function VentasCorreoEditor({
             <div>
                 <Label>Cuerpo del mensaje</Label>
                 <p className="text-xs text-orange-700/70 dark:text-orange-300/60 mb-2">
-                    Selecciona el texto y usa la barra de formato (fuente, tamaño, resaltado tipo marcador, negrita, etc.). Inserta{' '}
+                    Inserta{' '}
                     <code className="rounded bg-orange-100/80 px-1 py-0.5 text-[11px] dark:bg-orange-900/50">{ETIQUETA_USUARIOS}</code>{' '}
                     para que cada destinatario vea su nombre registrado.
                 </p>
@@ -675,7 +680,7 @@ export default function VentasCorreoEditor({
                                 ? 'Escribe aquí el mensaje preescrito…'
                                 : 'Escribe tu mensaje aquí…'
                         }
-                        onInput={() => onCuerpoChange(editorRef.current?.innerHTML ?? '')}
+                        onInput={() => syncEditorHtml()}
                         className={`min-h-[10rem] xl:min-h-[14rem] px-3 py-3 text-sm outline-none focus:ring-2 focus:ring-inset empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400 dark:empty:before:text-orange-400/40 ${
                             enModoPlantilla
                                 ? darkMode
@@ -719,11 +724,9 @@ export default function VentasCorreoEditor({
                     <p className="mt-2 text-xs text-orange-700/90 dark:text-orange-300/80 rounded-lg bg-orange-50/90 dark:bg-orange-950/40 px-3 py-2 border border-orange-100 dark:border-orange-900/50">
                         {ejemploDestinatario ? (
                             <>
-                                Vista previa (ejemplo con{' '}
-                                <strong>{ejemploDestinatario.nombre || ejemploDestinatario.email}</strong>): cada
-                                persona verá su propio nombre donde escribiste{' '}
-                                <code className="font-mono text-[11px]">{ETIQUETA_USUARIOS}</code> — p. ej. «Estimado{' '}
-                                <strong>{nombreEjemplo}</strong>».
+                                Vista previa (ejemplo con <strong>Usuario</strong>): cada persona verá su propio nombre
+                                donde escribiste <code className="font-mono text-[11px]">{ETIQUETA_USUARIOS}</code> — p.
+                                ej. «Estimado <strong>Usuario</strong>».
                             </>
                         ) : (
                             <>
