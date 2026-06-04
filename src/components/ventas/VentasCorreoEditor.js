@@ -1,7 +1,19 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Label from '@/components/Label'
+import {
+    createVentasCorreoPlantilla,
+    deleteVentasCorreoPlantilla,
+    fetchVentasCorreoPlantillas,
+    updateVentasCorreoPlantilla,
+} from '@/lib/ventasCorreosApi'
+import {
+    aplicarEstiloEnSeleccion,
+    FUENTES_CORREO,
+    RESALTADO_COLORES_CORREO,
+    TAMANOS_LETRA_CORREO,
+} from '@/lib/ventasCorreoRichText'
 
 function formatBytes(n) {
     const b = Number(n) || 0
@@ -34,6 +46,69 @@ export function buildCuerpoHtmlConImagenes(htmlEditor, cantidadImagenes) {
 /** Recuadro tipo historia de Instagram: ~9:16, compacto */
 const STORY_TILE = 'relative shrink-0 w-[4.5rem] h-[5.75rem] sm:w-[5rem] sm:h-[6.5rem]'
 
+function ToolbarDropdown({ darkMode, label, children, panelClassName = '' }) {
+    const [open, setOpen] = useState(false)
+    const rootRef = useRef(null)
+    const close = () => setOpen(false)
+
+    useEffect(() => {
+        if (!open) return undefined
+        const onOutside = (e) => {
+            if (rootRef.current && !rootRef.current.contains(e.target)) {
+                close()
+            }
+        }
+        document.addEventListener('mousedown', onOutside)
+        return () => document.removeEventListener('mousedown', onOutside)
+    }, [open])
+
+    const triggerCls = `flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition ${
+        open
+            ? darkMode
+                ? 'border-orange-500/60 bg-orange-900/40 text-orange-50'
+                : 'border-orange-400 bg-orange-100 text-orange-950'
+            : darkMode
+              ? 'border-orange-800/60 bg-[#262626]/80 text-orange-100 hover:bg-orange-950/60'
+              : 'border-orange-200 bg-white text-orange-950 hover:bg-orange-50'
+    }`
+
+    const panelCls = `absolute left-0 top-full z-40 mt-1 overflow-hidden rounded-xl border shadow-lg ${
+        darkMode ? 'border-orange-800/70 bg-[#262626]' : 'border-orange-200 bg-white shadow-orange-900/10'
+    } ${panelClassName}`
+
+    return (
+        <div ref={rootRef} className="relative shrink-0">
+            <button
+                type="button"
+                className={triggerCls}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => setOpen((o) => !o)}
+                aria-expanded={open}
+                aria-haspopup="listbox"
+            >
+                <span>{label}</span>
+                <svg
+                    className={`h-3.5 w-3.5 shrink-0 opacity-60 transition ${open ? 'rotate-180' : ''}`}
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    aria-hidden
+                >
+                    <path
+                        fillRule="evenodd"
+                        d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.24 4.5a.75.75 0 01-1.08 0l-4.24-4.5a.75.75 0 01.02-1.06z"
+                        clipRule="evenodd"
+                    />
+                </svg>
+            </button>
+            {open ? (
+                <div className={panelCls} role="listbox" onMouseDown={(e) => e.preventDefault()}>
+                    {typeof children === 'function' ? children({ close }) : children}
+                </div>
+            ) : null}
+        </div>
+    )
+}
+
 export default function VentasCorreoEditor({
     darkMode,
     asunto,
@@ -58,11 +133,178 @@ export default function VentasCorreoEditor({
     brandBtn,
     brandStyle,
     ghostBtn,
+    dangerBtn,
 }) {
     const imagenInputRef = useRef(null)
 
+    const [plantillas, setPlantillas] = useState([])
+    const [plantillasLoading, setPlantillasLoading] = useState(true)
+    /** null = redactar correo; 'nueva' o id numérico = editar plantilla */
+    const [modoPlantilla, setModoPlantilla] = useState(null)
+    const [plantillaNombre, setPlantillaNombre] = useState('')
+    const [snapshotComposeHtml, setSnapshotComposeHtml] = useState('')
+    const [plantillaError, setPlantillaError] = useState('')
+    const [plantillaGuardando, setPlantillaGuardando] = useState(false)
+    const [confirmEliminarPlantilla, setConfirmEliminarPlantilla] = useState(null)
+    /** HTML a cargar en el editor al entrar en modo plantilla (evita perderlo al re-renderizar). */
+    const [plantillaHtmlDraft, setPlantillaHtmlDraft] = useState('')
+    const [formatoAviso, setFormatoAviso] = useState('')
+
+    const enModoPlantilla = modoPlantilla !== null
+
+    const syncEditorHtml = useCallback(() => {
+        onCuerpoChange(editorRef.current?.innerHTML ?? '')
+    }, [editorRef, onCuerpoChange])
+
+    const avisoSeleccionTexto = useCallback((mensaje) => {
+        setFormatoAviso(mensaje)
+        window.setTimeout(() => setFormatoAviso(''), 2800)
+    }, [])
+
+    useEffect(() => {
+        if (!enModoPlantilla) return
+        const el = editorRef.current
+        if (!el) return
+        el.innerHTML = plantillaHtmlDraft
+    }, [modoPlantilla, enModoPlantilla, plantillaHtmlDraft, editorRef])
+
+    const cargarPlantillas = useCallback(async () => {
+        setPlantillasLoading(true)
+        try {
+            const lista = await fetchVentasCorreoPlantillas()
+            setPlantillas(Array.isArray(lista) ? lista : [])
+        } catch {
+            setPlantillas([])
+        } finally {
+            setPlantillasLoading(false)
+        }
+    }, [])
+
+    useEffect(() => {
+        cargarPlantillas()
+    }, [cargarPlantillas])
+
+    const salirModoPlantilla = useCallback(
+        (restaurarCompose = true) => {
+            if (restaurarCompose && editorRef.current) {
+                const html = snapshotComposeHtml || ''
+                editorRef.current.innerHTML = html
+                onCuerpoChange(html)
+            }
+            setModoPlantilla(null)
+            setPlantillaNombre('')
+            setPlantillaHtmlDraft('')
+            setSnapshotComposeHtml('')
+            setPlantillaError('')
+        },
+        [snapshotComposeHtml, editorRef, onCuerpoChange],
+    )
+
+    const iniciarNuevaPlantilla = () => {
+        if (enModoPlantilla) return
+        const htmlActual = editorRef.current?.innerHTML ?? cuerpoHtml ?? ''
+        setSnapshotComposeHtml(htmlActual)
+        setPlantillaHtmlDraft('')
+        setModoPlantilla('nueva')
+        setPlantillaNombre('')
+        setPlantillaError('')
+        onCuerpoChange('')
+        queueMicrotask(() => editorRef.current?.focus())
+    }
+
+    const iniciarEditarPlantilla = (plantilla) => {
+        if (!enModoPlantilla) {
+            const htmlActual = editorRef.current?.innerHTML ?? cuerpoHtml ?? ''
+            setSnapshotComposeHtml(htmlActual)
+        }
+        const html = plantilla.cuerpo_html || ''
+        setPlantillaHtmlDraft(html)
+        setPlantillaNombre(plantilla.nombre || '')
+        setPlantillaError('')
+        setModoPlantilla(plantilla.id)
+        onCuerpoChange(html)
+        queueMicrotask(() => editorRef.current?.focus())
+    }
+
+    const cancelarPlantilla = () => {
+        salirModoPlantilla(true)
+    }
+
+    const guardarPlantilla = async () => {
+        const nombre = plantillaNombre.trim()
+        const html = editorRef.current?.innerHTML ?? ''
+        const plano = html.replace(/<[^>]+>/g, '').trim()
+        const tieneContenido = plano.length > 0 || html.includes(ETIQUETA_USUARIOS)
+
+        if (!nombre) {
+            setPlantillaError('Escribe un nombre para el mensaje preescrito.')
+            return
+        }
+        if (!tieneContenido) {
+            setPlantillaError('Escribe el contenido del mensaje preescrito.')
+            return
+        }
+
+        setPlantillaGuardando(true)
+        setPlantillaError('')
+        try {
+            if (modoPlantilla === 'nueva') {
+                await createVentasCorreoPlantilla({ nombre, cuerpo_html: html })
+            } else {
+                await updateVentasCorreoPlantilla(modoPlantilla, { nombre, cuerpo_html: html })
+            }
+            await cargarPlantillas()
+            salirModoPlantilla(true)
+        } catch (e) {
+            setPlantillaError(e?.response?.data?.message || e?.message || 'No se pudo guardar.')
+        } finally {
+            setPlantillaGuardando(false)
+        }
+    }
+
+    const aplicarPlantilla = (plantilla) => {
+        if (enModoPlantilla) return
+        const html = plantilla.cuerpo_html || ''
+        const actual = (editorRef.current?.innerHTML ?? cuerpoHtml ?? '').replace(/<[^>]+>/g, '').trim()
+        if (actual.length > 0) {
+            const ok = window.confirm(
+                `¿Reemplazar el mensaje actual con «${plantilla.nombre}»?`,
+            )
+            if (!ok) return
+        }
+        if (editorRef.current) {
+            editorRef.current.innerHTML = html
+        }
+        onCuerpoChange(html)
+        editorRef.current?.focus()
+    }
+
+    const ejecutarEliminarPlantilla = async () => {
+        if (!confirmEliminarPlantilla) return
+        const id = confirmEliminarPlantilla.id
+        setPlantillaGuardando(true)
+        try {
+            await deleteVentasCorreoPlantilla(id)
+            if (modoPlantilla === id) {
+                salirModoPlantilla(true)
+            }
+            await cargarPlantillas()
+            setConfirmEliminarPlantilla(null)
+        } catch (e) {
+            setPlantillaError(e?.response?.data?.message || e?.message || 'No se pudo eliminar.')
+            setConfirmEliminarPlantilla(null)
+        } finally {
+            setPlantillaGuardando(false)
+        }
+    }
+
     useEffect(() => {
         if (mensajeResetKey === 0) return
+        setModoPlantilla(null)
+        setPlantillaNombre('')
+        setPlantillaHtmlDraft('')
+        setSnapshotComposeHtml('')
+        setPlantillaError('')
         if (editorRef.current) {
             editorRef.current.innerHTML = ''
         }
@@ -78,7 +320,43 @@ export default function VentasCorreoEditor({
         try {
             document.execCommand(cmd, false, null)
         } catch (_) {}
+        syncEditorHtml()
     }
+
+    const aplicarFuente = (fuente, close) => {
+        const ok = aplicarEstiloEnSeleccion(
+            editorRef.current,
+            { fontFamily: fuente.value },
+            syncEditorHtml,
+        )
+        if (!ok) avisoSeleccionTexto('Selecciona texto para aplicar la fuente.')
+        else close?.()
+    }
+
+    const aplicarTamano = (tamano, close) => {
+        const ok = aplicarEstiloEnSeleccion(
+            editorRef.current,
+            { fontSize: tamano.value },
+            syncEditorHtml,
+        )
+        if (!ok) avisoSeleccionTexto('Selecciona texto para cambiar el tamaño.')
+        else close?.()
+    }
+
+    const aplicarResaltado = (opcion, close) => {
+        const ok = aplicarEstiloEnSeleccion(
+            editorRef.current,
+            { backgroundColor: opcion.value },
+            syncEditorHtml,
+        )
+        if (!ok) avisoSeleccionTexto('Selecciona texto para resaltar.')
+        else close?.()
+    }
+
+    const menuItemCls = (darkMode) =>
+        `block w-full px-3 py-2 text-left text-sm transition ${
+            darkMode ? 'text-orange-50 hover:bg-orange-900/50' : 'text-gray-800 hover:bg-orange-50'
+        }`
 
     const insertarEtiquetaUsuarios = () => {
         const el = editorRef.current
@@ -89,7 +367,7 @@ export default function VentasCorreoEditor({
         } catch (_) {
             el.textContent = (el.textContent || '') + ETIQUETA_USUARIOS
         }
-        onCuerpoChange(el.innerHTML ?? '')
+        syncEditorHtml()
     }
 
     const cuerpoPlano = (cuerpoHtml || '').replace(/<[^>]+>/g, '')
@@ -143,10 +421,15 @@ export default function VentasCorreoEditor({
             <div>
                 <Label>Cuerpo del mensaje</Label>
                 <p className="text-xs text-orange-700/70 dark:text-orange-300/60 mb-2">
-                    Selecciona texto y usa negrita, cursiva o subrayado. Inserta{' '}
+                    Selecciona el texto y usa la barra de formato (fuente, tamaño, resaltado tipo marcador, negrita, etc.). Inserta{' '}
                     <code className="rounded bg-orange-100/80 px-1 py-0.5 text-[11px] dark:bg-orange-900/50">{ETIQUETA_USUARIOS}</code>{' '}
                     para que cada destinatario vea su nombre registrado.
                 </p>
+                {formatoAviso ? (
+                    <p className="mb-2 text-xs font-medium text-amber-800 dark:text-amber-200/90 rounded-lg bg-amber-50 dark:bg-amber-950/40 px-2.5 py-1.5 border border-amber-200/80 dark:border-amber-800/50">
+                        {formatoAviso}
+                    </p>
+                ) : null}
                 <div
                     className={`rounded-xl border overflow-hidden ${
                         darkMode ? 'border-orange-800/60' : 'border-orange-100'
@@ -159,25 +442,227 @@ export default function VentasCorreoEditor({
                         role="toolbar"
                         aria-label="Formato de texto"
                     >
-                        <button type="button" className={toolbarBtn} onClick={() => aplicarFormato('bold')} title="Negrita">
-                            <span className="font-bold">B</span>
-                        </button>
-                        <button type="button" className={toolbarBtn} onClick={() => aplicarFormato('italic')} title="Cursiva">
-                            <span className="italic">I</span>
-                        </button>
-                        <button type="button" className={toolbarBtn} onClick={() => aplicarFormato('underline')} title="Subrayado">
-                            <span className="underline">U</span>
-                        </button>
-                        <span className="mx-1 h-5 w-px bg-orange-200 dark:bg-orange-800/80" aria-hidden />
                         <button
                             type="button"
-                            className={`${toolbarBtn} font-mono text-xs font-semibold normal-case tracking-tight`}
+                            className={toolbarBtn}
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => aplicarFormato('bold')}
+                            title="Negrita"
+                        >
+                            <span className="font-bold">B</span>
+                        </button>
+                        <button
+                            type="button"
+                            className={toolbarBtn}
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => aplicarFormato('italic')}
+                            title="Cursiva"
+                        >
+                            <span className="italic">I</span>
+                        </button>
+                        <button
+                            type="button"
+                            className={toolbarBtn}
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => aplicarFormato('underline')}
+                            title="Subrayado (línea)"
+                        >
+                            <span className="underline">U</span>
+                        </button>
+                        <ToolbarDropdown darkMode={darkMode} label="Fuente" panelClassName="min-w-[11rem] max-h-56 overflow-y-auto">
+                            {({ close }) =>
+                                FUENTES_CORREO.map((f) => (
+                                    <button
+                                        key={f.label}
+                                        type="button"
+                                        role="option"
+                                        className={menuItemCls(darkMode)}
+                                        style={{ fontFamily: f.value }}
+                                        onClick={() => aplicarFuente(f, close)}
+                                    >
+                                        {f.label}
+                                    </button>
+                                ))
+                            }
+                        </ToolbarDropdown>
+                        <ToolbarDropdown darkMode={darkMode} label="Tamaño" panelClassName="min-w-[6.5rem] max-h-48 overflow-y-auto">
+                            {({ close }) =>
+                                TAMANOS_LETRA_CORREO.map((t) => (
+                                    <button
+                                        key={t.value}
+                                        type="button"
+                                        role="option"
+                                        className={menuItemCls(darkMode)}
+                                        style={{ fontSize: t.value }}
+                                        onClick={() => aplicarTamano(t, close)}
+                                    >
+                                        {t.label}
+                                    </button>
+                                ))
+                            }
+                        </ToolbarDropdown>
+                        <ToolbarDropdown darkMode={darkMode} label="Resaltar" panelClassName="min-w-[10.5rem] p-2">
+                            {({ close }) => (
+                                <div className="grid grid-cols-4 gap-1.5">
+                                    {RESALTADO_COLORES_CORREO.map((c) => (
+                                        <button
+                                            key={c.label}
+                                            type="button"
+                                            role="option"
+                                            title={c.label}
+                                            className={`flex h-8 w-full items-center justify-center rounded-lg border-2 transition hover:scale-105 ${
+                                                c.border
+                                                    ? darkMode
+                                                        ? 'border-dashed border-orange-600/70 bg-[#202020]'
+                                                        : 'border-dashed border-orange-300 bg-white'
+                                                    : darkMode
+                                                      ? 'border-orange-900/60'
+                                                      : 'border-orange-100'
+                                            }`}
+                                            onClick={() => aplicarResaltado(c, close)}
+                                        >
+                                            {c.border ? (
+                                                <span
+                                                    className={`text-[9px] font-bold leading-none ${
+                                                        darkMode ? 'text-orange-300/80' : 'text-orange-700/70'
+                                                    }`}
+                                                >
+                                                    ×
+                                                </span>
+                                            ) : (
+                                                <span
+                                                    className="block h-5 w-full max-w-[1.75rem] rounded-md"
+                                                    style={{ backgroundColor: c.color }}
+                                                />
+                                            )}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </ToolbarDropdown>
+                        <span className="mx-1 h-5 w-px shrink-0 bg-orange-200 dark:bg-orange-800/80" aria-hidden />
+                        <button
+                            type="button"
+                            className={`${toolbarBtn} shrink-0 font-mono text-xs font-semibold normal-case tracking-tight`}
                             onClick={insertarEtiquetaUsuarios}
                             title="Insertar nombre del destinatario"
                         >
                             {ETIQUETA_USUARIOS}
                         </button>
+                        <span className="mx-1 h-5 w-px shrink-0 bg-orange-200 dark:bg-orange-800/80" aria-hidden />
+                        <div
+                            className={`flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto pb-0.5 ${
+                                darkMode ? 'scrollbar-thumb-orange-800' : 'scrollbar-thumb-orange-200'
+                            }`}
+                            role="list"
+                            aria-label="Mensajes preescritos"
+                        >
+                            {plantillasLoading ? (
+                                <span className={`px-2 text-[11px] ${darkMode ? 'text-orange-400/60' : 'text-orange-700/60'}`}>
+                                    Cargando…
+                                </span>
+                            ) : plantillas.length === 0 ? (
+                                <span className={`px-1 text-[11px] italic ${darkMode ? 'text-orange-400/50' : 'text-orange-700/55'}`}>
+                                    Sin preescritos
+                                </span>
+                            ) : (
+                                plantillas.map((p) => (
+                                    <div
+                                        key={p.id}
+                                        role="listitem"
+                                        className={`inline-flex shrink-0 items-stretch overflow-hidden rounded-lg border text-xs font-semibold ${
+                                            darkMode
+                                                ? 'border-orange-700/60 bg-orange-950/40'
+                                                : 'border-orange-200 bg-white shadow-sm'
+                                        } ${enModoPlantilla && modoPlantilla === p.id ? 'ring-2 ring-amber-400/60' : ''}`}
+                                    >
+                                        <button
+                                            type="button"
+                                            disabled={enModoPlantilla}
+                                            onClick={() => aplicarPlantilla(p)}
+                                            title={`Usar «${p.nombre}» en el mensaje`}
+                                            className={`max-w-[9.5rem] truncate px-2.5 py-1.5 transition ${
+                                                enModoPlantilla
+                                                    ? 'cursor-not-allowed opacity-45'
+                                                    : darkMode
+                                                      ? 'text-orange-100 hover:bg-orange-900/50'
+                                                      : 'text-orange-950 hover:bg-orange-50'
+                                            }`}
+                                        >
+                                            {p.nombre}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => iniciarEditarPlantilla(p)}
+                                            title="Editar mensaje preescrito"
+                                            className={`border-l px-2 py-1.5 transition ${
+                                                darkMode
+                                                    ? 'border-orange-800/80 text-orange-200 hover:bg-orange-900/60'
+                                                    : 'border-orange-100 text-orange-800 hover:bg-orange-100'
+                                            }`}
+                                            aria-label={`Editar ${p.nombre}`}
+                                        >
+                                            ✎
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setConfirmEliminarPlantilla(p)}
+                                            title="Eliminar mensaje preescrito"
+                                            className={`border-l px-2 py-1.5 transition ${
+                                                darkMode
+                                                    ? 'border-orange-800/80 text-rose-300 hover:bg-rose-950/50'
+                                                    : 'border-orange-100 text-rose-600 hover:bg-rose-50'
+                                            }`}
+                                            aria-label={`Eliminar ${p.nombre}`}
+                                        >
+                                            ×
+                                        </button>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                        <button
+                            type="button"
+                            disabled={enModoPlantilla}
+                            onClick={iniciarNuevaPlantilla}
+                            title="Nuevo mensaje preescrito"
+                            className={`ml-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 text-lg font-light leading-none transition ${
+                                enModoPlantilla
+                                    ? 'cursor-not-allowed opacity-40'
+                                    : darkMode
+                                      ? 'border-orange-500/70 bg-orange-950/50 text-orange-100 hover:bg-orange-800/50'
+                                      : 'border-orange-400 bg-orange-50 text-orange-900 hover:bg-orange-100'
+                            }`}
+                            aria-label="Agregar mensaje preescrito"
+                        >
+                            +
+                        </button>
                     </div>
+                    {enModoPlantilla ? (
+                        <div
+                            className={`border-b px-3 py-2.5 space-y-2 ${
+                                darkMode ? 'border-amber-800/50 bg-amber-950/25' : 'border-amber-200 bg-amber-50/90'
+                            }`}
+                        >
+                            <p className={`text-xs font-medium ${darkMode ? 'text-amber-200/90' : 'text-amber-900/90'}`}>
+                                Modo mensaje preescrito — al guardar quedará disponible en la barra superior.
+                            </p>
+                            <div>
+                                <Label htmlFor="ventas-correo-plantilla-nombre" className="text-xs">
+                                    Nombre del mensaje
+                                </Label>
+                                <input
+                                    id="ventas-correo-plantilla-nombre"
+                                    type="text"
+                                    maxLength={80}
+                                    value={plantillaNombre}
+                                    onChange={(e) => setPlantillaNombre(e.target.value)}
+                                    placeholder="Ej. Seguimiento, Promo, Bienvenida…"
+                                    className={`mt-1 ${inputCls}`}
+                                />
+                            </div>
+                        </div>
+                    ) : null}
                     <div
                         key={`editor-${mensajeResetKey}`}
                         ref={editorRef}
@@ -185,12 +670,50 @@ export default function VentasCorreoEditor({
                         suppressContentEditableWarning
                         role="textbox"
                         aria-multiline="true"
-                        data-placeholder="Escribe tu mensaje aquí…"
+                        data-placeholder={
+                            enModoPlantilla
+                                ? 'Escribe aquí el mensaje preescrito…'
+                                : 'Escribe tu mensaje aquí…'
+                        }
                         onInput={() => onCuerpoChange(editorRef.current?.innerHTML ?? '')}
-                        className={`min-h-[10rem] xl:min-h-[14rem] px-3 py-3 text-sm outline-none focus:ring-2 focus:ring-inset focus:ring-orange-400/30 empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400 dark:empty:before:text-orange-400/40 ${
-                            darkMode ? 'bg-[#202020] text-orange-50' : 'bg-white text-gray-900'
+                        className={`min-h-[10rem] xl:min-h-[14rem] px-3 py-3 text-sm outline-none focus:ring-2 focus:ring-inset empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400 dark:empty:before:text-orange-400/40 ${
+                            enModoPlantilla
+                                ? darkMode
+                                    ? 'bg-amber-950/35 text-orange-50 ring-2 ring-inset ring-amber-500/40 focus:ring-amber-400/50'
+                                    : 'bg-amber-50/95 text-gray-900 ring-2 ring-inset ring-amber-300/80 focus:ring-amber-400/40'
+                                : darkMode
+                                  ? 'bg-[#202020] text-orange-50 focus:ring-orange-400/30'
+                                  : 'bg-white text-gray-900 focus:ring-orange-400/30'
                         }`}
                     />
+                    {enModoPlantilla ? (
+                        <div
+                            className={`flex flex-wrap items-center gap-2 border-t px-3 py-2.5 ${
+                                darkMode ? 'border-amber-800/50 bg-amber-950/20' : 'border-amber-200 bg-amber-50/70'
+                            }`}
+                        >
+                            <button
+                                type="button"
+                                className={brandBtn}
+                                style={brandStyle}
+                                disabled={plantillaGuardando}
+                                onClick={guardarPlantilla}
+                            >
+                                {plantillaGuardando ? 'Guardando…' : 'Guardar'}
+                            </button>
+                            <button
+                                type="button"
+                                className={ghostBtn}
+                                disabled={plantillaGuardando}
+                                onClick={cancelarPlantilla}
+                            >
+                                Cancelar
+                            </button>
+                            {plantillaError ? (
+                                <p className="w-full text-xs text-red-600 dark:text-red-300">{plantillaError}</p>
+                            ) : null}
+                        </div>
+                    ) : null}
                 </div>
                 {tieneEtiquetaUsuarios && (
                     <p className="mt-2 text-xs text-orange-700/90 dark:text-orange-300/80 rounded-lg bg-orange-50/90 dark:bg-orange-950/40 px-3 py-2 border border-orange-100 dark:border-orange-900/50">
@@ -408,6 +931,49 @@ export default function VentasCorreoEditor({
                     </div>
                 </div>
             )}
+
+            {confirmEliminarPlantilla ? (
+                <>
+                    <div
+                        className="fixed inset-0 z-[60] bg-black/55 backdrop-blur-sm"
+                        onClick={() => !plantillaGuardando && setConfirmEliminarPlantilla(null)}
+                        aria-hidden
+                    />
+                    <div
+                        role="alertdialog"
+                        aria-modal="true"
+                        aria-labelledby="eliminar-plantilla-titulo"
+                        className={`fixed left-1/2 top-1/2 z-[61] w-[min(24rem,calc(100%-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-2xl border p-5 shadow-2xl ${
+                            darkMode ? 'border-orange-900/50 bg-[#262626]' : 'border-orange-100 bg-white'
+                        }`}
+                    >
+                        <h3 id="eliminar-plantilla-titulo" className="font-semibold text-gray-900 dark:text-white">
+                            Eliminar mensaje preescrito
+                        </h3>
+                        <p className="mt-2 text-sm text-orange-900/85 dark:text-orange-200/80">
+                            ¿Eliminar «<strong>{confirmEliminarPlantilla.nombre}</strong>»? Esta acción no se puede deshacer.
+                        </p>
+                        <div className="mt-4 flex flex-wrap gap-2">
+                            <button
+                                type="button"
+                                className={dangerBtn}
+                                disabled={plantillaGuardando}
+                                onClick={ejecutarEliminarPlantilla}
+                            >
+                                {plantillaGuardando ? 'Eliminando…' : 'Sí, eliminar'}
+                            </button>
+                            <button
+                                type="button"
+                                className={ghostBtn}
+                                disabled={plantillaGuardando}
+                                onClick={() => setConfirmEliminarPlantilla(null)}
+                            >
+                                Cancelar
+                            </button>
+                        </div>
+                    </div>
+                </>
+            ) : null}
 
             <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-orange-100 dark:border-orange-900/40">
                 <p className="text-xs text-orange-700/80 dark:text-orange-300/60">

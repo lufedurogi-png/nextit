@@ -97,6 +97,37 @@ export async function fetchVentasCorreoHistorialDetalle(id) {
     return data.data
 }
 
+export async function fetchVentasCorreoPlantillas() {
+    const { data } = await axios.get('/ventas/correos/plantillas')
+    if (!data?.success || !Array.isArray(data.data)) {
+        throw new Error(data?.message || 'No se pudieron cargar los mensajes preescritos.')
+    }
+    return data.data
+}
+
+export async function createVentasCorreoPlantilla({ nombre, cuerpo_html }) {
+    const { data } = await axios.post('/ventas/correos/plantillas', { nombre, cuerpo_html })
+    if (!data?.success || !data.data) {
+        throw new Error(data?.message || 'No se pudo guardar el mensaje preescrito.')
+    }
+    return data.data
+}
+
+export async function updateVentasCorreoPlantilla(id, { nombre, cuerpo_html }) {
+    const { data } = await axios.put(`/ventas/correos/plantillas/${id}`, { nombre, cuerpo_html })
+    if (!data?.success || !data.data) {
+        throw new Error(data?.message || 'No se pudo actualizar el mensaje preescrito.')
+    }
+    return data.data
+}
+
+export async function deleteVentasCorreoPlantilla(id) {
+    const { data } = await axios.delete(`/ventas/correos/plantillas/${id}`)
+    if (!data?.success) {
+        throw new Error(data?.message || 'No se pudo eliminar el mensaje preescrito.')
+    }
+}
+
 export async function sendVentasCorreos({ asunto, cuerpo, destinatario_ids, adjuntos = [], imagenes_inline = [] }) {
     const formData = new FormData()
     formData.append('asunto', asunto)

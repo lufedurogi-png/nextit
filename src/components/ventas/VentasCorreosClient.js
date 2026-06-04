@@ -236,6 +236,7 @@ export default function VentasCorreosClient() {
                         brandBtn={brandBtn}
                         brandStyle={brandStyle}
                         ghostBtn={ghostBtn}
+                        dangerBtn={dangerBtn}
                     />
                 </div>
             </div>
