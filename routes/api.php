@@ -156,6 +156,10 @@ Route::prefix('v1')->group(function () {
             Route::get('/correos/destinatarios', [VentasCorreoController::class, 'indexDestinatarios'])->name('correos.destinatarios.index');
             Route::post('/correos/destinatarios', [VentasCorreoController::class, 'storeDestinatario'])->name('correos.destinatarios.store');
             Route::delete('/correos/destinatarios/{id}', [VentasCorreoController::class, 'destroyDestinatario'])->name('correos.destinatarios.destroy');
+            Route::get('/correos/plantillas', [VentasCorreoController::class, 'indexPlantillas'])->name('correos.plantillas.index');
+            Route::post('/correos/plantillas', [VentasCorreoController::class, 'storePlantilla'])->name('correos.plantillas.store');
+            Route::put('/correos/plantillas/{id}', [VentasCorreoController::class, 'updatePlantilla'])->name('correos.plantillas.update');
+            Route::delete('/correos/plantillas/{id}', [VentasCorreoController::class, 'destroyPlantilla'])->name('correos.plantillas.destroy');
             Route::post('/correos/enviar', [VentasCorreoController::class, 'send'])
                 ->middleware('throttle:20,1')
                 ->name('correos.enviar');

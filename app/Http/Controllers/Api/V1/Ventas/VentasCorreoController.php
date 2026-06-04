@@ -9,6 +9,7 @@ use App\Models\VentasCorreoGrupo;
 use App\Models\VentasCorreoEnvio;
 use App\Models\VentasCorreoEnvioAdjunto;
 use App\Models\VentasCorreoEnvioDestinatario;
+use App\Models\VentasCorreoPlantilla;
 use App\Support\VentasCorreoAdjuntoRules;
 use App\Support\VentasCorreoHtmlSanitizer;
 use App\Support\VentasCorreoPersonalizacion;
@@ -194,6 +195,114 @@ class VentasCorreoController extends Controller
         $destinatario->delete();
 
         return response()->json(['success' => true]);
+    }
+
+    public function indexPlantillas(): JsonResponse
+    {
+        $rows = VentasCorreoPlantilla::query()
+            ->where('user_id', Auth::id())
+            ->orderBy('nombre')
+            ->get()
+            ->map(fn (VentasCorreoPlantilla $p) => $this->mapPlantilla($p));
+
+        return response()->json(['success' => true, 'data' => $rows]);
+    }
+
+    public function storePlantilla(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'nombre' => ['required', 'string', 'max:80'],
+            'cuerpo_html' => ['required', 'string', 'max:50000'],
+        ]);
+
+        $nombre = trim($validated['nombre']);
+        $cuerpo = VentasCorreoHtmlSanitizer::sanitize($validated['cuerpo_html']);
+
+        if (! VentasCorreoHtmlSanitizer::tieneContenido($cuerpo)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Escribe el contenido del mensaje preescrito.',
+            ], 422);
+        }
+
+        if (VentasCorreoPlantilla::query()->where('user_id', Auth::id())->where('nombre', $nombre)->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ya tienes un mensaje preescrito con ese nombre.',
+            ], 422);
+        }
+
+        $plantilla = VentasCorreoPlantilla::create([
+            'user_id' => Auth::id(),
+            'nombre' => $nombre,
+            'cuerpo_html' => $cuerpo,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'data' => $this->mapPlantilla($plantilla),
+        ], 201);
+    }
+
+    public function updatePlantilla(Request $request, int $id): JsonResponse
+    {
+        $plantilla = VentasCorreoPlantilla::query()
+            ->where('user_id', Auth::id())
+            ->whereKey($id)
+            ->firstOrFail();
+
+        $validated = $request->validate([
+            'nombre' => ['required', 'string', 'max:80'],
+            'cuerpo_html' => ['required', 'string', 'max:50000'],
+        ]);
+
+        $nombre = trim($validated['nombre']);
+        $cuerpo = VentasCorreoHtmlSanitizer::sanitize($validated['cuerpo_html']);
+
+        if (! VentasCorreoHtmlSanitizer::tieneContenido($cuerpo)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Escribe el contenido del mensaje preescrito.',
+            ], 422);
+        }
+
+        $duplicado = VentasCorreoPlantilla::query()
+            ->where('user_id', Auth::id())
+            ->where('nombre', $nombre)
+            ->whereKeyNot($plantilla->id)
+            ->exists();
+
+        if ($duplicado) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ya tienes otro mensaje preescrito con ese nombre.',
+            ], 422);
+        }
+
+        $plantilla->update([
+            'nombre' => $nombre,
+            'cuerpo_html' => $cuerpo,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'data' => $this->mapPlantilla($plantilla->fresh()),
+        ]);
+    }
+
+    public function destroyPlantilla(int $id): JsonResponse
+    {
+        $plantilla = VentasCorreoPlantilla::query()
+            ->where('user_id', Auth::id())
+            ->whereKey($id)
+            ->firstOrFail();
+
+        $plantilla->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Mensaje preescrito eliminado.',
+        ]);
     }
 
     public function indexHistorial(Request $request): JsonResponse
@@ -595,6 +704,20 @@ class VentasCorreoController extends Controller
         }
 
         return $row;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function mapPlantilla(VentasCorreoPlantilla $p): array
+    {
+        return [
+            'id' => $p->id,
+            'nombre' => $p->nombre,
+            'cuerpo_html' => $p->cuerpo_html,
+            'created_at' => $p->created_at?->toIso8601String(),
+            'updated_at' => $p->updated_at?->toIso8601String(),
+        ];
     }
 
     /**
