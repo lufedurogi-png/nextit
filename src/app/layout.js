@@ -1,5 +1,6 @@
 import { Nunito, Playfair_Display, VT323 } from 'next/font/google'
 import '@/app/global.css'
+import TiendaChatbotHost from '@/components/TiendaChatbotHost'
 
 const nunitoFont = Nunito({
     subsets: ['latin'],
@@ -29,6 +30,7 @@ const RootLayout = ({ children }) => {
         >
             <body className="antialiased bg-gray-50 text-gray-900 dark:bg-tienda-canvas dark:text-gray-100 w-full overflow-x-hidden" suppressHydrationWarning>
                 {children}
+                <TiendaChatbotHost />
             </body>
         </html>
     )

@@ -97,7 +97,13 @@ export default function AdminMetodosPagoPage() {
                 <div className="flex flex-wrap items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                         <div className={`rounded-xl p-2.5 ${darkMode ? 'bg-emerald-700/35 ring-1 ring-emerald-400/40' : 'bg-white ring-1 ring-emerald-300'}`}>
-                            <Image src="/Imagenes/icons_metodosdepago.png" alt="" width={30} height={30} />
+                            <Image
+                                src="/Imagenes/icons_metodosdepago.png"
+                                alt=""
+                                width={30}
+                                height={30}
+                                className={darkMode ? 'brightness-0 invert' : undefined}
+                            />
                         </div>
                         <div>
                             <h1 className={`text-2xl font-bold ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>Métodos de pago</h1>
@@ -174,7 +180,9 @@ export default function AdminMetodosPagoPage() {
                                                         alt=""
                                                         width={38}
                                                         height={26}
-                                                        className="object-contain"
+                                                        className={`object-contain ${
+                                                            darkMode && method.code === 'tarjeta' ? 'brightness-0 invert' : ''
+                                                        }`}
                                                     />
                                                 </div>
                                                 <div className="min-w-0">

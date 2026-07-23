@@ -175,12 +175,7 @@ export default function TiendaNavHeader({ darkMode, setDarkMode, onToggleLeftSid
     }, [cotizacionesMenuOpen])
 
     const toggleDark = () => {
-        const next = !darkMode
-        setDarkMode(next)
-        localStorage.setItem('darkMode', JSON.stringify(next))
-        if (typeof window !== 'undefined') {
-            window.dispatchEvent(new CustomEvent('darkModeChange', { detail: next }))
-        }
+        setDarkMode(!darkMode)
     }
 
     const pill = `inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium transition-colors ${

@@ -1,5 +1,7 @@
 'use client'
 
+import { useAdminTheme } from '@/contexts/AdminThemeContext'
+
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import useSWR from 'swr'
 import Link from 'next/link'
@@ -91,8 +93,8 @@ function ProductoImagenesCelda({ urls, darkMode, rowKey }) {
                             className={`min-w-[1.25rem] rounded px-1 py-0.5 text-[10px] font-bold leading-none transition-colors ${
                                 i === safe
                                     ? darkMode
-                                        ? 'bg-emerald-600 text-white ring-1 ring-emerald-400/60'
-                                        : 'bg-emerald-600 text-white shadow-sm'
+                                        ? 'bg-orange-600 text-white ring-1 ring-orange-400/60'
+                                        : 'bg-orange-600 text-white shadow-sm'
                                     : darkMode
                                       ? 'bg-gray-800 text-gray-400 hover:bg-gray-700'
                                       : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
@@ -110,8 +112,8 @@ function ProductoImagenesCelda({ urls, darkMode, rowKey }) {
 function AdminPasswordField({ id, label, value, onChange, darkMode, labelClass, placeholder, autoComplete, className = 'max-w-md' }) {
     const [show, setShow] = useState(false)
     const wrap = darkMode
-        ? 'border-gray-600/90 bg-gray-900/40 focus-within:border-emerald-500/55 focus-within:ring-emerald-500/25'
-        : 'border-gray-300 bg-white focus-within:border-emerald-400 focus-within:ring-emerald-200'
+        ? 'border-gray-600/90 bg-gray-900/40 focus-within:border-orange-500/55 focus-within:ring-orange-500/25'
+        : 'border-gray-300 bg-white focus-within:border-orange-400 focus-within:ring-orange-200'
     return (
         <div className={className}>
             {label ? <Label className={labelClass}>{label}</Label> : null}
@@ -157,8 +159,8 @@ function PasswordModal({ open, title, darkMode, loading, error, onClose, onConfi
     if (!open) return null
     const box = darkMode ? 'bg-tienda-elevated border-gray-600 text-gray-100' : 'bg-white border-gray-200 text-gray-900'
     const wrap = darkMode
-        ? 'border-gray-600/90 bg-gray-800/80 focus-within:border-emerald-500/50'
-        : 'border-gray-300 bg-white focus-within:border-emerald-400'
+        ? 'border-gray-600/90 bg-gray-800/80 focus-within:border-orange-500/50'
+        : 'border-gray-300 bg-white focus-within:border-orange-400'
     return (
         <div
             className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4"
@@ -169,9 +171,9 @@ function PasswordModal({ open, title, darkMode, loading, error, onClose, onConfi
             <div className={`max-w-md w-full rounded-xl border shadow-2xl p-6 ${box}`} onClick={(e) => e.stopPropagation()}>
                 <h3 className="text-lg font-bold mb-2">{title}</h3>
                 <p className={`text-sm mb-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                    Introduce la contraseña del administrador en sesión para continuar.
+                    Introduce la contraseña del usuario en sesión para continuar.
                 </p>
-                <div className={`flex rounded-lg border overflow-hidden mb-3 focus-within:ring-2 ${wrap} ${darkMode ? 'ring-emerald-500/20' : 'ring-emerald-200'}`}>
+                <div className={`flex rounded-lg border overflow-hidden mb-3 focus-within:ring-2 ${wrap} ${darkMode ? 'ring-orange-500/20' : 'ring-orange-200'}`}>
                     <input
                         type={showPw ? 'text' : 'password'}
                         autoComplete="current-password"
@@ -207,7 +209,7 @@ function PasswordModal({ open, title, darkMode, loading, error, onClose, onConfi
                         type="button"
                         disabled={loading || !pw}
                         onClick={() => onConfirm(pw)}
-                        className="px-4 py-2 rounded-lg text-sm font-semibold bg-emerald-600 text-white disabled:opacity-50"
+                        className="px-4 py-2 rounded-lg text-sm font-semibold bg-orange-600 text-white disabled:opacity-50"
                     >
                         {loading ? '…' : 'Confirmar'}
                     </button>
@@ -218,7 +220,7 @@ function PasswordModal({ open, title, darkMode, loading, error, onClose, onConfi
 }
 
 export default function AdminPublicidad() {
-    const [darkMode, setDarkMode] = useState(true)
+    const { darkMode } = useAdminTheme()
     const [selectedFile, setSelectedFile] = useState(null)
     const [titulo, setTitulo] = useState('')
     const [enlaceBanner, setEnlaceBanner] = useState('')
@@ -306,15 +308,6 @@ export default function AdminPublicidad() {
     const [loadingBusqueda, setLoadingBusqueda] = useState(false)
 
     const [modal, setModal] = useState({ open: false, title: '', loading: false, error: '', onConfirm: null })
-
-    useEffect(() => {
-        setDarkMode(JSON.parse(localStorage.getItem('darkMode') ?? 'true'))
-    }, [])
-    useEffect(() => {
-        const onDarkModeChange = (e) => setDarkMode(!!e.detail)
-        window.addEventListener('darkModeChange', onDarkModeChange)
-        return () => window.removeEventListener('darkModeChange', onDarkModeChange)
-    }, [])
 
     useEffect(() => {
         getCategoriasPrincipales().then((c) => setCategorias(Array.isArray(c) ? c : []))
@@ -726,14 +719,14 @@ export default function AdminPublicidad() {
 
     const labelClass = darkMode ? 'text-gray-300 block mb-1.5 text-sm font-medium' : 'text-gray-700 block mb-1.5 text-sm font-medium'
     const inputClass = darkMode
-        ? 'w-full px-4 py-2.5 rounded-lg border border-gray-600 bg-gray-700/80 text-white focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500'
-        : 'w-full px-4 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-900 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500'
+        ? 'w-full px-4 py-2.5 rounded-lg border border-gray-600 bg-gray-700/80 text-white focus:ring-2 focus:ring-orange-500/40 focus:border-orange-500'
+        : 'w-full px-4 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-900 focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500'
     const catalogFilterInputClass = darkMode
-        ? 'w-full rounded-xl border border-emerald-800/50 bg-[#202020]/80 px-3 py-2 text-sm text-gray-100 placeholder:text-emerald-400/60'
-        : 'w-full rounded-xl border border-emerald-100 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400'
+        ? 'w-full rounded-xl border border-orange-800/50 bg-[#202020]/80 px-3 py-2 text-sm text-gray-100 placeholder:text-orange-400/60'
+        : 'w-full rounded-xl border border-orange-100 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400'
     const catalogFilterLabelClass = darkMode
-        ? 'block text-xs mb-1 text-emerald-200/70'
-        : 'block text-xs mb-1 text-emerald-800/80'
+        ? 'block text-xs mb-1 text-orange-200/70'
+        : 'block text-xs mb-1 text-orange-800/80'
     const card = `rounded-xl overflow-hidden border shadow-xl ${darkMode ? 'bg-tienda-elevated border-gray-700' : 'bg-white border-gray-200'}`
 
     return (
@@ -749,7 +742,7 @@ export default function AdminPublicidad() {
             />
 
             <div className="flex items-center gap-4">
-                <span className={`flex h-12 w-12 items-center justify-center rounded-xl ${darkMode ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-100 text-emerald-600'}`}>
+                <span className={`flex h-12 w-12 items-center justify-center rounded-xl ${darkMode ? 'bg-orange-500/20 text-orange-400' : 'bg-orange-100 text-orange-600'}`}>
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
@@ -763,15 +756,15 @@ export default function AdminPublicidad() {
             </div>
 
             {success && (
-                <div className={`flex items-center gap-2 rounded-lg px-4 py-3 ${darkMode ? 'bg-emerald-500/20 border border-emerald-500/40' : 'bg-emerald-50 border border-emerald-200'}`}>
-                    <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400">{success}</p>
+                <div className={`flex items-center gap-2 rounded-lg px-4 py-3 ${darkMode ? 'bg-orange-500/20 border border-orange-500/40' : 'bg-orange-50 border border-orange-200'}`}>
+                    <p className="text-sm font-medium text-orange-600 dark:text-orange-400">{success}</p>
                 </div>
             )}
 
             {/* 1. Estado carrusel global */}
             <div className={card}>
-                <div className={`px-5 py-4 ${darkMode ? 'bg-emerald-600/25 border-b border-emerald-500/30' : 'bg-emerald-50 border-b border-emerald-200'}`}>
-                    <h2 className={`text-lg font-bold ${darkMode ? 'text-emerald-200' : 'text-emerald-900'}`}>Visibilidad del carrusel en la tienda</h2>
+                <div className={`px-5 py-4 ${darkMode ? 'bg-orange-600/25 border-b border-orange-500/30' : 'bg-orange-50 border-b border-orange-200'}`}>
+                    <h2 className={`text-lg font-bold ${darkMode ? 'text-orange-200' : 'text-orange-900'}`}>Visibilidad del carrusel en la tienda</h2>
                 </div>
                 <div className="p-6 space-y-4">
                     <div className={`flex items-center gap-3 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
@@ -789,7 +782,7 @@ export default function AdminPublicidad() {
                     </div>
                     <AdminPasswordField
                         id="admin-password-carrusel"
-                        label="Contraseña del administrador"
+                        label="Tu contraseña"
                         value={passwordCarrusel}
                         onChange={(e) => setPasswordCarrusel(e.target.value)}
                         darkMode={darkMode}
@@ -802,7 +795,7 @@ export default function AdminPublicidad() {
                         type="button"
                         onClick={guardarCarrusel}
                         disabled={savingCarrusel}
-                        className={`py-2.5 px-5 rounded-lg font-semibold ${darkMode ? '!bg-emerald-600' : '!bg-emerald-700'} text-white`}
+                        className={`py-2.5 px-5 rounded-lg font-semibold ${darkMode ? '!bg-orange-600' : '!bg-orange-700'} text-white`}
                     >
                         {savingCarrusel ? 'Guardando…' : 'Guardar estado del carrusel'}
                     </Button>
@@ -811,8 +804,8 @@ export default function AdminPublicidad() {
 
             {/* 2. Promociones */}
             <div className={card}>
-                <div className={`px-5 py-4 ${darkMode ? 'bg-emerald-600/25 border-b border-emerald-500/30' : 'bg-emerald-50 border-b border-emerald-200'}`}>
-                    <h2 className={`text-lg font-bold ${darkMode ? 'text-emerald-200' : 'text-emerald-900'}`}>Promociones</h2>
+                <div className={`px-5 py-4 ${darkMode ? 'bg-orange-600/25 border-b border-orange-500/30' : 'bg-orange-50 border-b border-orange-200'}`}>
+                    <h2 className={`text-lg font-bold ${darkMode ? 'text-orange-200' : 'text-orange-900'}`}>Promociones</h2>
                 </div>
                 <div className="p-6 space-y-8">
                     {/* Datos de la nueva promoción (borrador; sin llamar a la API) */}
@@ -820,7 +813,7 @@ export default function AdminPublicidad() {
                         <div className="md:col-span-2">
                             <h3 className={`font-semibold mb-2 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>Nueva promoción (borrador)</h3>
                             {promoSeleccionadaId && (
-                                <p className={`text-sm mb-2 ${darkMode ? 'text-emerald-300/95' : 'text-emerald-800'}`}>
+                                <p className={`text-sm mb-2 ${darkMode ? 'text-orange-300/95' : 'text-orange-800'}`}>
                                     Hay una promoción existente seleccionada para edición. Deselecciónala (mismo botón «Editar») para seguir armando una nueva aquí.
                                 </p>
                             )}
@@ -862,7 +855,7 @@ export default function AdminPublicidad() {
                         <h3 className={`font-semibold mb-3 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>Buscar productos del catálogo</h3>
                         <div
                             className={`rounded-2xl border p-4 md:p-5 ${
-                                darkMode ? 'border-emerald-900/40 bg-[#262626]/90' : 'border-emerald-100 bg-white'
+                                darkMode ? 'border-orange-900/40 bg-[#262626]/90' : 'border-orange-100 bg-white'
                             }`}
                         >
                             <div className="flex flex-wrap items-end gap-2 md:gap-3">
@@ -878,7 +871,7 @@ export default function AdminPublicidad() {
                                 <div className="min-w-[170px]">
                                     <label className={catalogFilterLabelClass}>Categoría</label>
                                     <FancySelect
-                                        accent="emerald"
+                                        accent="orange"
                                         value={catPrincipal}
                                         onChange={(v) => {
                                             setCatPrincipal(v)
@@ -891,7 +884,7 @@ export default function AdminPublicidad() {
                                 <div className="min-w-[170px]">
                                     <label className={catalogFilterLabelClass}>Subcategoría</label>
                                     <FancySelect
-                                        accent="emerald"
+                                        accent="orange"
                                         value={subcategoria}
                                         onChange={setSubcategoria}
                                         options={subcategoriaOptions}
@@ -902,7 +895,7 @@ export default function AdminPublicidad() {
                                 <div className="min-w-[170px]">
                                     <label className={catalogFilterLabelClass}>Marca</label>
                                     <FancySelect
-                                        accent="emerald"
+                                        accent="orange"
                                         value={marca}
                                         onChange={setMarca}
                                         options={marcaOptions}
@@ -919,7 +912,7 @@ export default function AdminPublicidad() {
                                     />
                                     <span
                                         className={`text-sm select-none ${
-                                            darkMode ? 'text-emerald-200/80' : 'text-emerald-800/80'
+                                            darkMode ? 'text-orange-200/80' : 'text-orange-800/80'
                                         }`}
                                     >
                                         {soloStock ? 'Con stock' : 'Sin stock'}
@@ -930,8 +923,8 @@ export default function AdminPublicidad() {
                                     onClick={limpiarFiltrosCatalogo}
                                     className={`rounded-xl border px-4 py-2 text-sm font-semibold ${
                                         darkMode
-                                            ? 'border-emerald-700 text-emerald-200 hover:bg-emerald-900/40'
-                                            : 'border-emerald-200 text-emerald-900 hover:bg-emerald-50'
+                                            ? 'border-orange-700 text-orange-200 hover:bg-orange-900/40'
+                                            : 'border-orange-200 text-orange-900 hover:bg-orange-50'
                                     }`}
                                 >
                                     Limpiar
@@ -941,19 +934,19 @@ export default function AdminPublicidad() {
                             {filtrosDinamicosEntries.length > 0 ? (
                                 <div
                                     className={`mt-4 border-t pt-4 ${
-                                        darkMode ? 'border-emerald-900/40' : 'border-emerald-100'
+                                        darkMode ? 'border-orange-900/40' : 'border-orange-100'
                                     }`}
                                 >
                                     <p
                                         className={`mb-2 text-xs uppercase tracking-wide ${
-                                            darkMode ? 'text-emerald-300/70' : 'text-emerald-700/80'
+                                            darkMode ? 'text-orange-300/70' : 'text-orange-700/80'
                                         }`}
                                     >
                                         Filtros dinámicos
                                     </p>
                                     <div
                                         className={`rounded-xl border px-2 py-2 ${
-                                            darkMode ? 'border-emerald-900/40 bg-[#202020]/65' : 'border-emerald-100 bg-emerald-50/35'
+                                            darkMode ? 'border-orange-900/40 bg-[#202020]/65' : 'border-orange-100 bg-orange-50/35'
                                         }`}
                                     >
                                         <div className="overflow-x-auto pb-1">
@@ -964,14 +957,14 @@ export default function AdminPublicidad() {
                                                             <div
                                                                 key={etiqueta}
                                                                 className={`w-[200px] rounded-lg p-1.5 ${
-                                                                    darkMode ? 'bg-emerald-950/30' : 'bg-white/80'
+                                                                    darkMode ? 'bg-orange-950/30' : 'bg-white/80'
                                                                 }`}
                                                             >
                                                                 <label className={`${catalogFilterLabelClass} text-[11px] truncate`}>
                                                                     {etiqueta}
                                                                 </label>
                                                                 <FancySelect
-                                                                    accent="emerald"
+                                                                    accent="orange"
                                                                     value={filtrosVals[etiqueta] || ''}
                                                                     onChange={(val) =>
                                                                         setFiltrosVals((prev) => ({
@@ -1009,7 +1002,7 @@ export default function AdminPublicidad() {
                             />
                         ) : null}
                         {totalBusqueda > 0 ? (
-                            <p className={`mt-3 text-sm font-medium ${darkMode ? 'text-emerald-300/90' : 'text-emerald-800'}`}>
+                            <p className={`mt-3 text-sm font-medium ${darkMode ? 'text-orange-300/90' : 'text-orange-800'}`}>
                                 {totalBusqueda} resultado{totalBusqueda !== 1 ? 's' : ''}
                             </p>
                         ) : null}
@@ -1027,7 +1020,7 @@ export default function AdminPublicidad() {
                                             className={
                                                 darkMode
                                                     ? 'border-b border-gray-600 bg-gray-800/95 text-left text-gray-200'
-                                                    : 'border-b border-emerald-200 bg-emerald-50/90 text-left text-emerald-950'
+                                                    : 'border-b border-orange-200 bg-orange-50/90 text-left text-orange-950'
                                             }
                                         >
                                             <th className="whitespace-nowrap p-3 pl-4 font-semibold">Imagen</th>
@@ -1046,13 +1039,13 @@ export default function AdminPublicidad() {
                                                     className={
                                                         darkMode
                                                             ? 'border-t border-gray-700/70 transition-colors hover:bg-gray-800/50'
-                                                            : 'border-t border-gray-100 transition-colors hover:bg-emerald-50/40'
+                                                            : 'border-t border-gray-100 transition-colors hover:bg-orange-50/40'
                                                     }
                                                 >
                                                     <td className="align-middle p-3 pl-4">
                                                         <ProductoImagenesCelda urls={imgUrls} darkMode={darkMode} rowKey={pr.clave} />
                                                     </td>
-                                                    <td className="align-middle p-3 font-mono text-xs text-emerald-600 dark:text-emerald-300">
+                                                    <td className="align-middle p-3 font-mono text-xs text-orange-600 dark:text-orange-300">
                                                         {pr.clave}
                                                     </td>
                                                     <td className="align-middle p-3">
@@ -1065,7 +1058,7 @@ export default function AdminPublicidad() {
                                                         <button
                                                             type="button"
                                                             onClick={() => agregarProductoDesdeBusqueda(pr)}
-                                                            className="inline-flex rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-500"
+                                                            className="inline-flex rounded-lg bg-orange-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-orange-500"
                                                         >
                                                             {promoSeleccionadaId ? 'Agregar a promoción' : 'Agregar a la lista'}
                                                         </button>
@@ -1105,7 +1098,7 @@ export default function AdminPublicidad() {
                             <h4 className={`mb-3 text-sm font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Productos en el borrador</h4>
                             <div
                                 className={`overflow-x-auto rounded-xl border shadow-sm ${
-                                    darkMode ? 'border-emerald-900/40 bg-emerald-950/10' : 'border-emerald-200 bg-emerald-50/30'
+                                    darkMode ? 'border-orange-900/40 bg-orange-950/10' : 'border-orange-200 bg-orange-50/30'
                                 }`}
                             >
                                 <table className="w-full min-w-[720px] border-collapse text-sm">
@@ -1113,8 +1106,8 @@ export default function AdminPublicidad() {
                                         <tr
                                             className={
                                                 darkMode
-                                                    ? 'border-b border-emerald-800/50 bg-emerald-950/40 text-left text-emerald-100'
-                                                    : 'border-b border-emerald-200 bg-emerald-100/80 text-left text-emerald-950'
+                                                    ? 'border-b border-orange-800/50 bg-orange-950/40 text-left text-orange-100'
+                                                    : 'border-b border-orange-200 bg-orange-100/80 text-left text-orange-950'
                                             }
                                         >
                                             <th className="whitespace-nowrap p-3 pl-4 font-semibold">Imagen</th>
@@ -1133,15 +1126,15 @@ export default function AdminPublicidad() {
                                                     key={row.clave}
                                                     className={
                                                         darkMode
-                                                            ? 'border-t border-emerald-900/30 hover:bg-emerald-950/25'
-                                                            : 'border-t border-emerald-100 hover:bg-white/80'
+                                                            ? 'border-t border-orange-900/30 hover:bg-orange-950/25'
+                                                            : 'border-t border-orange-100 hover:bg-white/80'
                                                     }
                                                 >
                                                     <td className="align-middle p-3 pl-4">
                                                         <ProductoImagenesCelda urls={imgUrls} darkMode={darkMode} rowKey={row.clave} />
                                                     </td>
                                                     <td className="align-middle p-3 text-gray-500">{idx + 1}</td>
-                                                    <td className="align-middle p-3 font-mono text-xs text-emerald-700 dark:text-emerald-300">{row.clave}</td>
+                                                    <td className="align-middle p-3 font-mono text-xs text-orange-700 dark:text-orange-300">{row.clave}</td>
                                                     <td className="align-middle p-3">
                                                         <span className="line-clamp-2" title={row.descripcion}>
                                                             {row.descripcion}
@@ -1170,7 +1163,7 @@ export default function AdminPublicidad() {
                         <div className="space-y-4 max-w-md border-t border-gray-600/30 dark:border-gray-600 pt-6">
                             <AdminPasswordField
                                 id="admin-password-promo-crear"
-                                label="Contraseña del administrador"
+                                label="Tu contraseña"
                                 value={passwordPromoCrear}
                                 onChange={(e) => setPasswordPromoCrear(e.target.value)}
                                 darkMode={darkMode}
@@ -1183,7 +1176,7 @@ export default function AdminPublicidad() {
                                 type="button"
                                 onClick={crearPromocion}
                                 disabled={creandoPromo}
-                                className="!bg-emerald-600 hover:!bg-emerald-500 text-white py-2.5 px-5 rounded-lg font-semibold"
+                                className="!bg-orange-600 hover:!bg-orange-500 text-white py-2.5 px-5 rounded-lg font-semibold"
                             >
                                 {creandoPromo ? 'Creando…' : 'Crear promoción'}
                             </Button>
@@ -1251,7 +1244,7 @@ export default function AdminPublicidad() {
                                                             onClick={() => setPromoSeleccionadaId(promoSeleccionadaId === p.id ? null : p.id)}
                                                             className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${
                                                                 promoSeleccionadaId === p.id
-                                                                    ? 'bg-emerald-600 text-white'
+                                                                    ? 'bg-orange-600 text-white'
                                                                     : darkMode
                                                                       ? 'bg-gray-700 text-gray-200 hover:bg-gray-600'
                                                                       : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
@@ -1327,15 +1320,15 @@ export default function AdminPublicidad() {
                                                                 <span
                                                                     className={`inline-flex min-h-[4.5rem] min-w-[4.5rem] items-center justify-center rounded-lg border text-[10px] font-medium uppercase leading-tight px-1 text-center ${
                                                                         darkMode
-                                                                            ? 'border-emerald-900/50 bg-emerald-950/30 text-emerald-400/90'
-                                                                            : 'border-emerald-200 bg-emerald-50 text-emerald-800'
+                                                                            ? 'border-orange-900/50 bg-orange-950/30 text-orange-400/90'
+                                                                            : 'border-orange-200 bg-orange-50 text-orange-800'
                                                                     }`}
                                                                 >
                                                                     No en catálogo
                                                                 </span>
                                                             )}
                                                         </td>
-                                                        <td className="align-middle p-3 font-mono text-xs text-emerald-600 dark:text-emerald-300">{c}</td>
+                                                        <td className="align-middle p-3 font-mono text-xs text-orange-600 dark:text-orange-300">{c}</td>
                                                         <td className="align-middle p-3">
                                                             <span className="line-clamp-2" title={pr?.descripcion || ''}>
                                                                 {pr?.descripcion || '—'}
@@ -1348,7 +1341,7 @@ export default function AdminPublicidad() {
                                                                 target="_blank"
                                                                 rel="noopener noreferrer"
                                                                 className={`inline-flex text-xs font-semibold underline decoration-2 underline-offset-2 ${
-                                                                    darkMode ? 'text-emerald-400 hover:text-emerald-300' : 'text-emerald-700 hover:text-emerald-900'
+                                                                    darkMode ? 'text-orange-400 hover:text-orange-300' : 'text-orange-700 hover:text-orange-900'
                                                                 }`}
                                                             >
                                                                 Ver ficha
@@ -1377,14 +1370,14 @@ export default function AdminPublicidad() {
 
             {/* 3. Cargar banner */}
             <div className={card}>
-                <div className={`px-5 py-4 ${darkMode ? 'bg-emerald-600/25 border-b border-emerald-500/30' : 'bg-emerald-50 border-b border-emerald-200'}`}>
+                <div className={`px-5 py-4 ${darkMode ? 'bg-orange-600/25 border-b border-orange-500/30' : 'bg-orange-50 border-b border-orange-200'}`}>
                     <div className="flex items-center gap-3">
-                        <span className={`flex h-9 w-9 items-center justify-center rounded-lg ${darkMode ? 'bg-emerald-500/30 text-emerald-300' : 'bg-emerald-100 text-emerald-600'}`}>
+                        <span className={`flex h-9 w-9 items-center justify-center rounded-lg ${darkMode ? 'bg-orange-500/30 text-orange-300' : 'bg-orange-100 text-orange-600'}`}>
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                             </svg>
                         </span>
-                        <h2 className={`text-lg font-bold ${darkMode ? 'text-emerald-200' : 'text-emerald-800'}`}>Cargar imagen al carrusel</h2>
+                        <h2 className={`text-lg font-bold ${darkMode ? 'text-orange-200' : 'text-orange-800'}`}>Cargar imagen al carrusel</h2>
                     </div>
                 </div>
                 <div className="p-6">
@@ -1397,8 +1390,8 @@ export default function AdminPublicidad() {
                                 onChange={handleFileChange}
                                 className={`block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium ${
                                     darkMode
-                                        ? 'file:bg-emerald-600 file:text-white file:hover:bg-emerald-500 text-gray-300'
-                                        : 'file:bg-emerald-600 file:text-white file:hover:bg-emerald-700 text-gray-700'
+                                        ? 'file:bg-orange-600 file:text-white file:hover:bg-orange-500 text-gray-300'
+                                        : 'file:bg-orange-600 file:text-white file:hover:bg-orange-700 text-gray-700'
                                 }`}
                             />
                             {previewUrl && (
@@ -1433,7 +1426,7 @@ export default function AdminPublicidad() {
                         <div className="max-w-md">
                             <AdminPasswordField
                                 id="admin-password-banner"
-                                label="Contraseña del administrador"
+                                label="Tu contraseña"
                                 value={passwordBanner}
                                 onChange={(e) => setPasswordBanner(e.target.value)}
                                 darkMode={darkMode}
@@ -1448,7 +1441,7 @@ export default function AdminPublicidad() {
                             type="submit"
                             disabled={uploading || !selectedFile}
                             className={`w-full sm:w-auto py-3 px-6 rounded-lg font-semibold flex items-center justify-center gap-2 ${
-                                darkMode ? '!bg-emerald-500 hover:!bg-emerald-400' : '!bg-emerald-600 hover:!bg-emerald-700'
+                                darkMode ? '!bg-orange-500 hover:!bg-orange-400' : '!bg-orange-600 hover:!bg-orange-700'
                             } text-white transition-all duration-200`}
                         >
                             {uploading ? 'Guardando…' : 'Guardar'}
@@ -1488,7 +1481,7 @@ export default function AdminPublicidad() {
                                     <div className="p-3 space-y-1">
                                         <span className={`text-sm block ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>{img.titulo || `#${img.orden}`}</span>
                                         {img.enlace && (
-                                            <span className="text-xs break-all text-emerald-500 block">Enlace: {img.enlace}</span>
+                                            <span className="text-xs break-all text-orange-500 block">Enlace: {img.enlace}</span>
                                         )}
                                         <div className="flex justify-end pt-1">
                                             <button

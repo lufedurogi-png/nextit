@@ -86,3 +86,36 @@ body {
 .animate-carrusel-right {
     animation: carrusel-right 90s linear infinite;
 }
+
+/* Ventas native selects / date (paridad con admin, acento naranja) */
+@layer components {
+    .ventas-native-select-dark {
+        color-scheme: dark;
+    }
+    .ventas-native-select-dark option,
+    .ventas-native-select-dark optgroup {
+        background-color: rgb(38 38 38);
+        color: rgb(243 244 246);
+    }
+    .ventas-native-select-light {
+        color-scheme: light;
+    }
+    .ventas-native-select-light option,
+    .ventas-native-select-light optgroup {
+        background-color: rgb(255 255 255);
+        color: rgb(17 24 39);
+    }
+    .ventas-date-input-dark::-webkit-calendar-picker-indicator {
+        filter: invert(1) !important;
+        opacity: 0.92;
+        cursor: pointer;
+    }
+    .ventas-date-input-dark::-webkit-calendar-picker-indicator:hover {
+        opacity: 1;
+    }
+    .ventas-date-input-dark::-moz-calendar-picker-indicator {
+        filter: invert(1) !important;
+        opacity: 0.92;
+        cursor: pointer;
+    }
+}

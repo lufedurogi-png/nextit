@@ -98,6 +98,38 @@ export const VENTAS_SEARCH_VIEWS = [
         href: '/ventas-catalogo',
         keywords: ['catalogo', 'producto', 'productos', 'stock', 'precio', 'articulo'],
     },
+    {
+        id: 'vista-margen-venta',
+        vista: 'Margen venta',
+        title: 'Margen de venta',
+        subtitle: 'Porcentaje global sobre precios de catálogo',
+        href: '/ventas-margen-venta',
+        keywords: ['margen', 'porcentaje', 'precio', 'descuento maximo', 'ganancia'],
+    },
+    {
+        id: 'vista-cotizaciones-invitado',
+        vista: 'Cotiz. invitados',
+        title: 'Cotizaciones de invitados',
+        subtitle: 'Consultar cotizaciones hechas sin cuenta',
+        href: '/ventas-cotizaciones-invitado',
+        keywords: ['cotizacion invitado', 'invitados', 'guest', 'folio', 'pdf'],
+    },
+    {
+        id: 'vista-publicidad',
+        vista: 'Publicidad',
+        title: 'Publicidad y promociones',
+        subtitle: 'Carrusel de tienda y promociones',
+        href: '/ventas-publicidad',
+        keywords: ['publicidad', 'promocion', 'promociones', 'carrusel', 'banner'],
+    },
+    {
+        id: 'vista-productos-manuales',
+        vista: 'Productos manuales',
+        title: 'Productos manuales',
+        subtitle: 'Alta y edición de productos propios',
+        href: '/ventas-productos-manuales',
+        keywords: ['productos manuales', 'manual', 'alta producto', 'inventario propio'],
+    },
 ]
 
 export function searchVentasViews(query, threshold) {
