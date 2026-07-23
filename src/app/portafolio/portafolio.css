@@ -1,0 +1,253 @@
+/* Portafolio — Nothing × IBM × Encom (aislado del tema de la app) */
+
+.pf {
+    /* Oscuro por defecto: gris carbón, no negro puro */
+    --pf-bg: #2a2d33;
+    --pf-bg-elev: #343841;
+    --pf-ink: #f0f1f3;
+    --pf-mute: #9aa0ab;
+    --pf-line: rgba(240, 241, 243, 0.14);
+    --pf-line-strong: rgba(240, 241, 243, 0.26);
+    --pf-signal: #3dfff3;
+    --pf-signal-dim: rgba(61, 255, 243, 0.12);
+    --pf-ibm: #0f62fe;
+    --pf-nav-scrolled: rgba(42, 45, 51, 0.88);
+    --pf-grid-line: rgba(61, 255, 243, 0.07);
+    --pf-scan: rgba(0, 0, 0, 0.07);
+    --pf-hero-glow: rgba(61, 255, 243, 0.08);
+    --pf-plane-a: rgba(61, 255, 243, 0.035);
+    --pf-plane-b: rgba(61, 255, 243, 0.09);
+    --pf-plane-c: rgba(61, 255, 243, 0.06);
+    --pf-work-hover: rgba(61, 255, 243, 0.04);
+
+    color: var(--pf-ink);
+    background: var(--pf-bg);
+    font-family: var(--font-pf-sans), 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    transition: background-color 0.35s ease, color 0.35s ease;
+}
+
+.pf[data-theme='light'] {
+    --pf-bg: #eef0f3;
+    --pf-bg-elev: #ffffff;
+    --pf-ink: #1c1f26;
+    --pf-mute: #5c6470;
+    --pf-line: rgba(28, 31, 38, 0.12);
+    --pf-line-strong: rgba(28, 31, 38, 0.22);
+    --pf-signal: #0a8f88;
+    --pf-signal-dim: rgba(10, 143, 136, 0.1);
+    --pf-ibm: #0f62fe;
+    --pf-nav-scrolled: rgba(238, 240, 243, 0.9);
+    --pf-grid-line: rgba(10, 143, 136, 0.09);
+    --pf-scan: rgba(28, 31, 38, 0.035);
+    --pf-hero-glow: rgba(10, 143, 136, 0.06);
+    --pf-plane-a: rgba(10, 143, 136, 0.04);
+    --pf-plane-b: rgba(10, 143, 136, 0.11);
+    --pf-plane-c: rgba(10, 143, 136, 0.07);
+    --pf-work-hover: rgba(10, 143, 136, 0.05);
+}
+
+.pf * {
+    box-sizing: border-box;
+}
+
+.pf-mono {
+    font-family: var(--font-pf-mono), 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+.pf-grid-plane {
+    background-image:
+        linear-gradient(to right, var(--pf-grid-line) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--pf-grid-line) 1px, transparent 1px);
+    background-size: 64px 64px;
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 20%, transparent 75%);
+    -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 20%, transparent 75%);
+}
+
+.pf-hero-glow {
+    background: radial-gradient(
+        ellipse 80% 50% at 50% -10%,
+        var(--pf-hero-glow),
+        transparent 55%
+    );
+}
+
+.pf-encom-plane {
+    background:
+        linear-gradient(180deg, transparent 0%, var(--pf-plane-a) 40%, transparent 100%),
+        repeating-linear-gradient(
+            90deg,
+            var(--pf-plane-b) 0 1px,
+            transparent 1px 72px
+        ),
+        repeating-linear-gradient(
+            0deg,
+            var(--pf-plane-c) 0 1px,
+            transparent 1px 72px
+        );
+}
+
+.pf-grid-drift {
+    animation: pf-grid-drift 48s linear infinite;
+}
+
+@keyframes pf-grid-drift {
+    0% {
+        background-position: 0 0;
+    }
+    100% {
+        background-position: 64px 64px;
+    }
+}
+
+.pf-scanline {
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        var(--pf-scan) 2px,
+        var(--pf-scan) 4px
+    );
+    pointer-events: none;
+}
+
+.pf-glyph-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--pf-signal);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--pf-signal) 35%, transparent);
+    animation: pf-glyph-pulse 3.6s ease-in-out infinite;
+}
+
+@keyframes pf-glyph-pulse {
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 color-mix(in srgb, var(--pf-signal) 28%, transparent);
+        opacity: 1;
+    }
+    50% {
+        box-shadow: 0 0 0 8px transparent;
+        opacity: 0.75;
+    }
+}
+
+.pf-hairline {
+    height: 1px;
+    background: var(--pf-line);
+}
+
+.pf-work-row {
+    border-top: 1px solid var(--pf-line);
+    transition: background 0.35s ease, border-color 0.35s ease;
+}
+
+.pf-work-row:hover {
+    background: var(--pf-work-hover);
+    border-color: var(--pf-line-strong);
+}
+
+.pf-work-row:last-child {
+    border-bottom: 1px solid var(--pf-line);
+}
+
+.pf-service-item {
+    border-left: 1px solid var(--pf-line);
+    transition: border-color 0.4s ease, background 0.4s ease;
+}
+
+.pf-service-item:hover {
+    border-left-color: var(--pf-signal);
+    background: linear-gradient(90deg, var(--pf-signal-dim), transparent 70%);
+}
+
+.pf-cta {
+    position: relative;
+    overflow: hidden;
+}
+
+.pf-cta::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        105deg,
+        transparent 40%,
+        color-mix(in srgb, var(--pf-signal) 22%, transparent) 50%,
+        transparent 60%
+    );
+    transform: translateX(-120%);
+    transition: transform 0.7s ease;
+}
+
+.pf-cta:hover::after {
+    transform: translateX(120%);
+}
+
+.pf-nav-link {
+    position: relative;
+}
+
+.pf-nav-link::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -2px;
+    width: 100%;
+    height: 1px;
+    background: var(--pf-signal);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.35s ease;
+}
+
+.pf-nav-link:hover::after,
+.pf-nav-link[data-active='true']::after {
+    transform: scaleX(1);
+}
+
+.pf-theme-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border: 1px solid var(--pf-line-strong);
+    color: var(--pf-mute);
+    background: transparent;
+    transition: color 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+}
+
+.pf-theme-btn:hover {
+    color: var(--pf-ink);
+    border-color: var(--pf-signal);
+}
+
+.pf-theme-btn:focus-visible {
+    outline: 1px solid var(--pf-signal);
+    outline-offset: 2px;
+}
+
+.pf-preview {
+    transition: border-color 0.35s ease;
+}
+
+.pf-work-row:hover .pf-preview {
+    border-color: var(--pf-line-strong);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pf-grid-drift,
+    .pf-glyph-dot {
+        animation: none;
+    }
+
+    .pf,
+    .pf-cta::after,
+    .pf-theme-btn {
+        transition: none;
+    }
+
+    .pf-cta::after {
+        display: none;
+    }
+}
