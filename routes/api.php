@@ -25,6 +25,7 @@ use App\Http\Controllers\Api\V1\DatoFacturacionController;
 use App\Http\Controllers\Api\V1\DesarrolladorController;
 use App\Http\Controllers\Api\V1\DireccionEnvioController;
 use App\Http\Controllers\Api\V1\FavoritoController;
+use App\Http\Controllers\Api\V1\IaProxyController;
 use App\Http\Controllers\Api\V1\MercadoPagoController;
 use App\Http\Controllers\Api\V1\MetodoPagoController;
 use App\Http\Controllers\Api\V1\PayPalController;
@@ -34,6 +35,7 @@ use App\Http\Controllers\Api\V1\PromocionController;
 use App\Http\Controllers\Api\V1\PruebaPedidoController;
 use App\Http\Controllers\Api\V1\PublicidadController;
 use App\Http\Controllers\Api\V1\TarjetaGuardadaController;
+use App\Http\Controllers\Api\V1\TiendaChatbotController;
 use App\Http\Controllers\Api\V1\Ventas\VentasBusquedaController;
 use App\Http\Controllers\Api\V1\Ventas\VentasAuthController;
 use App\Http\Controllers\Api\V1\Ventas\VentasCalendarioTareaController;
@@ -107,6 +109,14 @@ Route::prefix('v1')->group(function () {
         ->middleware('throttle:20,1')
         ->name('cotizaciones-invitado.store');
 
+    Route::get('/tienda/chatbot/health', [TiendaChatbotController::class, 'health'])
+        ->middleware('throttle:60,1')
+        ->name('tienda.chatbot.health');
+
+    Route::post('/tienda/chatbot', [TiendaChatbotController::class, 'chat'])
+        ->middleware('throttle:tienda-chatbot')
+        ->name('tienda.chatbot');
+
     Route::post('/mercadopago/webhook', [MercadoPagoController::class, 'webhook'])
         ->name('mercadopago.webhook');
     // -------------------------------------------------------------
@@ -121,6 +131,12 @@ Route::prefix('v1')->group(function () {
         Route::put('/auth/profile/update', [ApiAuthController::class, 'updateProfile'])->middleware(['permission:edit profile'])->name('auth.profile.update');
 
         Route::put('/auth/password', [ApiAuthController::class, 'changePassword'])->middleware(['permission:edit profile'])->name('auth.password.update');
+
+        // Proxy hacia E-comerce-ia-api (Ollama / Llama)
+        Route::middleware('role:admin|seller')->prefix('ia')->name('ia.')->group(function () {
+            Route::get('/health', [IaProxyController::class, 'health'])->name('health');
+            Route::post('/chat', [IaProxyController::class, 'chat'])->name('chat');
+        });
 
         // Ventas (vendedores): calendario / pendientes
         Route::middleware('role:seller')->prefix('ventas')->name('ventas.')->group(function () {
@@ -294,6 +310,25 @@ Route::prefix('v1')->group(function () {
                 Route::post('/chat/clientes/{userId}/mensajes', [AdminChatController::class, 'store'])->name('chat.clientes.mensajes.store');
                 Route::put('/chat/mensajes/{id}', [AdminChatController::class, 'update'])->name('chat.mensajes.update');
                 Route::delete('/chat/mensajes/{id}', [AdminChatController::class, 'destroy'])->name('chat.mensajes.destroy');
+
+                // Mutaciones compartidas admin + ventas (mismas pantallas en ambos perfiles)
+                Route::patch('/publicidad/carrusel', [PublicidadAdminController::class, 'updateCarrusel'])->name('publicidad.admin.carrusel');
+                Route::post('/publicidad', [PublicidadAdminController::class, 'store'])->name('publicidad.admin.store');
+                Route::delete('/publicidad/{id}', [PublicidadAdminController::class, 'destroy'])->name('publicidad.admin.destroy');
+
+                Route::post('/promociones', [PromocionAdminController::class, 'store'])->name('promociones.admin.store');
+                Route::put('/promociones/{id}', [PromocionAdminController::class, 'update'])->name('promociones.admin.update');
+                Route::delete('/promociones/{id}', [PromocionAdminController::class, 'destroy'])->name('promociones.admin.destroy');
+                Route::post('/promociones/{id}/items', [PromocionAdminController::class, 'agregarItem'])->name('promociones.admin.items.add');
+                Route::post('/promociones/{id}/quitar-item', [PromocionAdminController::class, 'quitarItem'])->name('promociones.admin.items.remove');
+
+                Route::post('/productos-manuales', [ProductoManualAdminController::class, 'store'])->name('productos-manuales.store');
+                Route::put('/productos-manuales/{id}', [ProductoManualAdminController::class, 'update'])->name('productos-manuales.update');
+                Route::delete('/productos-manuales/{id}', [ProductoManualAdminController::class, 'destroy'])->name('productos-manuales.destroy');
+                Route::post('/productos-manuales/{id}/anular', [ProductoManualAdminController::class, 'toggleAnulado'])->name('productos-manuales.toggle-anulado');
+
+                Route::put('/margen-venta', [AdminMargenVentaController::class, 'update'])->name('margen-venta.update');
+                Route::post('/margen-venta/reset', [AdminMargenVentaController::class, 'reset'])->name('margen-venta.reset');
             });
 
             Route::middleware('role:admin')->group(function () {
@@ -310,28 +345,12 @@ Route::prefix('v1')->group(function () {
                 Route::post('/usuarios/{usuarioId}/permisos', [ManagerUserController::class, 'grantPermission'])->name('usuarios.permisos.grant');
                 Route::post('/usuarios/{usuarioId}/permisos/revocar', [ManagerUserController::class, 'revokePermission'])->name('usuarios.permisos.revoke');
 
-                Route::patch('/publicidad/carrusel', [PublicidadAdminController::class, 'updateCarrusel'])->name('publicidad.admin.carrusel');
-                Route::post('/publicidad', [PublicidadAdminController::class, 'store'])->name('publicidad.admin.store');
-                Route::delete('/publicidad/{id}', [PublicidadAdminController::class, 'destroy'])->name('publicidad.admin.destroy');
-
-                Route::post('/promociones', [PromocionAdminController::class, 'store'])->name('promociones.admin.store');
-                Route::put('/promociones/{id}', [PromocionAdminController::class, 'update'])->name('promociones.admin.update');
-                Route::delete('/promociones/{id}', [PromocionAdminController::class, 'destroy'])->name('promociones.admin.destroy');
-                Route::post('/promociones/{id}/items', [PromocionAdminController::class, 'agregarItem'])->name('promociones.admin.items.add');
-                Route::post('/promociones/{id}/quitar-item', [PromocionAdminController::class, 'quitarItem'])->name('promociones.admin.items.remove');
                 Route::post('/desarrolladores', [DesarrolladorAdminController::class, 'store'])->name('desarrolladores.admin.store');
                 Route::put('/desarrolladores/{id}', [DesarrolladorAdminController::class, 'update'])->name('desarrolladores.admin.update');
                 Route::delete('/desarrolladores/{id}', [DesarrolladorAdminController::class, 'destroy'])->name('desarrolladores.admin.destroy');
 
-                Route::post('/productos-manuales', [ProductoManualAdminController::class, 'store'])->name('productos-manuales.store');
-                Route::put('/productos-manuales/{id}', [ProductoManualAdminController::class, 'update'])->name('productos-manuales.update');
-                Route::delete('/productos-manuales/{id}', [ProductoManualAdminController::class, 'destroy'])->name('productos-manuales.destroy');
-                Route::post('/productos-manuales/{id}/anular', [ProductoManualAdminController::class, 'toggleAnulado'])->name('productos-manuales.toggle-anulado');
-
                 Route::patch('/pedidos/{id}/estatus', [PedidoAdminController::class, 'updateEstatusPedido'])->name('pedidos.admin.estatus');
 
-                Route::put('/margen-venta', [AdminMargenVentaController::class, 'update'])->name('margen-venta.update');
-                Route::post('/margen-venta/reset', [AdminMargenVentaController::class, 'reset'])->name('margen-venta.reset');
                 Route::put('/metodos-pago/{codigo}', [AdminMetodoPagoController::class, 'update'])->name('metodos-pago.admin.update');
 
                 Route::get('/backup/preview-export', [AdminBackupController::class, 'previewExport'])->name('backup.preview');

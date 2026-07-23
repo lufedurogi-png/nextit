@@ -58,5 +58,9 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('anonymous-tracking', function (Request $request) {
             return Limit::perMinute(45)->by(sha1('anon-track|'.$request->ip()));
         });
+
+        RateLimiter::for('tienda-chatbot', function (Request $request) {
+            return Limit::perMinute(30)->by(sha1('tienda-chatbot|'.$request->ip()));
+        });
     }
 }

@@ -58,6 +58,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'api/v1/chat-vendedor-mensajes',
             'api/v1/chat-vendedor-mensajes/*',
             'api/v1/admin/chat/*',
+            'api/v1/ia/*',
+            'api/v1/tienda/chatbot',
+            'api/v1/tienda/chatbot/*',
         ]);
 
         $middleware->alias([

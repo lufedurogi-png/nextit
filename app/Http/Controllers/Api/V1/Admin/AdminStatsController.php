@@ -17,6 +17,31 @@ use Symfony\Component\HttpFoundation\Response;
 class AdminStatsController extends Controller
 {
     /**
+     * Expresión SQL para agrupar por mes (YYYY-MM) según el driver.
+     */
+    private function mesExpr(string $column): string
+    {
+        $driver = DB::connection()->getDriverName();
+
+        return match ($driver) {
+            'sqlsrv' => "FORMAT({$column}, 'yyyy-MM')",
+            'sqlite' => "strftime('%Y-%m', {$column})",
+            'pgsql' => "to_char({$column}, 'YYYY-MM')",
+            default => "DATE_FORMAT({$column}, '%Y-%m')",
+        };
+    }
+
+    /**
+     * Condición SQL para columnas boolean/bit "destacado" según el driver.
+     */
+    private function destacadoTrueExpr(): string
+    {
+        return DB::connection()->getDriverName() === 'pgsql'
+            ? 'destacado IS TRUE'
+            : 'destacado = 1';
+    }
+
+    /**
      * Resumen de catálogo en una sola respuesta:
      * - resumen (totales/stock/ofertas)
      * - por_categoria (grupo => total)
@@ -24,12 +49,14 @@ class AdminStatsController extends Controller
      */
     public function catalogoResumen(): JsonResponse
     {
+        $destacadoTrue = $this->destacadoTrueExpr();
+
         $resumenCva = ProductoCva::query()
             ->selectRaw('COUNT(*) as total')
             ->selectRaw('SUM(CASE WHEN disponible > 0 THEN 1 ELSE 0 END) as con_stock')
             ->selectRaw('SUM(CASE WHEN disponible_cd > 0 THEN 1 ELSE 0 END) as con_stock_cd')
             ->selectRaw('SUM(CASE WHEN (COALESCE(disponible,0) + COALESCE(disponible_cd,0)) <= 0 THEN 1 ELSE 0 END) as sin_stock')
-            ->selectRaw('SUM(CASE WHEN destacado = 1 THEN 1 ELSE 0 END) as en_oferta')
+            ->selectRaw("SUM(CASE WHEN {$destacadoTrue} THEN 1 ELSE 0 END) as en_oferta")
             ->first();
 
         $resumenManual = ProductoManual::query()
@@ -38,7 +65,7 @@ class AdminStatsController extends Controller
             ->selectRaw('SUM(CASE WHEN disponible > 0 THEN 1 ELSE 0 END) as con_stock')
             ->selectRaw('SUM(CASE WHEN disponible_cd > 0 THEN 1 ELSE 0 END) as con_stock_cd')
             ->selectRaw('SUM(CASE WHEN (COALESCE(disponible,0) + COALESCE(disponible_cd,0)) <= 0 THEN 1 ELSE 0 END) as sin_stock')
-            ->selectRaw('SUM(CASE WHEN destacado = 1 THEN 1 ELSE 0 END) as en_oferta')
+            ->selectRaw("SUM(CASE WHEN {$destacadoTrue} THEN 1 ELSE 0 END) as en_oferta")
             ->first();
 
         $porCategoriaCva = ProductoCva::query()
@@ -135,14 +162,7 @@ class AdminStatsController extends Controller
      */
     public function clientesPorMes(): JsonResponse
     {
-        $driver = DB::connection()->getDriverName();
-        if ($driver === 'sqlsrv') {
-            $dateExpr = "FORMAT(created_at, 'yyyy-MM')";
-        } elseif ($driver === 'sqlite') {
-            $dateExpr = "strftime('%Y-%m', created_at)";
-        } else {
-            $dateExpr = "DATE_FORMAT(created_at, '%Y-%m')";
-        }
+        $dateExpr = $this->mesExpr('created_at');
 
         $data = User::query()
             ->where('tipo', UserType::CUSTOMER->value)
@@ -163,17 +183,8 @@ class AdminStatsController extends Controller
      */
     public function actividadUsuarios(): JsonResponse
     {
-        $driver = DB::connection()->getDriverName();
-        if ($driver === 'sqlsrv') {
-            $dateExpr = "FORMAT(created_at, 'yyyy-MM')";
-            $dateExprLog = "FORMAT(logged_at, 'yyyy-MM')";
-        } elseif ($driver === 'sqlite') {
-            $dateExpr = "strftime('%Y-%m', created_at)";
-            $dateExprLog = "strftime('%Y-%m', logged_at)";
-        } else {
-            $dateExpr = "DATE_FORMAT(created_at, '%Y-%m')";
-            $dateExprLog = "DATE_FORMAT(logged_at, '%Y-%m')";
-        }
+        $dateExpr = $this->mesExpr('created_at');
+        $dateExprLog = $this->mesExpr('logged_at');
 
         $registrosPorMes = User::query()
             ->select(

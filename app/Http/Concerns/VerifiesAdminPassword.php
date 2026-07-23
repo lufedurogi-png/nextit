@@ -17,7 +17,7 @@ trait VerifiesAdminPassword
         $user = $request->user();
         if (! $user || ! Hash::check($request->input('admin_password'), $user->password)) {
             throw ValidationException::withMessages([
-                'admin_password' => ['La contraseña no coincide con la del administrador en sesión.'],
+                'admin_password' => ['La contraseña no coincide con la del usuario en sesión.'],
             ]);
         }
     }

@@ -71,4 +71,11 @@ return [
         'notification_url' => env('MERCADOPAGO_NOTIFICATION_URL'),
     ],
 
+    'ia_api' => [
+        'enabled' => filter_var(env('IA_API_ENABLED', true), FILTER_VALIDATE_BOOLEAN),
+        'base_url' => env('IA_API_URL', 'http://127.0.0.1:8001/api/v1'),
+        'token' => env('IA_API_TOKEN'),
+        'timeout' => (int) env('IA_API_TIMEOUT', 130),
+    ],
+
 ];
