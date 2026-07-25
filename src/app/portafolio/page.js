@@ -161,7 +161,7 @@ export default function PortafolioPage() {
 
                 <div className="relative z-10 mx-auto w-full max-w-6xl px-5 sm:px-8">
                     <FadeUp>
-                        <p className="pf-mono mb-6 flex items-center gap-3 text-[10px] uppercase tracking-[0.28em] text-[var(--pf-mute)]">
+                        <p className="pf-mono mb-6 flex items-center gap-3 pf-type-label uppercase tracking-[0.28em] text-[var(--pf-mute)]">
                             <span className="inline-block h-px w-8 bg-[var(--pf-signal)]" />
                             Ingeniero de software · Guadalajara, MX
                         </p>
@@ -177,7 +177,7 @@ export default function PortafolioPage() {
                     </FadeUp>
 
                     <FadeUp delay={0.16}>
-                        <p className="mt-6 max-w-lg text-[15px] font-light leading-relaxed text-[var(--pf-mute)] sm:text-base">
+                        <p className="mt-6 max-w-lg text-base font-light leading-relaxed text-[var(--pf-mute)] sm:text-lg">
                             Diseño y construyo productos digitales — e-commerce,
                             redes y sistemas a medida — con disciplina tipográfica
                             y alcance ajustado a tu presupuesto.
@@ -189,7 +189,7 @@ export default function PortafolioPage() {
                         className="mt-10 flex flex-wrap items-center gap-4">
                         <a
                             href="#trabajo"
-                            className="pf-cta inline-flex items-center justify-center border border-[var(--pf-ink)] bg-[var(--pf-ink)] px-6 py-3 text-[11px] font-medium uppercase tracking-[0.2em] text-[var(--pf-bg)] transition-opacity hover:opacity-90">
+                            className="pf-cta inline-flex items-center justify-center border border-[var(--pf-ink)] bg-[var(--pf-ink)] px-6 py-3 pf-type-ui font-medium uppercase tracking-[0.2em] text-[var(--pf-bg)] transition-opacity hover:opacity-90">
                             Ver trabajo
                         </a>
                         <ContactChooser />
@@ -213,10 +213,10 @@ export default function PortafolioPage() {
                             key={k}
                             delay={i * 0.05}
                             className="flex flex-col gap-1 px-5 py-5 sm:px-8">
-                            <span className="pf-mono text-[9px] uppercase tracking-[0.22em] text-[var(--pf-mute)]">
+                            <span className="pf-mono pf-type-meta uppercase tracking-[0.22em] text-[var(--pf-mute)]">
                                 {k}
                             </span>
-                            <span className="text-sm font-light text-[var(--pf-ink)]">
+                            <span className="text-base font-light text-[var(--pf-ink)]">
                                 {v}
                             </span>
                         </FadeUp>
@@ -230,14 +230,14 @@ export default function PortafolioPage() {
                 className="mx-auto max-w-6xl px-5 py-24 sm:px-8 sm:py-32">
                 <FadeUp className="mb-14 flex flex-col gap-3 sm:mb-16 sm:flex-row sm:items-end sm:justify-between">
                     <div>
-                        <p className="pf-mono mb-3 text-[10px] uppercase tracking-[0.28em] text-[var(--pf-signal)]">
+                        <p className="pf-mono mb-3 pf-type-label uppercase tracking-[0.28em] text-[var(--pf-signal)]">
                             01 — Selección
                         </p>
                         <h2 className="text-3xl font-light tracking-[-0.03em] text-[var(--pf-ink)] sm:text-4xl">
                             Trabajo reciente
                         </h2>
                     </div>
-                    <p className="max-w-xs text-sm font-light leading-relaxed text-[var(--pf-mute)]">
+                    <p className="max-w-xs text-base font-light leading-relaxed text-[var(--pf-mute)]">
                         Proyectos en producción con preview en vivo. Haz clic en
                         el marco para abrir el sitio.
                     </p>
@@ -248,7 +248,7 @@ export default function PortafolioPage() {
                         <StaggerItem key={work.code} as={motion.article}>
                             <article className="pf-work-row group py-8 sm:py-10">
                                 <div className="grid gap-4 sm:grid-cols-[4.5rem_1fr_auto] sm:items-baseline sm:gap-8">
-                                    <span className="pf-mono text-[11px] tracking-[0.12em] text-[var(--pf-mute)]">
+                                    <span className="pf-mono pf-type-ui tracking-[0.12em] text-[var(--pf-mute)]">
                                         {work.code}
                                     </span>
                                     <div className="min-w-0">
@@ -266,21 +266,21 @@ export default function PortafolioPage() {
                                                     {work.title}
                                                 </h3>
                                             )}
-                                            <span className="pf-mono text-[10px] uppercase tracking-[0.16em] text-[var(--pf-mute)]">
+                                            <span className="pf-mono pf-type-label uppercase tracking-[0.16em] text-[var(--pf-mute)]">
                                                 {work.year}
                                             </span>
                                         </div>
-                                        <p className="pf-mono mt-1 text-[10px] uppercase tracking-[0.14em] text-[var(--pf-signal)]/80">
+                                        <p className="pf-mono mt-1 pf-type-label uppercase tracking-[0.14em] text-[var(--pf-signal)]/80">
                                             {work.client}
                                         </p>
-                                        <p className="mt-2 max-w-xl text-sm font-light leading-relaxed text-[var(--pf-mute)]">
+                                        <p className="mt-2 max-w-xl text-base font-light leading-relaxed text-[var(--pf-mute)]">
                                             {work.blurb}
                                         </p>
-                                        <p className="pf-mono mt-3 text-[10px] uppercase tracking-[0.14em] text-[var(--pf-mute)]/80">
+                                        <p className="pf-mono mt-3 pf-type-label uppercase tracking-[0.14em] text-[var(--pf-mute)]/80">
                                             {work.stack}
                                         </p>
                                     </div>
-                                    <span className="pf-mono self-start text-[10px] uppercase tracking-[0.16em] text-[var(--pf-mute)] sm:pt-1">
+                                    <span className="pf-mono self-start pf-type-label uppercase tracking-[0.16em] text-[var(--pf-mute)] sm:pt-1">
                                         {work.role}
                                     </span>
                                 </div>
@@ -307,7 +307,7 @@ export default function PortafolioPage() {
                 className="border-t border-[var(--pf-line)] bg-[var(--pf-bg-elev)]">
                 <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8 sm:py-32">
                     <FadeUp className="mb-6 sm:mb-8">
-                        <p className="pf-mono mb-3 text-[10px] uppercase tracking-[0.28em] text-[var(--pf-signal)]">
+                        <p className="pf-mono mb-3 pf-type-label uppercase tracking-[0.28em] text-[var(--pf-signal)]">
                             02 — Servicios
                         </p>
                         <h2 className="max-w-lg text-3xl font-light tracking-[-0.03em] text-[var(--pf-ink)] sm:text-4xl">
@@ -315,7 +315,7 @@ export default function PortafolioPage() {
                         </h2>
                     </FadeUp>
                     <FadeUp delay={0.06} className="mb-14 max-w-xl sm:mb-16">
-                        <p className="text-sm font-light leading-relaxed text-[var(--pf-mute)]">
+                        <p className="text-base font-light leading-relaxed text-[var(--pf-mute)]">
                             Trabajo por fases y priorizo lo que más valor aporta.
                             El alcance se calibra a tu presupuesto — sin perder
                             calidad en lo esencial.
@@ -326,13 +326,13 @@ export default function PortafolioPage() {
                         {SERVICES.map((s, i) => (
                             <FadeUp key={s.n} delay={i * 0.06}>
                                 <div className="pf-service-item h-full px-5 py-8 sm:px-7 sm:py-10">
-                                    <span className="pf-mono text-[10px] tracking-[0.2em] text-[var(--pf-mute)]">
+                                    <span className="pf-mono pf-type-label tracking-[0.2em] text-[var(--pf-mute)]">
                                         {s.n}
                                     </span>
                                     <h3 className="mt-4 text-lg font-light tracking-[-0.02em] text-[var(--pf-ink)]">
                                         {s.title}
                                     </h3>
-                                    <p className="mt-3 max-w-sm text-sm font-light leading-relaxed text-[var(--pf-mute)]">
+                                    <p className="mt-3 max-w-sm text-base font-light leading-relaxed text-[var(--pf-mute)]">
                                         {s.text}
                                     </p>
                                 </div>
@@ -348,7 +348,7 @@ export default function PortafolioPage() {
                 className="border-t border-[var(--pf-line)]">
                 <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8 sm:py-28">
                     <FadeUp className="mb-14 sm:mb-16">
-                        <p className="pf-mono mb-3 text-[10px] uppercase tracking-[0.28em] text-[var(--pf-signal)]">
+                        <p className="pf-mono mb-3 pf-type-label uppercase tracking-[0.28em] text-[var(--pf-signal)]">
                             03 — Proceso
                         </p>
                         <h2 className="text-3xl font-light tracking-[-0.03em] text-[var(--pf-ink)] sm:text-4xl">
@@ -365,13 +365,13 @@ export default function PortafolioPage() {
                                             ? 'sm:border-r'
                                             : ''
                                     } ${i > 0 ? 'border-t sm:border-t-0' : ''}`}>
-                                    <span className="pf-mono text-[10px] tracking-[0.2em] text-[var(--pf-mute)]">
+                                    <span className="pf-mono pf-type-label tracking-[0.2em] text-[var(--pf-mute)]">
                                         {step.n}
                                     </span>
                                     <h3 className="mt-4 text-base font-light tracking-[-0.02em] text-[var(--pf-ink)]">
                                         {step.title}
                                     </h3>
-                                    <p className="mt-3 text-sm font-light leading-relaxed text-[var(--pf-mute)]">
+                                    <p className="mt-3 text-base font-light leading-relaxed text-[var(--pf-mute)]">
                                         {step.text}
                                     </p>
                                 </div>
@@ -388,13 +388,13 @@ export default function PortafolioPage() {
                 <div className="mx-auto max-w-6xl px-5 py-24 sm:px-8 sm:py-32">
                     <div className="grid gap-14 lg:grid-cols-[1fr_1.1fr] lg:gap-20">
                         <FadeUp>
-                            <p className="pf-mono mb-3 text-[10px] uppercase tracking-[0.28em] text-[var(--pf-signal)]">
+                            <p className="pf-mono mb-3 pf-type-label uppercase tracking-[0.28em] text-[var(--pf-signal)]">
                                 04 — Enfoque
                             </p>
                             <h2 className="text-3xl font-light tracking-[-0.03em] text-[var(--pf-ink)] sm:text-4xl">
                                 Minimalismo con memoria
                             </h2>
-                            <p className="mt-6 text-sm font-light leading-relaxed text-[var(--pf-mute)] sm:text-[15px]">
+                            <p className="mt-6 text-base font-light leading-relaxed text-[var(--pf-mute)] sm:text-lg">
                                 Busco silencio visual, tipografía precisa y
                                 geometría con intención: no como ornamento, sino
                                 como disciplina. Menos capas. Más claridad.
@@ -410,14 +410,14 @@ export default function PortafolioPage() {
                                                 ? 'border-b border-[var(--pf-line)]'
                                                 : ''
                                         }`}>
-                                        <span className="pf-mono w-8 shrink-0 pt-1 text-[10px] tracking-[0.16em] text-[var(--pf-mute)]">
+                                        <span className="pf-mono w-8 shrink-0 pt-1 pf-type-label tracking-[0.16em] text-[var(--pf-mute)]">
                                             {String(i + 1).padStart(2, '0')}
                                         </span>
                                         <div>
                                             <h3 className="text-base font-medium tracking-[-0.01em] text-[var(--pf-ink)]">
                                                 {p.k}
                                             </h3>
-                                            <p className="mt-2 text-sm font-light leading-relaxed text-[var(--pf-mute)]">
+                                            <p className="mt-2 text-base font-light leading-relaxed text-[var(--pf-mute)]">
                                                 {p.v}
                                             </p>
                                         </div>
@@ -439,7 +439,7 @@ export default function PortafolioPage() {
                 />
                 <div className="relative mx-auto max-w-6xl px-5 py-24 sm:px-8 sm:py-32">
                     <FadeUp>
-                        <p className="pf-mono mb-3 text-[10px] uppercase tracking-[0.28em] text-[var(--pf-signal)]">
+                        <p className="pf-mono mb-3 pf-type-label uppercase tracking-[0.28em] text-[var(--pf-signal)]">
                             05 — Contacto
                         </p>
                         <h2 className="max-w-2xl text-[clamp(2rem,6vw,3.5rem)] font-light leading-[1.05] tracking-[-0.03em] text-[var(--pf-ink)]">
@@ -452,40 +452,40 @@ export default function PortafolioPage() {
                         delay={0.1}
                         className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
                         <div>
-                            <p className="pf-mono mb-2 text-[9px] uppercase tracking-[0.22em] text-[var(--pf-mute)]">
+                            <p className="pf-mono mb-2 pf-type-meta uppercase tracking-[0.22em] text-[var(--pf-mute)]">
                                 Correo
                             </p>
                             <a
                                 href={`mailto:${EMAIL}`}
-                                className="text-sm font-light text-[var(--pf-ink)] transition-colors hover:text-[var(--pf-signal)] break-all">
+                                className="text-base font-light text-[var(--pf-ink)] transition-colors hover:text-[var(--pf-signal)] break-all">
                                 {EMAIL}
                             </a>
                         </div>
                         <div>
-                            <p className="pf-mono mb-2 text-[9px] uppercase tracking-[0.22em] text-[var(--pf-mute)]">
+                            <p className="pf-mono mb-2 pf-type-meta uppercase tracking-[0.22em] text-[var(--pf-mute)]">
                                 Celular / WhatsApp
                             </p>
                             <a
                                 href={`tel:${PHONE_TEL}`}
-                                className="block text-sm font-light text-[var(--pf-ink)] transition-colors hover:text-[var(--pf-signal)]">
+                                className="block text-base font-light text-[var(--pf-ink)] transition-colors hover:text-[var(--pf-signal)]">
                                 {PHONE_DISPLAY}
                             </a>
                             <a
                                 href={WHATSAPP}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="pf-mono mt-1 inline-block text-[10px] uppercase tracking-[0.14em] text-[var(--pf-mute)] transition-colors hover:text-[var(--pf-signal)]">
+                                className="pf-mono mt-1 inline-block pf-type-label uppercase tracking-[0.14em] text-[var(--pf-mute)] transition-colors hover:text-[var(--pf-signal)]">
                                 Abrir WhatsApp ↗
                             </a>
                         </div>
                         <div>
-                            <p className="pf-mono mb-2 text-[9px] uppercase tracking-[0.22em] text-[var(--pf-mute)]">
+                            <p className="pf-mono mb-2 pf-type-meta uppercase tracking-[0.22em] text-[var(--pf-mute)]">
                                 Ubicación
                             </p>
-                            <p className="text-sm font-light text-[var(--pf-ink)]">
+                            <p className="text-base font-light text-[var(--pf-ink)]">
                                 Guadalajara, Jalisco
                             </p>
-                            <p className="mt-1 text-sm font-light text-[var(--pf-mute)]">
+                            <p className="mt-1 text-base font-light text-[var(--pf-mute)]">
                                 Proyectos remotos o locales
                             </p>
                         </div>
@@ -496,17 +496,17 @@ export default function PortafolioPage() {
                         className="mt-12 flex flex-wrap items-center gap-4">
                         <a
                             href={`mailto:${EMAIL}?subject=Proyecto%20/%20consulta`}
-                            className="pf-cta inline-flex items-center border border-[var(--pf-signal)] bg-[var(--pf-signal)]/10 px-6 py-3.5 text-[11px] font-medium uppercase tracking-[0.2em] text-[var(--pf-signal)] transition-colors hover:bg-[var(--pf-signal)] hover:text-[var(--pf-bg)]">
+                            className="pf-cta inline-flex items-center border border-[var(--pf-signal)] bg-[var(--pf-signal)]/10 px-6 py-3.5 pf-type-ui font-medium uppercase tracking-[0.2em] text-[var(--pf-signal)] transition-colors hover:bg-[var(--pf-signal)] hover:text-[var(--pf-bg)]">
                             Escribir correo
                         </a>
                         <a
                             href={WHATSAPP}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="pf-mono inline-flex items-center border border-[var(--pf-line-strong)] px-6 py-3.5 text-[11px] uppercase tracking-[0.2em] text-[var(--pf-ink)] transition-colors hover:border-[var(--pf-signal)] hover:text-[var(--pf-signal)]">
+                            className="pf-mono inline-flex items-center border border-[var(--pf-line-strong)] px-6 py-3.5 pf-type-ui uppercase tracking-[0.2em] text-[var(--pf-ink)] transition-colors hover:border-[var(--pf-signal)] hover:text-[var(--pf-signal)]">
                             WhatsApp
                         </a>
-                        <p className="pf-mono text-[10px] uppercase tracking-[0.18em] text-[var(--pf-mute)]">
+                        <p className="pf-mono pf-type-label uppercase tracking-[0.18em] text-[var(--pf-mute)]">
                             Respuesta habitual · 24–48 h
                         </p>
                     </FadeUp>
@@ -515,7 +515,7 @@ export default function PortafolioPage() {
 
             <footer className="border-t border-[var(--pf-line)]">
                 <div className="mx-auto flex max-w-6xl flex-col gap-4 px-5 py-8 sm:flex-row sm:items-center sm:justify-between sm:px-8">
-                    <p className="pf-mono text-[10px] uppercase tracking-[0.2em] text-[var(--pf-mute)]">
+                    <p className="pf-mono pf-type-label uppercase tracking-[0.2em] text-[var(--pf-mute)]">
                         © {new Date().getFullYear()} Fernando Durán
                     </p>
                     <div className="flex flex-wrap gap-5">
@@ -523,14 +523,14 @@ export default function PortafolioPage() {
                             href="https://viku.com.mx"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="pf-mono text-[10px] uppercase tracking-[0.16em] text-[var(--pf-mute)] transition-colors hover:text-[var(--pf-signal)]">
+                            className="pf-mono pf-type-label uppercase tracking-[0.16em] text-[var(--pf-mute)] transition-colors hover:text-[var(--pf-signal)]">
                             Viku
                         </a>
                         <a
                             href="https://todoparaoficna.shop/"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="pf-mono text-[10px] uppercase tracking-[0.16em] text-[var(--pf-mute)] transition-colors hover:text-[var(--pf-signal)]">
+                            className="pf-mono pf-type-label uppercase tracking-[0.16em] text-[var(--pf-mute)] transition-colors hover:text-[var(--pf-signal)]">
                             Todo para oficina
                         </a>
                     </div>

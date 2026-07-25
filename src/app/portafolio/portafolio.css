@@ -55,6 +55,29 @@
     font-family: var(--font-pf-mono), 'IBM Plex Mono', ui-monospace, monospace;
 }
 
+/* Tamaños fijos (no dependen del JIT de Tailwind / HMR) */
+.pf .pf-type-meta {
+    font-size: 0.9375rem; /* 15px */
+    line-height: 1.4;
+}
+
+.pf .pf-type-label {
+    font-size: 1rem; /* 16px */
+    line-height: 1.45;
+}
+
+.pf .pf-type-ui {
+    font-size: 1.0625rem; /* 17px */
+    line-height: 1.45;
+}
+
+/* Letter-spacing un poco menos agresivo al subir tamaño */
+.pf .pf-type-meta.uppercase,
+.pf .pf-type-label.uppercase,
+.pf .pf-type-ui.uppercase {
+    letter-spacing: 0.14em;
+}
+
 .pf-grid-plane {
     background-image:
         linear-gradient(to right, var(--pf-grid-line) 1px, transparent 1px),

@@ -61,7 +61,7 @@ export default function ContactChooser({
                 onClick={() => setOpen(true)}
                 className={
                     className ||
-                    'pf-mono inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-[var(--pf-mute)] transition-colors hover:text-[var(--pf-signal)]'
+                    'pf-mono inline-flex items-center gap-2 pf-type-ui uppercase tracking-[0.2em] text-[var(--pf-mute)] transition-colors hover:text-[var(--pf-signal)]'
                 }
                 aria-haspopup="dialog"
                 aria-expanded={open}>
@@ -103,17 +103,17 @@ export default function ContactChooser({
                                 <div>
                                     <p
                                         id={titleId}
-                                        className="pf-mono text-[10px] uppercase tracking-[0.22em] text-[var(--pf-signal)]">
+                                        className="pf-mono pf-type-label uppercase tracking-[0.22em] text-[var(--pf-signal)]">
                                         Contacto
                                     </p>
-                                    <p className="mt-2 text-sm font-light text-[var(--pf-mute)]">
+                                    <p className="mt-2 text-base font-light text-[var(--pf-mute)]">
                                         Elige cómo prefieres escribirme.
                                     </p>
                                 </div>
                                 <button
                                     type="button"
                                     onClick={() => setOpen(false)}
-                                    className="pf-mono text-[10px] uppercase tracking-[0.16em] text-[var(--pf-mute)] transition-colors hover:text-[var(--pf-ink)]"
+                                    className="pf-mono pf-type-label uppercase tracking-[0.16em] text-[var(--pf-mute)] transition-colors hover:text-[var(--pf-ink)]"
                                     aria-label="Cerrar diálogo">
                                     Cerrar
                                 </button>
@@ -125,15 +125,15 @@ export default function ContactChooser({
                                     onClick={() => setOpen(false)}
                                     className="pf-cta group flex items-center justify-between border border-[var(--pf-line-strong)] px-4 py-3.5 transition-colors hover:border-[var(--pf-signal)]">
                                     <span>
-                                        <span className="block text-[13px] font-light text-[var(--pf-ink)]">
+                                        <span className="block pf-type-ui font-light text-[var(--pf-ink)]">
                                             Mandar correo
                                         </span>
-                                        <span className="pf-mono mt-1 block text-[9px] uppercase tracking-[0.14em] text-[var(--pf-mute)]">
+                                        <span className="pf-mono mt-1 block pf-type-meta uppercase tracking-[0.14em] text-[var(--pf-mute)]">
                                             {EMAIL}
                                         </span>
                                     </span>
                                     <span
-                                        className="pf-mono text-[10px] text-[var(--pf-mute)] transition-colors group-hover:text-[var(--pf-signal)]"
+                                        className="pf-mono pf-type-label text-[var(--pf-mute)] transition-colors group-hover:text-[var(--pf-signal)]"
                                         aria-hidden>
                                         →
                                     </span>
@@ -146,15 +146,15 @@ export default function ContactChooser({
                                     onClick={() => setOpen(false)}
                                     className="pf-cta group flex items-center justify-between border border-[var(--pf-line-strong)] px-4 py-3.5 transition-colors hover:border-[var(--pf-signal)]">
                                     <span>
-                                        <span className="block text-[13px] font-light text-[var(--pf-ink)]">
+                                        <span className="block pf-type-ui font-light text-[var(--pf-ink)]">
                                             Mensaje de WhatsApp
                                         </span>
-                                        <span className="pf-mono mt-1 block text-[9px] uppercase tracking-[0.14em] text-[var(--pf-mute)]">
+                                        <span className="pf-mono mt-1 block pf-type-meta uppercase tracking-[0.14em] text-[var(--pf-mute)]">
                                             33 2214 7524
                                         </span>
                                     </span>
                                     <span
-                                        className="pf-mono text-[10px] text-[var(--pf-mute)] transition-colors group-hover:text-[var(--pf-signal)]"
+                                        className="pf-mono pf-type-label text-[var(--pf-mute)] transition-colors group-hover:text-[var(--pf-signal)]"
                                         aria-hidden>
                                         ↗
                                     </span>

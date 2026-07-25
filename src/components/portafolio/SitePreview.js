@@ -29,11 +29,11 @@ export default function SitePreview({
                     <span className="h-2 w-2 rounded-full bg-[var(--pf-line-strong)]" />
                     <span className="h-2 w-2 rounded-full bg-[var(--pf-line-strong)]" />
                 </div>
-                <p className="pf-mono min-w-0 flex-1 truncate text-[10px] tracking-[0.12em] text-[var(--pf-mute)]">
+                <p className="pf-mono min-w-0 flex-1 truncate pf-type-label tracking-[0.12em] text-[var(--pf-mute)]">
                     {host}
                 </p>
                 {label ? (
-                    <span className="pf-mono hidden text-[9px] uppercase tracking-[0.16em] text-[var(--pf-signal)] sm:inline">
+                    <span className="pf-mono hidden pf-type-meta uppercase tracking-[0.16em] text-[var(--pf-signal)] sm:inline">
                         {label}
                     </span>
                 ) : null}
@@ -41,7 +41,7 @@ export default function SitePreview({
                     href={url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="pf-mono shrink-0 text-[10px] uppercase tracking-[0.14em] text-[var(--pf-mute)] transition-colors hover:text-[var(--pf-signal)]">
+                    className="pf-mono shrink-0 pf-type-label uppercase tracking-[0.14em] text-[var(--pf-mute)] transition-colors hover:text-[var(--pf-signal)]">
                     Abrir ↗
                 </a>
             </div>
@@ -58,7 +58,7 @@ export default function SitePreview({
                     />
                 ) : (
                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-6 text-center">
-                        <p className="pf-mono text-[10px] uppercase tracking-[0.2em] text-[var(--pf-mute)]">
+                        <p className="pf-mono pf-type-label uppercase tracking-[0.2em] text-[var(--pf-mute)]">
                             Preview no disponible
                         </p>
                         <a

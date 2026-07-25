@@ -71,7 +71,7 @@ export default function PortafolioNav() {
             <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-5 sm:h-16 sm:px-8">
                 <a
                     href="#inicio"
-                    className="pf-mono group flex items-center gap-2.5 text-[11px] tracking-[0.22em] text-[var(--pf-ink)]">
+                    className="pf-mono group flex items-center gap-2.5 pf-type-ui tracking-[0.22em] text-[var(--pf-ink)]">
                     <span className="pf-glyph-dot inline-block shrink-0" aria-hidden />
                     <span className="font-medium uppercase">Fernando</span>
                     <span className="hidden text-[var(--pf-mute)] sm:inline">
@@ -87,7 +87,7 @@ export default function PortafolioNav() {
                             key={link.id}
                             href={`#${link.id}`}
                             data-active={active === link.id}
-                            className="pf-nav-link pf-mono hidden text-[10px] uppercase tracking-[0.18em] text-[var(--pf-mute)] transition-colors hover:text-[var(--pf-ink)] sm:inline">
+                            className="pf-nav-link pf-mono hidden pf-type-label uppercase tracking-[0.18em] text-[var(--pf-mute)] transition-colors hover:text-[var(--pf-ink)] sm:inline">
                             {link.label}
                         </a>
                     ))}
@@ -107,7 +107,7 @@ export default function PortafolioNav() {
 
                     <a
                         href="#contacto"
-                        className="pf-mono pf-cta inline-flex items-center border border-[var(--pf-line-strong)] px-3 py-1.5 text-[10px] uppercase tracking-[0.18em] text-[var(--pf-ink)] transition-colors hover:border-[var(--pf-signal)] hover:text-[var(--pf-signal)]">
+                        className="pf-mono pf-cta inline-flex items-center border border-[var(--pf-line-strong)] px-3 py-1.5 pf-type-label uppercase tracking-[0.18em] text-[var(--pf-ink)] transition-colors hover:border-[var(--pf-signal)] hover:text-[var(--pf-signal)]">
                         Disponible
                     </a>
                 </nav>
