@@ -3,8 +3,14 @@
 import { motion, useReducedMotion } from 'framer-motion'
 import PortafolioNav from '@/components/portafolio/PortafolioNav'
 import SitePreview from '@/components/portafolio/SitePreview'
+import ShotCarousel from '@/components/portafolio/ShotCarousel'
 import ContactChooser from '@/components/portafolio/ContactChooser'
 import { FadeUp, Stagger, StaggerItem } from '@/components/portafolio/Motion'
+
+const LIVES_VENTAS_SHOTS = [0, 1, 2, 3, 4, 5, 6].map(n => ({
+    src: `/Imagenes/LivesVentas/image(${n}).png`,
+    alt: `Lives Ventas — captura ${n + 1}`,
+}))
 
 const EMAIL = 'lufedurogi@gmail.com'
 const PHONE_DISPLAY = '33 2214 7524'
@@ -37,13 +43,15 @@ const WORKS = [
     {
         code: '03',
         year: '2025',
-        title: 'Sistemas de acceso y roles',
-        client: 'Arquitectura',
-        role: 'Backend · Seguridad',
-        stack: 'Sanctum · Spatie · Policies',
-        blurb: 'Modelos de sesión, permisos granulares y flujos de autenticación listos para SPAs y paneles.',
+        title: 'Lives Ventas',
+        client: 'Producto propio',
+        role: 'Desktop · Ventas',
+        stack: 'React · Electron · Node.js · MongoDB',
+        blurb:
+            'App de escritorio para vender en directo: catálogo y pedidos, notas, calendario, perfil, ajustes y chatbot ligado a lives de Facebook con respuestas configurables.',
         href: null,
-        previewLabel: null,
+        previewLabel: 'Capturas',
+        shots: LIVES_VENTAS_SHOTS,
     },
 ]
 
@@ -238,8 +246,8 @@ export default function PortafolioPage() {
                         </h2>
                     </div>
                     <p className="max-w-xs text-base font-light leading-relaxed text-[var(--pf-mute)]">
-                        Proyectos en producción con preview en vivo. Haz clic en
-                        el marco para abrir el sitio.
+                        Proyectos en producción: preview en vivo donde hay sitio,
+                        capturas cuando el producto es de escritorio.
                     </p>
                 </FadeUp>
 
@@ -285,14 +293,27 @@ export default function PortafolioPage() {
                                     </span>
                                 </div>
 
-                                {work.href ? (
+                                {work.href || work.shots?.length ? (
                                     <div className="sm:pl-[4.5rem] sm:pr-0 lg:max-w-3xl">
-                                        <SitePreview
-                                            url={work.href}
-                                            title={work.title}
-                                            label={work.previewLabel}
-                                            loading={index === 0 ? 'eager' : 'lazy'}
-                                        />
+                                        {work.shots?.length ? (
+                                            <ShotCarousel
+                                                shots={work.shots}
+                                                title={work.title}
+                                                label={work.previewLabel}
+                                                loading={
+                                                    index === 0 ? 'eager' : 'lazy'
+                                                }
+                                            />
+                                        ) : (
+                                            <SitePreview
+                                                url={work.href}
+                                                title={work.title}
+                                                label={work.previewLabel}
+                                                loading={
+                                                    index === 0 ? 'eager' : 'lazy'
+                                                }
+                                            />
+                                        )}
                                     </div>
                                 ) : null}
                             </article>
