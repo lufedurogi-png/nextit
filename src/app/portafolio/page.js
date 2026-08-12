@@ -8,7 +8,7 @@ import ContactChooser from '@/components/portafolio/ContactChooser'
 import { FadeUp, Stagger, StaggerItem } from '@/components/portafolio/Motion'
 
 const LIVES_VENTAS_SHOTS = [0, 1, 2, 3, 4, 5, 6].map(n => ({
-    src: `/Imagenes/LivesVentas/image(${n}).png`,
+    src: `/Imagenes/LivesVentas/image-${n}.png`,
     alt: `Lives Ventas — captura ${n + 1}`,
 }))
 
