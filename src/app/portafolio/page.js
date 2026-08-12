@@ -44,11 +44,11 @@ const WORKS = [
         code: '03',
         year: '2025',
         title: 'Lives Ventas',
-        client: 'Producto propio',
+        client: 'Cliente · A medida',
         role: 'Desktop · Ventas',
         stack: 'React · Electron · Node.js · MongoDB',
         blurb:
-            'App de escritorio para vender en directo: catálogo y pedidos, notas, calendario, perfil, ajustes y chatbot ligado a lives de Facebook con respuestas configurables.',
+            'App de escritorio hecha a medida para una clienta: catálogo y pedidos en directo, notas, calendario, perfil, ajustes y chatbot ligado a lives de Facebook con respuestas configurables.',
         href: null,
         previewLabel: 'Capturas',
         shots: LIVES_VENTAS_SHOTS,
