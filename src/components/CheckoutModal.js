@@ -441,7 +441,7 @@ export default function CheckoutModal({
                                         onChange={() => setMetodoPago('mercadopago')}
                                         className="text-[#FF8000] focus:ring-[#FF8000]"
                                     />
-                                    <Image src="/Imagenes/mercado%20pago.png" alt="Mercado Pago" width={80} height={32} className="object-contain" />
+                                    <Image src="/Imagenes/mercado-pago.png" alt="Mercado Pago" width={80} height={32} className="object-contain" />
                                     <span className={`font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>Mercado Pago</span>
                                 </label>
                                 <label

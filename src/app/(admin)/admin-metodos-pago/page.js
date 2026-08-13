@@ -7,7 +7,7 @@ import { useAdminDarkMode } from '@/hooks/useAdminDarkMode'
 
 const METHOD_ICON = {
     paypal: '/Imagenes/PayPal.png',
-    mercadopago: '/Imagenes/mercado%20pago.png',
+    mercadopago: '/Imagenes/mercado-pago.png',
     tarjeta: '/Imagenes/icons_metodosdepago.png',
     promocional: '/Imagenes/icon_modo.webp',
 }

@@ -1,14 +1,14 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 
 const AUTOPLAY_MS = 4000
 const RESUME_AFTER_INTERACT_MS = 3000
 
 /**
  * Carrusel de capturas con marco tipo app de escritorio.
- * La altura sigue la captura; autoplay con pausa breve tras interacción.
+ * Crossfade + altura animada (sin mode="wait", evita el “tronido”).
  */
 export default function ShotCarousel({
     shots = [],
@@ -18,8 +18,21 @@ export default function ShotCarousel({
 }) {
     const reduce = useReducedMotion()
     const [index, setIndex] = useState(0)
+    const [boxHeight, setBoxHeight] = useState(null)
     const total = shots.length
     const pausedUntilRef = useRef(0)
+    const frameRef = useRef(null)
+    const ratiosRef = useRef([])
+
+    const applyHeight = useCallback(
+        i => {
+            const frame = frameRef.current
+            const ratio = ratiosRef.current[i]
+            if (!frame || !ratio) return
+            setBoxHeight(Math.round(frame.clientWidth * ratio))
+        },
+        [],
+    )
 
     const go = useCallback(
         (delta, fromUser = false) => {
@@ -32,15 +45,12 @@ export default function ShotCarousel({
         [total],
     )
 
-    const goTo = useCallback(
-        (i, fromUser = false) => {
-            if (fromUser) {
-                pausedUntilRef.current = Date.now() + RESUME_AFTER_INTERACT_MS
-            }
-            setIndex(i)
-        },
-        [],
-    )
+    const goTo = useCallback((i, fromUser = false) => {
+        if (fromUser) {
+            pausedUntilRef.current = Date.now() + RESUME_AFTER_INTERACT_MS
+        }
+        setIndex(i)
+    }, [])
 
     useEffect(() => {
         if (reduce || total < 2) return undefined
@@ -53,9 +63,18 @@ export default function ShotCarousel({
         return () => window.clearInterval(id)
     }, [reduce, total])
 
+    useEffect(() => {
+        applyHeight(index)
+    }, [index, applyHeight])
+
+    useEffect(() => {
+        const onResize = () => applyHeight(index)
+        window.addEventListener('resize', onResize)
+        return () => window.removeEventListener('resize', onResize)
+    }, [index, applyHeight])
+
     if (!total) return null
 
-    const current = shots[index]
     const pad = n => String(n).padStart(2, '0')
 
     return (
@@ -79,21 +98,60 @@ export default function ShotCarousel({
                 </span>
             </div>
 
-            <div className="relative w-full bg-[var(--pf-bg-elev)]">
-                <AnimatePresence mode="wait" initial={false}>
-                    <motion.img
-                        key={current.src}
-                        src={current.src}
-                        alt={current.alt || `${title} — captura ${index + 1}`}
-                        loading={index === 0 ? loading : 'lazy'}
-                        draggable={false}
-                        className="block h-auto w-full select-none"
-                        initial={reduce ? false : { opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={reduce ? undefined : { opacity: 0 }}
-                        transition={{ duration: 0.3, ease: 'easeOut' }}
+            <div
+                ref={frameRef}
+                className="relative w-full overflow-hidden bg-[var(--pf-bg-elev)]"
+                style={{
+                    height: boxHeight ? `${boxHeight}px` : undefined,
+                    transition: reduce ? undefined : 'height 0.4s ease',
+                }}>
+                {shots.map((shot, i) => {
+                    const active = i === index
+                    return (
+                        <motion.img
+                            key={shot.src}
+                            src={shot.src}
+                            alt={shot.alt || `${title} — captura ${i + 1}`}
+                            loading={i === 0 ? loading : 'eager'}
+                            draggable={false}
+                            aria-hidden={!active}
+                            onLoad={e => {
+                                const { naturalWidth, naturalHeight } = e.currentTarget
+                                if (naturalWidth > 0) {
+                                    ratiosRef.current[i] = naturalHeight / naturalWidth
+                                    if (i === index) applyHeight(i)
+                                }
+                            }}
+                            className="absolute left-0 top-0 block w-full max-w-full select-none"
+                            initial={false}
+                            animate={{ opacity: active ? 1 : 0 }}
+                            transition={{
+                                duration: reduce ? 0 : 0.4,
+                                ease: 'easeInOut',
+                            }}
+                            style={{
+                                zIndex: active ? 2 : 1,
+                                pointerEvents: active ? 'auto' : 'none',
+                            }}
+                        />
+                    )
+                })}
+                {/* Reserva altura hasta conocer la primera captura */}
+                {!boxHeight ? (
+                    <img
+                        src={shots[0].src}
+                        alt=""
+                        aria-hidden
+                        className="block h-auto w-full opacity-0"
+                        onLoad={e => {
+                            const { naturalWidth, naturalHeight } = e.currentTarget
+                            if (naturalWidth > 0) {
+                                ratiosRef.current[0] = naturalHeight / naturalWidth
+                                applyHeight(0)
+                            }
+                        }}
                     />
-                </AnimatePresence>
+                ) : null}
             </div>
 
             {total > 1 ? (
